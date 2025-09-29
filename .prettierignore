@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+.expo-shared/
+dist/
+*.lock
+*.log
+.vscode/
+.idea/
+android/
+ios/
