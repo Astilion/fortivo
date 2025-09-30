@@ -19,7 +19,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name='index'
         options={{
-          title: 'Tab One',
+          title: 'Home',
           tabBarIcon: ({ color }) => <TabBarIcon name='code' color={color} />,
           headerRight: () => (
             <Link href='/modal' asChild>
@@ -37,9 +37,30 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name='two'
+        name='workouts'
         options={{
-          title: 'Tab Two',
+          title: 'Plany',
+          tabBarIcon: ({ color }) => <TabBarIcon name='code' color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name='current-workout'
+        options={{
+          title: 'Mój Trening',
+          tabBarIcon: ({ color }) => <TabBarIcon name='code' color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name='exercises'
+        options={{
+          title: 'Lista ćwiczeń',
+          tabBarIcon: ({ color }) => <TabBarIcon name='code' color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name='profile'
+        options={{
+          title: 'Profil',
           tabBarIcon: ({ color }) => <TabBarIcon name='code' color={color} />,
         }}
       />

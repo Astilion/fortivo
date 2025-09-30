@@ -1,9 +1,9 @@
 import { StyleSheet, View, Text } from 'react-native';
 
-export default function TabTwoScreen() {
+export default function ExercisesScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab Two</Text>
+      <Text style={styles.title}>Lista ćwiczeń</Text>
       <View style={styles.separator} />
     </View>
   );
