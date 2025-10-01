@@ -1,6 +1,7 @@
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { useState } from 'react';
 import colors from '@/constants/Colors';
+import { WORKOUT_CATEGORIES } from '@/constants/Training';
 
 export default function WorkoutsScreen() {
   const [selectedCategory, setSelectedCategory] = useState<'custom' | 'plans'>(
@@ -13,8 +14,6 @@ export default function WorkoutsScreen() {
     { id: 2, name: 'Trening B' },
     { id: 3, name: 'Nogi i Pośladki' },
   ];
-
-  const workoutCategories = ['FBW', 'Góra/Dół', 'Push/Pull'];
 
   return (
     <View style={styles.container}>
@@ -71,7 +70,7 @@ export default function WorkoutsScreen() {
           </>
         ) : (
           <>
-            {workoutCategories.map((category) => (
+            {WORKOUT_CATEGORIES.map((category) => (
               <Pressable key={category} style={styles.categoryItem}>
                 <Text style={styles.categoryItemText}>{category}</Text>
               </Pressable>
