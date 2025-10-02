@@ -16,9 +16,11 @@ export const MUSCLE_GROUPS = [
   'Biceps',
   'Triceps',
   'Przedramię',
-  'Uda',
+  'Nogi',
   'Pośladki',
   'Brzuch',
+  'Barki',
+  'Łydki',
 ];
 
 
@@ -46,3 +48,15 @@ export const MUSCLE = [
   'Przedramię',
   'Równoległoboczny',
 ];
+
+export const EQUIPMENT =[
+  'sztanga',
+  'hantle',
+  'maszyna',
+  'kettleball',
+  'guma oporowa',
+  'trx',
+  'masa ciała',
+  'wyciąg',
+  'brak',
+]

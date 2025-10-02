@@ -149,3 +149,8 @@ export interface PeriodizationBlock {
   weeks: number;
   description?: string;
 }
+
+export type Difficulty =
+  | 'początkujący'
+  | 'średniozaawansowany'
+  | 'zaawansowany';
