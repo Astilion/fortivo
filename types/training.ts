@@ -10,6 +10,8 @@ export interface Exercise {
   isCustom: boolean;
   userId?: string; // Only for custom exercises
   createdAt: Date;
+  photo?: string;
+  video?: string;
 }
 
 // Workout set & exercise
@@ -149,8 +151,3 @@ export interface PeriodizationBlock {
   weeks: number;
   description?: string;
 }
-
-export type Difficulty =
-  | 'początkujący'
-  | 'średniozaawansowany'
-  | 'zaawansowany';

@@ -1,12 +1,11 @@
 // Workout categories - schemas for Planning workout
 export const WORKOUT_CATEGORIES = [
-  'Push/Pull/Legs',
-  'Push/Pull',
-  'Split',
-  'Cardio',
-  'Core',
-  'Full Body',
-  'Upper/Lower',
+  'siła',
+  'hipertrofia',
+  'cardio',
+  'mobilność',
+  'kalistenika',
+  'core'
 ];
 
 // Casual style of muscle groups
@@ -59,4 +58,5 @@ export const EQUIPMENT =[
   'masa ciała',
   'wyciąg',
   'brak',
+  'drążek'
 ]

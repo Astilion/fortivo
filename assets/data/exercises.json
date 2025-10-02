@@ -1,0 +1,110 @@
+[
+  {
+    "id": "ex_pushup_001",
+    "name": "Pompki Klasyczne",
+    "category": "kalistenika",
+    "muscleGroups": ["Klatka Piersiowa", "Triceps", "Barki", "Brzuch"],
+    "equipment": ["masa ciała"],
+    "difficulty": "beginner",
+    "isCustom": false,
+    "createdAt": "2025-10-02T16:00:00.000Z"
+  },
+  {
+    "id": "ex_squat_001",
+    "name": "Przysiad Klasyczny",
+    "category": "kalistenika",
+    "muscleGroups": ["Nogi", "Pośladki", "Brzuch"],
+    "equipment": ["masa ciała"],
+    "difficulty": "beginner",
+    "isCustom": false,
+    "createdAt": "2025-10-02T16:05:00.000Z"
+  },
+  {
+    "id": "ex_pullup_001",
+    "name": "Podciąganie na drążku",
+    "category": "siła",
+    "muscleGroups": ["Plecy", "Biceps", "Przedramię", "Brzuch"],
+    "instructions": "Zawiśnij na drążku nachwytem. Podciągnij ciało do góry, aż broda znajdzie się ponad drążkiem, a następnie opuść się w kontrolowany sposób.",
+    "equipment": ["drążek"],
+    "difficulty": "intermediate",
+    "isCustom": false,
+    "createdAt": "2025-10-02T16:10:00.000Z"
+  },
+  {
+    "id": "ex_deadlift_001",
+    "name": "Martwy Ciąg Klasyczny",
+    "category": "siła",
+    "muscleGroups": ["Nogi", "Pośladki", "Plecy", "Przedramię", "Brzuch"],
+    "instructions": "Stand with feet hip-width apart. Grip bar just outside knees. Keep back flat, push through heels and stand tall.",
+    "equipment": ["sztanga"],
+    "difficulty": "intermediate",
+    "isCustom": false,
+    "createdAt": "2025-10-02T16:15:00.000Z"
+  },
+  {
+    "id": "ex_benchpress_001",
+    "name": "Wyciskanie sztangi na ławce płaskiej",
+    "category": "siła",
+    "muscleGroups": ["Chest", "Triceps", "Shoulders"],
+    "instructions": "Połóż się na ławce, chwyć sztangę szerzej niż barki. Opuść sztangę do klatki piersiowej, unieś ją do góry, aż ramiona będą wyprostowane.",
+    "equipment": ["Barbell", "Bench", "Plates"],
+    "difficulty": "intermediate",
+    "isCustom": false,
+    "createdAt": "2025-10-02T16:20:00.000Z"
+  },
+  {
+    "id": "ex_ohpress_001",
+    "name": "Wyciskanie sztangi nad głowę (OHP)",
+    "category": "siła",
+    "muscleGroups": ["Barki", "Triceps", "Klatka Piersiowa"],
+    "instructions": "Stań ze sztangą przy klatce piersiowej. Wyciskaj nad głowę, aż ramiona się zablokują. Opuszczaj pod kontrolą.",
+    "equipment": ["Barbell", "Plates"],
+    "difficulty": "intermediate",
+    "isCustom": false,
+    "createdAt": "2025-10-02T16:25:00.000Z"
+  },
+  {
+    "id": "ex_bicepscurl_001",
+    "name": "Uginanie ramion z hantlami stojąc",
+    "category": "hipertrofia",
+    "muscleGroups": ["Biceps"],
+    "instructions": "Trzymaj hantle po bokach, dłońmi do przodu. Unoś ciężarki w górę, trzymając łokcie blisko siebie, i powoli opuszczaj.",
+    "equipment": ["hantle"],
+    "difficulty": "beginner",
+    "isCustom": false,
+    "createdAt": "2025-10-02T16:30:00.000Z"
+  },
+  {
+    "id": "ex_tricepsext_001",
+    "name": "Wyprosty ramion na wyciągu do dołu",
+    "category": "hipertrofia",
+    "muscleGroups": ["Triceps"],
+    "instructions": "Stań twarzą do maszyny do ćwiczeń na linach. Chwyć linę. Pchaj linę w dół, aż ramiona będą wyprostowane, a następnie powoli wróć do pozycji wyjściowej.",
+    "equipment": ["wyciąg"],
+    "difficulty": "beginner",
+    "isCustom": false,
+    "createdAt": "2025-10-02T16:35:00.000Z"
+  },
+  {
+    "id": "ex_latpulldown_001",
+    "name": "Ściąganie drążka wyciągu górnego do klatki piersiowej",
+    "category": "hipertrofia",
+    "muscleGroups": ["Plecy", "Biceps", "Przedramię"],
+    "instructions": "Usiądź na maszynie, chwyć drążek szeroko. Pociągnij drążek w dół do klatki piersiowej, a następnie powoli wróć do góry.",
+    "equipment": ["wyciąg"],
+    "difficulty": "beginner",
+    "isCustom": false,
+    "createdAt": "2025-10-02T16:40:00.000Z"
+  },
+  {
+    "id": "ex_plank_001",
+    "name": "Plank",
+    "category": "Core",
+    "muscleGroups": ["Brzuch", "Barki"],
+    "instructions": "Utrzymaj pozycję pompki na przedramionach, utrzymuj ciało w linii prostej, napnij mięśnie korpusu.",
+    "equipment": ["masa ciała"],
+    "difficulty": "beginner",
+    "isCustom": false,
+    "createdAt": "2025-10-02T16:45:00.000Z"
+  }
+]
