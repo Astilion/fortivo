@@ -12,7 +12,7 @@ export class ExerciseService {
   // Seed initial exercises from JSON
   async seedExercises(exercises: Exercise[]) {
     const existingCount = await this.db.getFirstAsync<{ count: number }>(
-      'SELECT COUNT(*) as count FROM exercises WHERE is_custom = 0'
+      'SELECT COUNT(*) as count FROM exercises WHERE is_custom = 0',
     );
 
     if (existingCount && existingCount.count > 0) {
@@ -24,7 +24,7 @@ export class ExerciseService {
       `INSERT INTO exercises (
         id, name, category, muscle_groups, instructions, equipment, 
         difficulty, is_custom, user_id, photo, video, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
 
     try {
@@ -41,7 +41,7 @@ export class ExerciseService {
           null,
           exercise.photo || null,
           exercise.video || null,
-          exercise.createdAt.toISOString()
+          exercise.createdAt.toISOString(),
         ]);
       }
     } finally {
@@ -55,52 +55,58 @@ export class ExerciseService {
   async getAllExercises(userId?: string): Promise<Exercise[]> {
     let query = 'SELECT * FROM exercises WHERE is_custom = 0';
     const params: any[] = [];
-    
+
     if (userId) {
       query += ' OR (is_custom = 1 AND user_id = ?)';
       params.push(userId);
     }
-    
+
     query += ' ORDER BY is_custom DESC, name ASC';
-    
+
     const rows = await this.db.getAllAsync<ExerciseRow>(query, params);
     return rows.map(this.mapRowToExercise);
   }
 
   // Get exercises by category
-  async getExercisesByCategory(category: string, userId?: string): Promise<Exercise[]> {
+  async getExercisesByCategory(
+    category: string,
+    userId?: string,
+  ): Promise<Exercise[]> {
     let query = 'SELECT * FROM exercises WHERE category = ? AND (is_custom = 0';
     const params: any[] = [category];
-    
+
     if (userId) {
       query += ' OR (is_custom = 1 AND user_id = ?))';
       params.push(userId);
     } else {
       query += ')';
     }
-    
+
     query += ' ORDER BY name ASC';
-    
+
     const rows = await this.db.getAllAsync<ExerciseRow>(query, params);
     return rows.map(this.mapRowToExercise);
   }
 
   // Get exercises by muscle group
-  async getExercisesByMuscleGroup(muscleGroup: string, userId?: string): Promise<Exercise[]> {
+  async getExercisesByMuscleGroup(
+    muscleGroup: string,
+    userId?: string,
+  ): Promise<Exercise[]> {
     let query = `SELECT * FROM exercises 
                  WHERE muscle_groups LIKE ? 
                  AND (is_custom = 0`;
     const params: any[] = [`%"${muscleGroup}"%`];
-    
+
     if (userId) {
       query += ' OR (is_custom = 1 AND user_id = ?))';
       params.push(userId);
     } else {
       query += ')';
     }
-    
+
     query += ' ORDER BY name ASC';
-    
+
     const rows = await this.db.getAllAsync<ExerciseRow>(query, params);
     return rows.map(this.mapRowToExercise);
   }
@@ -109,7 +115,7 @@ export class ExerciseService {
   async getExerciseById(id: string): Promise<Exercise | null> {
     const row = await this.db.getFirstAsync<ExerciseRow>(
       'SELECT * FROM exercises WHERE id = ?',
-      [id]
+      [id],
     );
 
     return row ? this.mapRowToExercise(row) : null;
@@ -122,16 +128,16 @@ export class ExerciseService {
                WHERE (name LIKE ? OR category LIKE ?) 
                AND (is_custom = 0`;
     const params: any[] = [searchTerm, searchTerm];
-    
+
     if (userId) {
       sql += ' OR (is_custom = 1 AND user_id = ?))';
       params.push(userId);
     } else {
       sql += ')';
     }
-    
+
     sql += ' ORDER BY is_custom DESC, name ASC';
-    
+
     const rows = await this.db.getAllAsync<ExerciseRow>(sql, params);
     return rows.map(this.mapRowToExercise);
   }
@@ -139,7 +145,7 @@ export class ExerciseService {
   // Create custom exercise
   async createExercise(
     exercise: Omit<Exercise, 'id' | 'isCustom' | 'createdAt'>,
-    userId: string
+    userId: string,
   ): Promise<Exercise> {
     const id = generateId('ex');
     const createdAt = new Date();
@@ -161,8 +167,8 @@ export class ExerciseService {
         userId,
         exercise.photo || null,
         exercise.video || null,
-        createdAt.toISOString()
-      ]
+        createdAt.toISOString(),
+      ],
     );
 
     return {
@@ -170,18 +176,20 @@ export class ExerciseService {
       id,
       isCustom: true,
       userId,
-      createdAt
+      createdAt,
     };
   }
 
   // Update exercise (only custom exercises)
   async updateExercise(
     id: string,
-    updates: Partial<Omit<Exercise, 'id' | 'isCustom' | 'createdAt' | 'userId'>>,
-    userId: string
+    updates: Partial<
+      Omit<Exercise, 'id' | 'isCustom' | 'createdAt' | 'userId'>
+    >,
+    userId: string,
   ): Promise<void> {
     const exercise = await this.getExerciseById(id);
-    
+
     if (!exercise || !exercise.isCustom || exercise.userId !== userId) {
       throw new Error('Can only update your own custom exercises');
     }
@@ -228,14 +236,14 @@ export class ExerciseService {
 
     await this.db.runAsync(
       `UPDATE exercises SET ${fields.join(', ')} WHERE id = ?`,
-      values
+      values,
     );
   }
 
   // Delete exercise (only custom exercises)
   async deleteExercise(id: string, userId: string): Promise<void> {
     const exercise = await this.getExerciseById(id);
-    
+
     if (!exercise || !exercise.isCustom || exercise.userId !== userId) {
       throw new Error('Can only delete your own custom exercises');
     }
@@ -247,27 +255,27 @@ export class ExerciseService {
   async getCategories(userId?: string): Promise<string[]> {
     let query = 'SELECT DISTINCT category FROM exercises WHERE is_custom = 0';
     const params: any[] = [];
-    
+
     if (userId) {
       query += ' OR (is_custom = 1 AND user_id = ?)';
       params.push(userId);
     }
-    
+
     query += ' ORDER BY category ASC';
-    
+
     const rows = await this.db.getAllAsync<{ category: string }>(query, params);
-    return rows.map(row => row.category);
+    return rows.map((row) => row.category);
   }
 
   // Get all muscle groups
   async getMuscleGroups(userId?: string): Promise<string[]> {
     const exercises = await this.getAllExercises(userId);
     const muscleGroupsSet = new Set<string>();
-    
-    exercises.forEach(exercise => {
-      exercise.muscleGroups.forEach(muscle => muscleGroupsSet.add(muscle));
+
+    exercises.forEach((exercise) => {
+      exercise.muscleGroups.forEach((muscle) => muscleGroupsSet.add(muscle));
     });
-    
+
     return Array.from(muscleGroupsSet).sort();
   }
 
@@ -280,12 +288,16 @@ export class ExerciseService {
       muscleGroups: JSON.parse(row.muscle_groups),
       instructions: row.instructions || undefined,
       equipment: row.equipment ? JSON.parse(row.equipment) : undefined,
-      difficulty: row.difficulty as 'beginner' | 'intermediate' | 'advanced' | undefined,
+      difficulty: row.difficulty as
+        | 'beginner'
+        | 'intermediate'
+        | 'advanced'
+        | undefined,
       isCustom: row.is_custom === 1,
       userId: row.user_id || undefined,
       photo: row.photo || undefined,
       video: row.video || undefined,
-      createdAt: new Date(row.created_at)
+      createdAt: new Date(row.created_at),
     };
   }
 }
