@@ -40,6 +40,7 @@ const validateExerciseData = (data: any[]): Exercise[] => {
         | 'advanced'
         | undefined,
       instructions: exercise.instructions || undefined,
+      createdAt: new Date(exercise.createdAt),
     } as Exercise;
   });
 };

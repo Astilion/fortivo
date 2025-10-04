@@ -1,4 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { AppProvider } from '@/providers/AppProvider';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -43,8 +44,10 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   return (
-    <Stack>
-      <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-    </Stack>
+    <AppProvider>
+      <Stack>
+        <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+      </Stack>
+    </AppProvider>
   );
 }
