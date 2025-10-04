@@ -151,3 +151,147 @@ export interface PeriodizationBlock {
   weeks: number;
   description?: string;
 }
+
+
+// Row Types
+export interface ExerciseRow {
+  id: string;
+  name: string;
+  category: string;
+  muscle_groups: string; // JSON string
+  instructions: string | null;
+  equipment: string | null; // JSON string
+  difficulty: string | null;
+  is_custom: number;
+  user_id: string | null;
+  photo: string | null;
+  video: string | null;
+  created_at: string;
+}
+
+export interface WorkoutSetRow {
+  id: string;
+  workout_exercise_id: string;
+  set_order: number;
+  reps: number;
+  weight: number | null;
+  rpe: number | null;
+  tempo: string | null;
+  rest_time: number | null;
+  completed: number;
+  notes: string | null;
+  actual_reps: number | null;
+  actual_weight: number | null;
+  actual_rpe: number | null;
+}
+
+export interface WorkoutExerciseRow {
+  id: string;
+  workout_id: string;
+  exercise_id: string;
+  exercise_order: number;
+  superset_group: string | null;
+  notes: string | null;
+}
+
+export interface WorkoutRow {
+  id: string;
+  name: string;
+  date: string;
+  duration: number | null;
+  notes: string | null;
+  tags: string | null; // JSON string
+  completed: number;
+  template_id: string | null;
+  created_at: string;
+}
+
+export interface WeeklyPlanDayRow {
+  id: string;
+  weekly_plan_id: string;
+  day_of_week: number;
+  day_name: string | null;
+  workout_id: string | null;
+  is_rest_day: number;
+}
+
+export interface WeeklyPlanRow {
+  id: string;
+  name: string;
+  week_number: number | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface TrainingPlanWeekRow {
+  id: string;
+  training_plan_id: string;
+  week_number: number;
+  weekly_plan_id: string;
+  notes: string | null;
+  intensity_multiplier: number;
+  volume_multiplier: number;
+}
+
+export interface TrainingPlanRow {
+  id: string;
+  name: string;
+  description: string | null;
+  user_id: string;
+  is_active: number;
+  start_date: string | null;
+  end_date: string | null;
+  goal: string | null;
+  tags: string | null; // JSON string
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkoutTemplateRow {
+  id: string;
+  name: string;
+  description: string | null;
+  user_id: string;
+  is_public: number;
+  tags: string | null; // JSON string
+  created_at: string;
+}
+
+export interface ExerciseProgressRow {
+  id: string;
+  exercise_id: string;
+  user_id: string;
+  date: string;
+  max_weight: number;
+  total_volume: number;
+  estimated_one_rep_max: number | null;
+  personal_record: number;
+}
+
+export interface WorkoutHistoryRow {
+  id: string;
+  workout_id: string;
+  user_id: string;
+  completed_at: string;
+  actual_duration: number;
+  performance_notes: string | null;
+}
+
+export interface UserSettingsRow {
+  user_id: string;
+  preferred_weight_unit: string;
+  default_rest_time: number;
+  track_rpe: number;
+  track_tempo: number;
+  track_rest_time: number;
+  week_starts_on: number;
+}
+
+export interface PeriodizationBlockRow {
+  id: string;
+  training_plan_id: string;
+  phase: string;
+  weeks: number;
+  description: string | null;
+  block_order: number;
+}
