@@ -60,6 +60,9 @@ function RootLayoutNav() {
             headerTitleStyle: {
               color: colors.text.primary,
             },
+            contentStyle: {
+              backgroundColor: colors.primary,
+            },
           }}
         />
       </Stack>
