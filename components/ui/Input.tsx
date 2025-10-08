@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 8,
+    marginBottom: 16,
   },
   icon: {},
   input: {
