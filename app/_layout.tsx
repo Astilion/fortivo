@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import colors from '@/constants/Colors';
 import 'react-native-reanimated';
 
 export {
@@ -47,6 +48,20 @@ function RootLayoutNav() {
     <AppProvider>
       <Stack>
         <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+        <Stack.Screen
+          name='exercise-details'
+          options={{
+            presentation: 'modal',
+            title: 'Szczegóły ćwiczenia',
+            headerStyle: {
+              backgroundColor: colors.primary,
+            },
+            headerTintColor: colors.text.primary,
+            headerTitleStyle: {
+              color: colors.text.primary,
+            },
+          }}
+        />
       </Stack>
     </AppProvider>
   );
