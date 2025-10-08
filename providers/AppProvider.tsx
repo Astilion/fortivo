@@ -25,19 +25,22 @@ export const useApp = () => {
 const validateExerciseData = (data: any[]): Exercise[] => {
   return data.map((exercise) => {
     // Validate difficulty field
-    const validDifficulties = ['beginner', 'intermediate', 'advanced'];
-    const difficulty = validDifficulties.includes(
-      exercise.difficulty?.toLowerCase(),
-    )
-      ? exercise.difficulty.toLowerCase()
+    const validDifficulties = [
+      'Początkujący',
+      'Średniozaawansowany',
+      'Zaawansowany',
+    ];
+
+    const difficulty = validDifficulties.includes(exercise.difficulty)
+      ? exercise.difficulty
       : undefined;
 
     return {
       ...exercise,
       difficulty: difficulty as
-        | 'beginner'
-        | 'intermediate'
-        | 'advanced'
+        | 'Początkujący'
+        | 'Średniozaawansowany'
+        | 'Zaawansowany'
         | undefined,
       instructions: exercise.instructions || undefined,
       createdAt: new Date(exercise.createdAt),

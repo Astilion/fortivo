@@ -6,7 +6,7 @@ export interface Exercise {
   muscleGroups: string[];
   instructions?: string;
   equipment?: string[];
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: 'Początkujący' | 'Średniozaawansowany' | 'Zaawansowany';
   isCustom: boolean;
   userId?: string; // Only for custom exercises
   createdAt: Date;

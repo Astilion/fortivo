@@ -5,7 +5,7 @@
     "category": "kalistenika",
     "muscleGroups": ["Klatka Piersiowa", "Triceps", "Barki", "Brzuch"],
     "equipment": ["masa ciała"],
-    "difficulty": "beginner",
+    "difficulty": "Początkujący",
     "isCustom": false,
     "createdAt": "2025-10-02T16:00:00.000Z"
   },
@@ -15,7 +15,7 @@
     "category": "kalistenika",
     "muscleGroups": ["Nogi", "Pośladki", "Brzuch"],
     "equipment": ["masa ciała"],
-    "difficulty": "beginner",
+    "difficulty": "Początkujący",
     "isCustom": false,
     "createdAt": "2025-10-02T16:05:00.000Z"
   },
@@ -26,7 +26,7 @@
     "muscleGroups": ["Plecy", "Biceps", "Przedramię", "Brzuch"],
     "instructions": "Zawiśnij na drążku nachwytem. Podciągnij ciało do góry, aż broda znajdzie się ponad drążkiem, a następnie opuść się w kontrolowany sposób.",
     "equipment": ["drążek"],
-    "difficulty": "intermediate",
+    "difficulty": "Średniozaawansowany",
     "isCustom": false,
     "createdAt": "2025-10-02T16:10:00.000Z"
   },
@@ -37,7 +37,7 @@
     "muscleGroups": ["Nogi", "Pośladki", "Plecy", "Przedramię", "Brzuch"],
     "instructions": "Stań z nogami na szerokości bioder. Chwyć sztangę tuż poza kolanami. Utrzymaj plecy prosto, odepnij się od ziemi przez pięty i wyprostuj się.",
     "equipment": ["sztanga"],
-    "difficulty": "intermediate",
+    "difficulty": "Średniozaawansowany",
     "isCustom": false,
     "createdAt": "2025-10-02T16:15:00.000Z"
   },
@@ -48,7 +48,7 @@
     "muscleGroups": ["Klatka Piersiowa", "Triceps", "Barki"],
     "instructions": "Połóż się na ławce, chwyć sztangę szerzej niż barki. Opuść sztangę do klatki piersiowej, unieś ją do góry, aż ramiona będą wyprostowane.",
     "equipment": ["sztanga"],
-    "difficulty": "intermediate",
+    "difficulty": "Średniozaawansowany",
     "isCustom": false,
     "createdAt": "2025-10-02T16:20:00.000Z"
   },
@@ -59,7 +59,7 @@
     "muscleGroups": ["Barki", "Triceps", "Klatka Piersiowa"],
     "instructions": "Stań ze sztangą przy klatce piersiowej. Wyciskaj nad głowę, aż ramiona się zablokują. Opuszczaj pod kontrolą.",
     "equipment": ["sztanga"],
-    "difficulty": "intermediate",
+    "difficulty": "Średniozaawansowany",
     "isCustom": false,
     "createdAt": "2025-10-02T16:25:00.000Z"
   },
@@ -70,7 +70,7 @@
     "muscleGroups": ["Biceps"],
     "instructions": "Trzymaj hantle po bokach, dłońmi do przodu. Unoś ciężarki w górę, trzymając łokcie blisko ciała, i powoli opuszczaj.",
     "equipment": ["hantle"],
-    "difficulty": "beginner",
+    "difficulty": "Początkujący",
     "isCustom": false,
     "createdAt": "2025-10-02T16:30:00.000Z"
   },
@@ -81,7 +81,7 @@
     "muscleGroups": ["Triceps"],
     "instructions": "Stań twarzą do wyciągu. Chwyć uchwyt. Pchaj uchwyt w dół, aż ramiona będą wyprostowane, a następnie powoli wróć do pozycji wyjściowej.",
     "equipment": ["wyciąg"],
-    "difficulty": "beginner",
+    "difficulty": "Początkujący",
     "isCustom": false,
     "createdAt": "2025-10-02T16:35:00.000Z"
   },
@@ -92,7 +92,7 @@
     "muscleGroups": ["Plecy", "Biceps", "Przedramię"],
     "instructions": "Usiądź na maszynie, chwyć drążek szeroko. Pociągnij drążek w dół do klatki piersiowej, a następnie powoli wróć do góry.",
     "equipment": ["wyciąg"],
-    "difficulty": "beginner",
+    "difficulty": "Początkujący",
     "isCustom": false,
     "createdAt": "2025-10-02T16:40:00.000Z"
   },
@@ -103,7 +103,7 @@
     "muscleGroups": ["Brzuch", "Barki"],
     "instructions": "Utrzymaj pozycję pompki na przedramionach, utrzymuj ciało w linii prostej, napnij mięśnie korpusu.",
     "equipment": ["masa ciała"],
-    "difficulty": "beginner",
+    "difficulty": "Początkujący",
     "isCustom": false,
     "createdAt": "2025-10-02T16:45:00.000Z"
   }

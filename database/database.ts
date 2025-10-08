@@ -4,7 +4,7 @@ const DB_NAME = 'fortivo.db';
 
 export const initDatabase = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
-  
+
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys = ON;
@@ -17,7 +17,7 @@ export const initDatabase = async () => {
       muscle_groups TEXT NOT NULL, -- JSON array
       instructions TEXT,
       equipment TEXT, -- JSON array
-      difficulty TEXT CHECK(difficulty IN ('beginner', 'intermediate', 'advanced')),
+      difficulty TEXT CHECK(difficulty IN ('Początkujący', 'Średniozaawansowany', 'Zaawansowany')),
       is_custom INTEGER DEFAULT 0,
       user_id TEXT,
       photo TEXT,
