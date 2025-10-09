@@ -1,14 +1,19 @@
-import { View, Text,ScrollView } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { commonStyles } from '@/constants/Styles';
+import { useRouter } from 'expo-router';
 
 export default function CreateWorkoutScreen() {
+  const router = useRouter()
   const [workoutName, setWorkoutName] = useState<string>('');
   const [exercises, setExercises] = useState<string[]>([]);
   return (
-    <ScrollView contentContainerStyle={{gap:16}} style={commonStyles.container}>
+    <ScrollView
+      contentContainerStyle={{ gap: 16 }}
+      style={commonStyles.container}
+    >
       <Text style={commonStyles.title}>Utwórz nowy trening</Text>
       <Input
         value={workoutName}
@@ -17,7 +22,7 @@ export default function CreateWorkoutScreen() {
       />
       <Button
         title='Dodaj Ćwiczenie'
-        onPress={() => console.log('Dodaj Ćwiczenie')}
+        onPress={() => router.push('/select-exercise')}
         variant='primary'
       />
       <Button
@@ -29,4 +34,3 @@ export default function CreateWorkoutScreen() {
     </ScrollView>
   );
 }
-
