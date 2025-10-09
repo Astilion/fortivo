@@ -62,6 +62,16 @@ function RootLayoutNav() {
             },
           }}
         />
+        <Stack.Screen
+          name='create-workout'
+          options={{
+            presentation: 'modal',
+            title: 'Nowy trening',
+            headerStyle: { backgroundColor: colors.primary },
+            headerTintColor: colors.text.primary,
+            contentStyle: { backgroundColor: colors.primary },
+          }}
+        />
       </Stack>
     </AppProvider>
   );
