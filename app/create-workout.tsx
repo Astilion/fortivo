@@ -8,7 +8,7 @@ export default function CreateWorkoutScreen() {
   const [workoutName, setWorkoutName] = useState<string>('');
   const [exercises, setExercises] = useState<string[]>([]);
   return (
-    <ScrollView style={commonStyles.container}>
+    <ScrollView contentContainerStyle={{gap:16}} style={commonStyles.container}>
       <Text style={commonStyles.title}>Utwórz nowy trening</Text>
       <Input
         value={workoutName}
