@@ -1,9 +1,12 @@
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { useState } from 'react';
 import colors from '@/constants/Colors';
+import { useRouter } from 'expo-router';
 import { WORKOUT_CATEGORIES } from '@/constants/Training';
+import { Button } from '@/components/ui/Button';
 
 export default function WorkoutsScreen() {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<'custom' | 'plans'>(
     'custom',
   );
@@ -54,9 +57,13 @@ export default function WorkoutsScreen() {
       >
         {selectedCategory === 'custom' ? (
           <>
-            <Pressable style={styles.addButton}>
-              <Text style={styles.addButtonText}>Stwórz nowy trening</Text>
-            </Pressable>
+            <View style={{ marginBottom: 20 }}>
+              <Button
+                title='+ Stwórz nowy trening'
+                variant='primary'
+                onPress={() => router.push('/create-workout')}
+              />
+            </View>
 
             <Text style={styles.sectionTitle}>
               Twoje Własne Plany Treningowe:
@@ -118,18 +125,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 20,
-  },
-  addButton: {
-    backgroundColor: colors.accent,
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  addButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: '600',
   },
   sectionTitle: {
     fontSize: 16,
