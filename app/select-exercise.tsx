@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useExerciseStore } from '@/store/exerciseStore';
+import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter } from 'expo-router';
 import { commonStyles } from '@/constants/Styles';
 import { useState } from 'react';
@@ -34,10 +35,14 @@ export default function SelectExerciseScreen() {
 
     return matchesSearch && matchesCategory;
   });
+  const addExercise = useWorkoutStore((state) => state.addExercise);
+
   const handleSelectExercise = (exerciseId: string) => {
-    // TODO: Przekaż ID z powrotem do create-workout
-    console.log('Selected exercise:', exerciseId);
-    router.back(); // ✅ Zamknij modal
+    const exercise = exercises.find((ex) => ex.id === exerciseId);
+    if (exercise) {
+      addExercise(exercise);
+      router.back();
+    }
   };
 
   return (
