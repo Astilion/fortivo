@@ -95,7 +95,10 @@ export default function CreateWorkoutScreen() {
         title='Zapisz Trening'
         onPress={handleSaveWorkout}
         variant='primary'
-        disabled={!draft.name.trim() || draft.exercises.length === 0}
+        disabled={
+          !draft.name.trim()
+          || draft.exercises.length === 0
+        }
       />
     </ScrollView>
   );

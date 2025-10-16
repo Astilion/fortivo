@@ -9,7 +9,7 @@ import { WorkoutRow } from '@/types/training';
 
 export default function WorkoutsScreen() {
   const { workoutService } = useApp();
-const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
+  const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
 
   // Załaduj treningi przy starcie
   useEffect(() => {
@@ -26,13 +26,6 @@ const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<'custom' | 'plans'>(
     'custom',
   );
-
-  // Placeholder for custom workouts
-  const customWorkouts = [
-    { id: 1, name: 'Trening A' },
-    { id: 2, name: 'Trening B' },
-    { id: 3, name: 'Nogi i Pośladki' },
-  ];
 
   return (
     <View style={styles.container}>
@@ -85,11 +78,17 @@ const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
               Twoje Własne Plany Treningowe:
             </Text>
 
-            {customWorkouts.map((workout) => (
-              <Pressable key={workout.id} style={styles.workoutItem}>
-                <Text style={styles.workoutItemText}>{workout.name}</Text>
-              </Pressable>
-            ))}
+            {workouts.length === 0 ? (
+              <Text style={styles.sectionTitle}>
+                Nie masz jeszcze treningów
+              </Text>
+            ) : (
+              workouts.map((workout) => (
+                <Pressable key={workout.id} style={styles.workoutItem}>
+                  <Text style={styles.workoutItemText}>{workout.name}</Text>
+                </Pressable>
+              ))
+            )}
           </>
         ) : (
           <>
