@@ -289,9 +289,9 @@ export class ExerciseService {
       instructions: row.instructions || undefined,
       equipment: row.equipment ? JSON.parse(row.equipment) : undefined,
       difficulty: row.difficulty as
-        | 'beginner'
-        | 'intermediate'
-        | 'advanced'
+        | 'Początkujący'
+        | 'Średniozaawansowany'
+        | 'Zaawansowany'
         | undefined,
       isCustom: row.is_custom === 1,
       userId: row.user_id || undefined,

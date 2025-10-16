@@ -4,11 +4,13 @@ import * as SQLite from 'expo-sqlite';
 import initDatabase from '@/database/database';
 import { ExerciseService, Exercise } from '@/services/exerciseService';
 import { useExerciseStore } from '@/store/exerciseStore';
+import { WorkoutService } from '@/services/workoutService';
 import exercisesData from '@/assets/data/exercises.json';
 
 interface AppContextType {
   db: SQLite.SQLiteDatabase;
   exerciseService: ExerciseService;
+  workoutService: WorkoutService
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -70,6 +72,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Initialize services
       const exerciseService = new ExerciseService(database);
+      const workoutService = new WorkoutService(database)
 
       // Validate and seed exercises
       const validatedExercises = validateExerciseData(exercisesData);
@@ -84,6 +87,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       setContext({
         db: database,
         exerciseService,
+        workoutService
       });
 
       setIsReady(true);

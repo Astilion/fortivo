@@ -60,9 +60,26 @@ function RootLayoutNav() {
             headerTitleStyle: {
               color: colors.text.primary,
             },
-            contentStyle: {
-              backgroundColor: colors.primary,
-            },
+          }}
+        />
+        <Stack.Screen
+          name='create-workout'
+          options={{
+            presentation: 'modal',
+            title: 'Nowy trening',
+            headerStyle: { backgroundColor: colors.primary },
+            headerTintColor: colors.text.primary,
+            contentStyle: { backgroundColor: colors.primary },
+          }}
+        />
+        <Stack.Screen
+          name='select-exercise'
+          options={{
+            presentation: 'modal',
+            title: 'Wybierz ćwiczenie',
+            headerStyle: { backgroundColor: colors.primary },
+            headerTintColor: colors.text.primary,
+            contentStyle: { backgroundColor: colors.primary },
           }}
         />
       </Stack>

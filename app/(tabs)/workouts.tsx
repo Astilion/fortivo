@@ -1,19 +1,34 @@
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import colors from '@/constants/Colors';
+import { useRouter } from 'expo-router';
 import { WORKOUT_CATEGORIES } from '@/constants/Training';
+import { Button } from '@/components/ui/Button';
+import { useApp } from '@/providers/AppProvider';
+import { WorkoutRow } from '@/types/training';
 
 export default function WorkoutsScreen() {
+  const { workoutService } = useApp();
+  const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
+
+
+useFocusEffect(
+  useCallback(() => {
+    loadWorkouts();
+  }, [])
+);
+
+  const loadWorkouts = async () => {
+    const allWorkouts = await workoutService.getAllWorkouts();
+    console.log('📋 Treningi z bazy:', allWorkouts);
+    setWorkouts(allWorkouts);
+  };
+
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<'custom' | 'plans'>(
     'custom',
   );
-
-  // Placeholder for custom workouts
-  const customWorkouts = [
-    { id: 1, name: 'Trening A' },
-    { id: 2, name: 'Trening B' },
-    { id: 3, name: 'Nogi i Pośladki' },
-  ];
 
   return (
     <View style={styles.container}>
@@ -54,19 +69,29 @@ export default function WorkoutsScreen() {
       >
         {selectedCategory === 'custom' ? (
           <>
-            <Pressable style={styles.addButton}>
-              <Text style={styles.addButtonText}>Stwórz nowy trening</Text>
-            </Pressable>
+            <View style={{ marginBottom: 20 }}>
+              <Button
+                title='+ Stwórz nowy trening'
+                variant='primary'
+                onPress={() => router.push('/create-workout')}
+              />
+            </View>
 
             <Text style={styles.sectionTitle}>
               Twoje Własne Plany Treningowe:
             </Text>
 
-            {customWorkouts.map((workout) => (
-              <Pressable key={workout.id} style={styles.workoutItem}>
-                <Text style={styles.workoutItemText}>{workout.name}</Text>
-              </Pressable>
-            ))}
+            {workouts.length === 0 ? (
+              <Text style={styles.sectionTitle}>
+                Nie masz jeszcze treningów
+              </Text>
+            ) : (
+              workouts.map((workout) => (
+                <Pressable key={workout.id} style={styles.workoutItem}>
+                  <Text style={styles.workoutItemText}>{workout.name}</Text>
+                </Pressable>
+              ))
+            )}
           </>
         ) : (
           <>
@@ -118,18 +143,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 20,
-  },
-  addButton: {
-    backgroundColor: colors.accent,
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  addButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: '600',
   },
   sectionTitle: {
     fontSize: 16,
