@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, FlatList } from 'react-native';
 import { useState } from 'react';
+import { useApp } from '@/providers/AppProvider';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,7 +11,31 @@ import colors from '@/constants/Colors';
 
 export default function CreateWorkoutScreen() {
   const router = useRouter();
-  const { draft, setWorkoutName, removeExercise } = useWorkoutStore();
+  const { draft, setWorkoutName, removeExercise, clearDraft } =
+    useWorkoutStore();
+  const { workoutService } = useApp();
+
+  const handleSaveWorkout = async () => {
+    try {
+      const workoutData = {
+        name: draft.name,
+        date: new Date(),
+        duration: undefined,
+        notes: undefined,
+        tags: undefined,
+        completed: false,
+        templateId: undefined,
+      };
+
+      await workoutService.createWorkout(workoutData);
+      clearDraft();
+      router.back();
+      alert('Trening zapisany!');
+    } catch (error) {
+      console.error('Błąd zapisu', error);
+      alert('Nie udało się zapisać treningu');
+    }
+  };
 
   return (
     <ScrollView
@@ -68,7 +93,7 @@ export default function CreateWorkoutScreen() {
 
       <Button
         title='Zapisz Trening'
-        onPress={() => console.log('Zapisz:', draft)}
+        onPress={handleSaveWorkout}
         variant='primary'
         disabled={!draft.name.trim() || draft.exercises.length === 0}
       />

@@ -1,11 +1,27 @@
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import colors from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { WORKOUT_CATEGORIES } from '@/constants/Training';
 import { Button } from '@/components/ui/Button';
+import { useApp } from '@/providers/AppProvider';
+import { WorkoutRow } from '@/types/training';
 
 export default function WorkoutsScreen() {
+  const { workoutService } = useApp();
+const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
+
+  // Załaduj treningi przy starcie
+  useEffect(() => {
+    loadWorkouts();
+  }, []);
+
+  const loadWorkouts = async () => {
+    const allWorkouts = await workoutService.getAllWorkouts();
+    console.log('📋 Treningi z bazy:', allWorkouts);
+    setWorkouts(allWorkouts);
+  };
+
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<'custom' | 'plans'>(
     'custom',
