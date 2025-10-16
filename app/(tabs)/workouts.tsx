@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import colors from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { WORKOUT_CATEGORIES } from '@/constants/Training';
@@ -11,10 +12,12 @@ export default function WorkoutsScreen() {
   const { workoutService } = useApp();
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
 
-  // Załaduj treningi przy starcie
-  useEffect(() => {
+
+useFocusEffect(
+  useCallback(() => {
     loadWorkouts();
-  }, []);
+  }, [])
+);
 
   const loadWorkouts = async () => {
     const allWorkouts = await workoutService.getAllWorkouts();
