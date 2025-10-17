@@ -7,17 +7,22 @@ import { WORKOUT_CATEGORIES } from '@/constants/Training';
 import { Button } from '@/components/ui/Button';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutRow } from '@/types/training';
+import { Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function WorkoutsScreen() {
   const { workoutService } = useApp();
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
+  const router = useRouter();
+  const [selectedCategory, setSelectedCategory] = useState<'custom' | 'plans'>(
+    'custom',
+  );
 
-
-useFocusEffect(
-  useCallback(() => {
-    loadWorkouts();
-  }, [])
-);
+  useFocusEffect(
+    useCallback(() => {
+      loadWorkouts();
+    }, []),
+  );
 
   const loadWorkouts = async () => {
     const allWorkouts = await workoutService.getAllWorkouts();
@@ -25,10 +30,24 @@ useFocusEffect(
     setWorkouts(allWorkouts);
   };
 
-  const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<'custom' | 'plans'>(
-    'custom',
-  );
+  const handleDeleteWorkout = async (id: string, name: string) => {
+    Alert.alert('Usuń trening', `Czy na pewno chcesz usunąć "${name}"?`, [
+      { text: 'Anuluj', style: 'cancel' },
+      {
+        text: 'Usuń',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await workoutService.deleteWorkout(id);
+            loadWorkouts();
+          } catch (error) {
+            console.error('Błąd usuwania:', error);
+            alert('Nie udało się usunąć');
+          }
+        },
+      },
+    ]);
+  };
 
   return (
     <View style={styles.container}>
@@ -87,9 +106,26 @@ useFocusEffect(
               </Text>
             ) : (
               workouts.map((workout) => (
-                <Pressable key={workout.id} style={styles.workoutItem}>
-                  <Text style={styles.workoutItemText}>{workout.name}</Text>
-                </Pressable>
+                <View key={workout.id} style={styles.workoutItem}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.workoutItemText}>{workout.name}</Text>
+                  </View>
+
+                  <View style={styles.actionButtons}>
+                    <Pressable
+                      style={styles.iconButton}
+                      onPress={() =>
+                        handleDeleteWorkout(workout.id, workout.name)
+                      }
+                    >
+                      <Ionicons
+                        name='trash-outline'
+                        size={20}
+                        color={colors.danger}
+                      />
+                    </Pressable>
+                  </View>
+                </View>
               ))
             )}
           </>
@@ -155,6 +191,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderRadius: 8,
     marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   workoutItemText: {
     color: colors.text.primary,
@@ -177,5 +215,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: colors.text.primary,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconButton: {
+    padding: 8,
   },
 });

@@ -50,4 +50,8 @@ export class WorkoutService {
       createdAt,
     } as Workout;
   }
+
+  async deleteWorkout(id: string): Promise<void> {
+    await this.db.runAsync('DELETE FROM workouts WHERE id = ?', [id]);
+  }
 }
