@@ -54,4 +54,53 @@ export class WorkoutService {
   async deleteWorkout(id: string): Promise<void> {
     await this.db.runAsync('DELETE FROM workouts WHERE id = ?', [id]);
   }
+
+  async updateWorkout(
+    id: string,
+    updates: Partial<Omit<Workout, 'id' | 'createdAt' | 'exercises'>>,
+  ): Promise<void> {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (updates.name !== undefined) {
+      fields.push('name = ?');
+      values.push(updates.name);
+    }
+    if (updates.date !== undefined) {
+      fields.push('date = ?');
+      values.push(updates.date.toISOString());
+    }
+    if (updates.duration !== undefined) {
+      fields.push('duration = ?');
+      values.push(updates.duration);
+    }
+    if (updates.notes !== undefined) {
+      fields.push('notes = ?');
+      values.push(updates.notes);
+    }
+    if (updates.tags !== undefined) {
+      fields.push('tags = ?');
+      values.push(updates.tags ? JSON.stringify(updates.tags) : null);
+    }
+    if (updates.completed !== undefined) {
+      fields.push('completed = ?');
+      values.push(updates.completed ? 1 : 0);
+    }
+
+    if (fields.length === 0) return;
+
+    values.push(id);
+
+    await this.db.runAsync(
+      `UPDATE workouts SET ${fields.join(', ')} WHERE id = ?`,
+      values,
+    );
+  }
+  async getWorkoutById(id: string): Promise<WorkoutRow | null> {
+    const row = await this.db.getFirstAsync<WorkoutRow>(
+      'SELECT * FROM workouts WHERE id = ?',
+      [id],
+    );
+    return row || null;
+  }
 }
