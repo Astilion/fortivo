@@ -82,6 +82,16 @@ function RootLayoutNav() {
             contentStyle: { backgroundColor: colors.primary },
           }}
         />
+        <Stack.Screen
+          name='edit-workout'
+          options={{
+            presentation: 'modal',
+            title: 'Edytuj trening',
+            headerStyle: { backgroundColor: colors.primary },
+            headerTintColor: colors.text.primary,
+            contentStyle: { backgroundColor: colors.primary },
+          }}
+        />
       </Stack>
     </AppProvider>
   );

@@ -115,6 +115,18 @@ export default function WorkoutsScreen() {
                     <Pressable
                       style={styles.iconButton}
                       onPress={() =>
+                        router.push(`/edit-workout?id=${workout.id}`)
+                      }
+                    >
+                      <Ionicons
+                        name='pencil'
+                        size={20}
+                        color={colors.text.secondary}
+                      />
+                    </Pressable>
+                    <Pressable
+                      style={styles.iconButton}
+                      onPress={() =>
                         handleDeleteWorkout(workout.id, workout.name)
                       }
                     >
