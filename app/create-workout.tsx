@@ -27,7 +27,15 @@ export default function CreateWorkoutScreen() {
         templateId: undefined,
       };
 
-      await workoutService.createWorkout(workoutData);
+      const savedWorkout = await workoutService.createWorkout(workoutData);
+
+      if (draft.exercises.length > 0) {
+        await workoutService.saveWorkoutExercises(
+          savedWorkout.id,
+          draft.exercises,
+        );
+      }
+
       clearDraft();
       router.back();
       alert('Trening zapisany!');
@@ -95,10 +103,7 @@ export default function CreateWorkoutScreen() {
         title='Zapisz Trening'
         onPress={handleSaveWorkout}
         variant='primary'
-        disabled={
-          !draft.name.trim()
-          || draft.exercises.length === 0
-        }
+        disabled={!draft.name.trim() || draft.exercises.length === 0}
       />
     </ScrollView>
   );

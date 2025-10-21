@@ -6,6 +6,7 @@ import {
   WorkoutExercise,
   WorkoutExerciseRow,
   Exercise,
+  ExerciseRow,
 } from '@/types/training';
 
 export class WorkoutService {
@@ -125,5 +126,28 @@ export class WorkoutService {
         [exerciseId, workoutId, exercise.id, i],
       );
     }
+  }
+
+  async getWorkoutExercises(workoutId: string): Promise<Exercise[]> {
+    const rows = await this.db.getAllAsync<ExerciseRow>(
+      'SELECT e.id, e.name, e.category, e.muscle_groups, e.equipment, e.difficulty, e.is_custom, e.user_id, e.photo, e.video, e.created_at FROM workout_exercises we JOIN exercises e ON we.exercise_id=e.id WHERE we.workout_id=? ORDER BY we.exercise_order ASC',
+      [workoutId],
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      muscleGroups: JSON.parse(row.muscle_groups),
+      equipment: row.equipment ? JSON.parse(row.equipment) : undefined,
+      difficulty: row.difficulty as
+        | 'Początkujący'
+        | 'Średniozaawansowany'
+        | 'Zaawansowany',
+      isCustom: row.is_custom === 1,
+      userId: row.user_id || undefined,
+      photo: row.photo || undefined,
+      video: row.video || undefined,
+      createdAt: new Date(row.created_at),
+    }));
   }
 }
