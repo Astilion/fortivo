@@ -5,6 +5,7 @@ import {
   WorkoutRow,
   WorkoutExercise,
   WorkoutExerciseRow,
+  Exercise,
 } from '@/types/training';
 
 export class WorkoutService {
@@ -102,5 +103,27 @@ export class WorkoutService {
       [id],
     );
     return row || null;
+  }
+
+  async saveWorkoutExercises(
+    workoutId: string,
+    exercises: Exercise[],
+  ): Promise<void> {
+    await this.db.runAsync(
+      'DELETE FROM workout_exercises WHERE workout_id = ?',
+      [workoutId],
+    );
+
+    for (let i = 0; i < exercises.length; i++) {
+      const exercise = exercises[i];
+      const exerciseId = generateId('we'); // workout_exercise
+
+      await this.db.runAsync(
+        `INSERT INTO workout_exercises (
+      id, workout_id, exercise_id, exercise_order
+    ) VALUES (?, ?, ?, ?)`,
+        [exerciseId, workoutId, exercise.id, i],
+      );
+    }
   }
 }
