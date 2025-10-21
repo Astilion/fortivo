@@ -13,6 +13,7 @@ interface WorkoutStore {
   addExercise: (exercise: Exercise) => void;
   removeExercise: (exerciseId: string) => void;
   clearDraft: () => void;
+  setExercises: (exercises: Exercise[]) => void;
 }
 
 export const useWorkoutStore = create<WorkoutStore>((set) => ({
@@ -46,4 +47,9 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
     set({
       draft: { name: '', exercises: [] },
     }),
+
+  setExercises: (exercises: Exercise[]) =>
+    set((state) => ({
+      draft: { ...state.draft, exercises },
+    })),
 }));

@@ -12,7 +12,7 @@ import { useLocalSearchParams } from 'expo-router';
 
 export default function EditWorkoutScreen() {
   const router = useRouter();
-  const { draft, setWorkoutName, removeExercise, clearDraft } =
+  const { draft, setWorkoutName, removeExercise, clearDraft, setExercises } =
     useWorkoutStore();
   const { workoutService } = useApp();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,18 +23,24 @@ export default function EditWorkoutScreen() {
 
   const loadWorkout = async () => {
     try {
+      clearDraft();
+
       const workout = await workoutService.getWorkoutById(id);
       if (workout) {
         setWorkoutName(workout.name);
+        const exercises = await workoutService.getWorkoutExercises(id);
+        setExercises(exercises);
       }
     } catch (error) {
       console.error('Błąd ładowania:', error);
       alert('Nie udało się załadować treningu');
     }
   };
+
   const handleSaveWorkout = async () => {
     try {
       await workoutService.updateWorkout(id, { name: draft.name });
+      await workoutService.saveWorkoutExercises(id, draft.exercises);
       clearDraft();
       router.back();
       alert('Zmiany zapisane!');
