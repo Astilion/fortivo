@@ -7,7 +7,16 @@ import {
   WorkoutExerciseRow,
   Exercise,
   ExerciseRow,
+  WorkoutSet,
+  WorkoutSetRow,
 } from '@/types/training';
+
+
+interface WorkoutExerciseWithSets {
+  exercise: Exercise;
+  sets: WorkoutSet[];
+  isExpanded?: boolean;
+}
 
 export class WorkoutService {
   private db: SQLite.SQLiteDatabase;
@@ -35,12 +44,12 @@ export class WorkoutService {
       [
         id,
         workout.name,
-        workout.date.toISOString(), //  Date → string
+        workout.date.toISOString(),
         workout.duration || null,
         workout.notes || null,
-        workout.tags ? JSON.stringify(workout.tags) : null, //  Array → JSON
-        workout.completed ? 1 : 0, //  Boolean → 0/1
-        workout.templateId || null, //  undefined → null
+        workout.tags ? JSON.stringify(workout.tags) : null,
+        workout.completed ? 1 : 0,
+        workout.templateId || null,
         createdAt.toISOString(),
       ],
     );
@@ -98,6 +107,7 @@ export class WorkoutService {
       values,
     );
   }
+
   async getWorkoutById(id: string): Promise<WorkoutRow | null> {
     const row = await this.db.getFirstAsync<WorkoutRow>(
       'SELECT * FROM workouts WHERE id = ?',
@@ -106,9 +116,10 @@ export class WorkoutService {
     return row || null;
   }
 
+
   async saveWorkoutExercises(
     workoutId: string,
-    exercises: Exercise[],
+    exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
     await this.db.runAsync(
       'DELETE FROM workout_exercises WHERE workout_id = ?',
@@ -116,38 +127,114 @@ export class WorkoutService {
     );
 
     for (let i = 0; i < exercises.length; i++) {
-      const exercise = exercises[i];
-      const exerciseId = generateId('we'); // workout_exercise
+      const { exercise, sets } = exercises[i];
+      const workoutExerciseId = generateId('we');
 
       await this.db.runAsync(
         `INSERT INTO workout_exercises (
-      id, workout_id, exercise_id, exercise_order
-    ) VALUES (?, ?, ?, ?)`,
-        [exerciseId, workoutId, exercise.id, i],
+          id, workout_id, exercise_id, exercise_order, superset_group, notes
+        ) VALUES (?, ?, ?, ?, ?, ?)`,
+        [workoutExerciseId, workoutId, exercise.id, i, null, null],
       );
+
+      for (let j = 0; j < sets.length; j++) {
+        const set = sets[j];
+        const setId = generateId('ws'); // workout_set
+
+        await this.db.runAsync(
+          `INSERT INTO workout_sets (
+            id, workout_exercise_id, set_order, reps, weight, rpe, 
+            tempo, rest_time, completed, notes, actual_reps, actual_weight, actual_rpe
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            setId,
+            workoutExerciseId,
+            j, // set_order
+            set.reps,
+            set.weight || null,
+            set.rpe || null,
+            set.tempo || null,
+            set.restTime || null,
+            set.completed ? 1 : 0,
+            set.notes || null,
+            set.actualReps || null,
+            set.actualWeight || null,
+            set.actualRpe || null,
+          ],
+        );
+      }
     }
   }
 
-  async getWorkoutExercises(workoutId: string): Promise<Exercise[]> {
-    const rows = await this.db.getAllAsync<ExerciseRow>(
-      'SELECT e.id, e.name, e.category, e.muscle_groups, e.equipment, e.difficulty, e.is_custom, e.user_id, e.photo, e.video, e.created_at FROM workout_exercises we JOIN exercises e ON we.exercise_id=e.id WHERE we.workout_id=? ORDER BY we.exercise_order ASC',
+  async getWorkoutExercises(
+    workoutId: string,
+  ): Promise<WorkoutExerciseWithSets[]> {
+
+    const workoutExercises = await this.db.getAllAsync<WorkoutExerciseRow>(
+      `SELECT * FROM workout_exercises 
+       WHERE workout_id = ? 
+       ORDER BY exercise_order ASC`,
       [workoutId],
     );
-    return rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      category: row.category,
-      muscleGroups: JSON.parse(row.muscle_groups),
-      equipment: row.equipment ? JSON.parse(row.equipment) : undefined,
-      difficulty: row.difficulty as
-        | 'Początkujący'
-        | 'Średniozaawansowany'
-        | 'Zaawansowany',
-      isCustom: row.is_custom === 1,
-      userId: row.user_id || undefined,
-      photo: row.photo || undefined,
-      video: row.video || undefined,
-      createdAt: new Date(row.created_at),
-    }));
+
+    const result: WorkoutExerciseWithSets[] = [];
+
+    for (const we of workoutExercises) {
+      const exerciseRow = await this.db.getFirstAsync<ExerciseRow>(
+        'SELECT * FROM exercises WHERE id = ?',
+        [we.exercise_id],
+      );
+
+      if (!exerciseRow) continue;
+
+      const setRows = await this.db.getAllAsync<WorkoutSetRow>(
+        `SELECT * FROM workout_sets 
+         WHERE workout_exercise_id = ? 
+         ORDER BY set_order ASC`,
+        [we.id],
+      );
+
+      const exercise: Exercise = {
+        id: exerciseRow.id,
+        name: exerciseRow.name,
+        category: exerciseRow.category,
+        muscleGroups: JSON.parse(exerciseRow.muscle_groups),
+        equipment: exerciseRow.equipment
+          ? JSON.parse(exerciseRow.equipment)
+          : undefined,
+        difficulty: exerciseRow.difficulty as
+          | 'Początkujący'
+          | 'Średniozaawansowany'
+          | 'Zaawansowany'
+          | undefined,
+        isCustom: exerciseRow.is_custom === 1,
+        userId: exerciseRow.user_id || undefined,
+        photo: exerciseRow.photo || undefined,
+        video: exerciseRow.video || undefined,
+        createdAt: new Date(exerciseRow.created_at),
+      };
+
+      const sets: WorkoutSet[] = setRows.map((setRow) => ({
+        id: setRow.id,
+        reps: setRow.reps,
+        weight: setRow.weight || undefined,
+        rpe: setRow.rpe || undefined,
+        tempo: setRow.tempo || undefined,
+        restTime: setRow.rest_time || undefined,
+        completed: setRow.completed === 1,
+        notes: setRow.notes || undefined,
+        actualReps: setRow.actual_reps || undefined,
+        actualWeight: setRow.actual_weight || undefined,
+        actualRpe: setRow.actual_rpe || undefined,
+      }));
+
+      result.push({
+        exercise,
+        sets,
+        isExpanded: false,
+      });
+    }
+
+    return result;
   }
 }

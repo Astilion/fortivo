@@ -1,9 +1,15 @@
 import { create } from 'zustand';
-import { Exercise } from '@/types/training';
+import { Exercise, WorkoutSet } from '@/types/training';
+
+interface WorkoutExerciseWithSets {
+  exercise: Exercise;
+  sets: WorkoutSet[];
+  isExpanded?: boolean;
+}
 
 interface WorkoutDraft {
   name: string;
-  exercises: Exercise[];
+  exercises: WorkoutExerciseWithSets[];
 }
 
 interface WorkoutStore {
@@ -13,8 +19,25 @@ interface WorkoutStore {
   addExercise: (exercise: Exercise) => void;
   removeExercise: (exerciseId: string) => void;
   clearDraft: () => void;
-  setExercises: (exercises: Exercise[]) => void;
+  setExercises: (exercises: WorkoutExerciseWithSets[]) => void;
+  toggleExpanded: (exerciseId: string) => void;
+
+  // Set management
+  addSet: (exerciseId: string) => void;
+  removeSet: (exerciseId: string, setId: string) => void;
+  updateSet: (
+    exerciseId: string,
+    setId: string,
+    updates: Partial<WorkoutSet>,
+  ) => void;
 }
+
+const createDefaultSet = (order: number): WorkoutSet => ({
+  id: `temp_${Date.now()}_${order}_${Math.random()}`,
+  reps: 8,
+  weight: 0,
+  completed: false,
+});
 
 export const useWorkoutStore = create<WorkoutStore>((set) => ({
   draft: {
@@ -31,7 +54,14 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
     set((state) => ({
       draft: {
         ...state.draft,
-        exercises: [...state.draft.exercises, exercise],
+        exercises: [
+          ...state.draft.exercises,
+          {
+            exercise,
+            sets: [createDefaultSet(0)],
+            isExpanded: false,
+          },
+        ],
       },
     })),
 
@@ -39,7 +69,9 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
     set((state) => ({
       draft: {
         ...state.draft,
-        exercises: state.draft.exercises.filter((ex) => ex.id !== exerciseId),
+        exercises: state.draft.exercises.filter(
+          (ex) => ex.exercise.id !== exerciseId,
+        ),
       },
     })),
 
@@ -48,8 +80,78 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
       draft: { name: '', exercises: [] },
     }),
 
-  setExercises: (exercises: Exercise[]) =>
+  setExercises: (exercises: WorkoutExerciseWithSets[]) =>
     set((state) => ({
       draft: { ...state.draft, exercises },
+    })),
+
+  toggleExpanded: (exerciseId: string) =>
+    set((state) => ({
+      draft: {
+        ...state.draft,
+        exercises: state.draft.exercises.map((ex) =>
+          ex.exercise.id === exerciseId
+            ? { ...ex, isExpanded: !ex.isExpanded }
+            : ex,
+        ),
+      },
+    })),
+
+  // Add new set to exercise
+  addSet: (exerciseId: string) =>
+    set((state) => ({
+      draft: {
+        ...state.draft,
+        exercises: state.draft.exercises.map((ex) => {
+          if (ex.exercise.id === exerciseId) {
+            const newSetOrder = ex.sets.length;
+            return {
+              ...ex,
+              sets: [...ex.sets, createDefaultSet(newSetOrder)],
+            };
+          }
+          return ex;
+        }),
+      },
+    })),
+
+  // Remove set from exercise
+  removeSet: (exerciseId: string, setId: string) =>
+    set((state) => ({
+      draft: {
+        ...state.draft,
+        exercises: state.draft.exercises.map((ex) => {
+          if (ex.exercise.id === exerciseId) {
+            return {
+              ...ex,
+              sets: ex.sets.filter((s) => s.id !== setId),
+            };
+          }
+          return ex;
+        }),
+      },
+    })),
+
+  // Update set properties (reps, weight, etc.)
+  updateSet: (
+    exerciseId: string,
+    setId: string,
+    updates: Partial<WorkoutSet>,
+  ) =>
+    set((state) => ({
+      draft: {
+        ...state.draft,
+        exercises: state.draft.exercises.map((ex) => {
+          if (ex.exercise.id === exerciseId) {
+            return {
+              ...ex,
+              sets: ex.sets.map((s) =>
+                s.id === setId ? { ...s, ...updates } : s,
+              ),
+            };
+          }
+          return ex;
+        }),
+      },
     })),
 }));
