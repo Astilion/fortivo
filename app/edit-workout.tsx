@@ -1,19 +1,27 @@
-import { View, Text, ScrollView, FlatList } from 'react-native';
-import { useState, useEffect } from 'react';
+import { View, Text, ScrollView } from 'react-native';
+import { useEffect } from 'react';
 import { useApp } from '@/providers/AppProvider';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { commonStyles } from '@/constants/Styles';
 import { useRouter } from 'expo-router';
-import { Card } from '@/components/ui/Card';
-import colors from '@/constants/Colors';
+import { ExpandableExerciseCard } from '@/components/ui/ExpandableExerciseCard';
 import { useLocalSearchParams } from 'expo-router';
 
 export default function EditWorkoutScreen() {
   const router = useRouter();
-  const { draft, setWorkoutName, removeExercise, clearDraft, setExercises } =
-    useWorkoutStore();
+  const {
+    draft,
+    setWorkoutName,
+    removeExercise,
+    clearDraft,
+    setExercises,
+    toggleExpanded,
+    addSet,
+    removeSet,
+    updateSet,
+  } = useWorkoutStore();
   const { workoutService } = useApp();
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -55,7 +63,7 @@ export default function EditWorkoutScreen() {
       style={commonStyles.container}
       contentContainerStyle={{ gap: 16, paddingBottom: 80 }}
     >
-      <Text style={commonStyles.title}> Edytuj Trening</Text>
+      <Text style={commonStyles.title}>Edytuj Trening</Text>
 
       <Input
         value={draft.name}
@@ -69,31 +77,22 @@ export default function EditWorkoutScreen() {
             Ćwiczenia ({draft.exercises.length}):
           </Text>
 
-          {draft.exercises.map((exercise) => (
-            <Card key={exercise.id}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{ color: colors.text.primary, fontWeight: 'bold' }}
-                  >
-                    {exercise.name}
-                  </Text>
-                  <Text style={{ color: colors.text.secondary }}>
-                    {exercise.category}
-                  </Text>
-                </View>
-                <Button
-                  title='Usuń'
-                  variant='danger'
-                  onPress={() => removeExercise(exercise.id)}
-                />
-              </View>
-            </Card>
+          {draft.exercises.map((item) => (
+            <ExpandableExerciseCard
+              key={item.exercise.id}
+              exerciseName={item.exercise.name}
+              exerciseCategory={item.exercise.category}
+              exerciseId={item.exercise.id}
+              sets={item.sets}
+              isExpanded={item.isExpanded || false}
+              onToggleExpand={() => toggleExpanded(item.exercise.id)}
+              onRemoveExercise={() => removeExercise(item.exercise.id)}
+              onAddSet={() => addSet(item.exercise.id)}
+              onRemoveSet={(setId) => removeSet(item.exercise.id, setId)}
+              onUpdateSet={(setId, updates) =>
+                updateSet(item.exercise.id, setId, updates)
+              }
+            />
           ))}
         </>
       )}
