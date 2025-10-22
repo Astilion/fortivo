@@ -104,10 +104,19 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
         ...state.draft,
         exercises: state.draft.exercises.map((ex) => {
           if (ex.exercise.id === exerciseId) {
+            const lastSet = ex.sets[ex.sets.length - 1];
             const newSetOrder = ex.sets.length;
+
+            const newSet: WorkoutSet = {
+              id: `temp_${Date.now()}_${newSetOrder}_${Math.random()}`,
+              reps: lastSet ? lastSet.reps : 8,
+              weight: lastSet ? lastSet.weight : 0,
+              completed: false,
+            };
+
             return {
               ...ex,
-              sets: [...ex.sets, createDefaultSet(newSetOrder)],
+              sets: [...ex.sets, newSet],
             };
           }
           return ex;
