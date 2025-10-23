@@ -15,6 +15,11 @@ interface ExpandableExerciseCardProps {
   onAddSet: () => void;
   onRemoveSet: (setId: string) => void;
   onUpdateSet: (setId: string, updates: Partial<WorkoutSet>) => void;
+
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 export const ExpandableExerciseCard = ({
@@ -28,6 +33,10 @@ export const ExpandableExerciseCard = ({
   onAddSet,
   onRemoveSet,
   onUpdateSet,
+  onMoveUp,
+  onMoveDown,
+  isFirst = false,
+  isLast = false,
 }: ExpandableExerciseCardProps) => {
   return (
     <View style={styles.card}>
@@ -44,9 +53,50 @@ export const ExpandableExerciseCard = ({
             <Text style={styles.exerciseCategory}>{exerciseCategory}</Text>
           </View>
         </View>
-        <Pressable onPress={onRemoveExercise} style={styles.deleteButton}>
-          <Ionicons name='trash-outline' size={20} color={colors.danger} />
-        </Pressable>
+
+        {/* Reorder & Delete buttons */}
+        <View style={styles.headerActions}>
+          {/* Move Up button */}
+          {onMoveUp && (
+            <Pressable
+              onPress={onMoveUp}
+              disabled={isFirst}
+              style={[
+                styles.reorderButton,
+                isFirst && styles.reorderButtonDisabled,
+              ]}
+            >
+              <Ionicons
+                name='arrow-up'
+                size={18}
+                color={isFirst ? colors.text.secondary : colors.accent}
+              />
+            </Pressable>
+          )}
+
+          {/* Move Down button */}
+          {onMoveDown && (
+            <Pressable
+              onPress={onMoveDown}
+              disabled={isLast}
+              style={[
+                styles.reorderButton,
+                isLast && styles.reorderButtonDisabled,
+              ]}
+            >
+              <Ionicons
+                name='arrow-down'
+                size={18}
+                color={isLast ? colors.text.secondary : colors.accent}
+              />
+            </Pressable>
+          )}
+
+          {/* Delete button */}
+          <Pressable onPress={onRemoveExercise} style={styles.deleteButton}>
+            <Ionicons name='trash-outline' size={20} color={colors.danger} />
+          </Pressable>
+        </View>
       </Pressable>
 
       {/* Sets Accordion */}
@@ -167,9 +217,26 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textTransform: 'capitalize',
   },
+
+  // NEW: Header actions container
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+
+  reorderButton: {
+    padding: 8,
+    borderRadius: 6,
+  },
+  reorderButtonDisabled: {
+    opacity: 0.3,
+  },
+
   deleteButton: {
     padding: 8,
   },
+
   expandedContent: {
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -263,7 +330,6 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
 
- 
   addSetButton: {
     flexDirection: 'row',
     alignItems: 'center',
