@@ -30,6 +30,9 @@ interface WorkoutStore {
     setId: string,
     updates: Partial<WorkoutSet>,
   ) => void;
+
+  moveExerciseUp: (exerciseId: string) => void;
+  moveExerciseDown: (exerciseId: string) => void;
 }
 
 const createDefaultSet = (order: number): WorkoutSet => ({
@@ -163,4 +166,45 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
         }),
       },
     })),
+
+  moveExerciseUp: (exerciseId: string) =>
+    set((state) => {
+      const currentIndex = state.draft.exercises.findIndex(
+        (ex) => ex.exercise.id === exerciseId,
+      );
+
+      // If already first, do nothing
+      if (currentIndex <= 0) return state;
+
+      const newExercises = [...state.draft.exercises];
+      const [item] = newExercises.splice(currentIndex, 1); // Remove from current position
+      newExercises.splice(currentIndex - 1, 0, item); // Insert one position up
+
+      return {
+        draft: { ...state.draft, exercises: newExercises },
+      };
+    }),
+
+  moveExerciseDown: (exerciseId: string) =>
+    set((state) => {
+      const currentIndex = state.draft.exercises.findIndex(
+        (ex) => ex.exercise.id === exerciseId,
+      );
+
+      // If already last, do nothing
+      if (
+        currentIndex === -1 ||
+        currentIndex >= state.draft.exercises.length - 1
+      ) {
+        return state;
+      }
+
+      const newExercises = [...state.draft.exercises];
+      const [item] = newExercises.splice(currentIndex, 1); // Remove from current position
+      newExercises.splice(currentIndex + 1, 0, item); // Insert one position down
+
+      return {
+        draft: { ...state.draft, exercises: newExercises },
+      };
+    }),
 }));
