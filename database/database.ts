@@ -66,6 +66,7 @@ export const initDatabase = async () => {
       completed INTEGER DEFAULT 0,
       template_id TEXT,
       created_at TEXT NOT NULL,
+      display_order INTEGER DEFAULT 0,
       FOREIGN KEY (template_id) REFERENCES workout_templates(id) ON DELETE SET NULL
     );
 
