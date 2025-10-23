@@ -18,6 +18,8 @@ export default function CreateWorkoutScreen() {
     addSet,
     removeSet,
     updateSet,
+    moveExerciseDown,
+    moveExerciseUp,
   } = useWorkoutStore();
   const { workoutService } = useApp();
 
@@ -70,7 +72,7 @@ export default function CreateWorkoutScreen() {
             Ćwiczenia ({draft.exercises.length}):
           </Text>
 
-          {draft.exercises.map((item) => (
+          {draft.exercises.map((item, index) => (
             <ExpandableExerciseCard
               key={item.exercise.id}
               exerciseName={item.exercise.name}
@@ -85,6 +87,10 @@ export default function CreateWorkoutScreen() {
               onUpdateSet={(setId, updates) =>
                 updateSet(item.exercise.id, setId, updates)
               }
+              onMoveDown={() => moveExerciseDown(item.exercise.id)}
+              onMoveUp={() => moveExerciseUp(item.exercise.id)}
+              isFirst={index === 0}
+              isLast={index === draft.exercises.length - 1}
             />
           ))}
         </>
