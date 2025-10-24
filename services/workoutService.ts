@@ -11,7 +11,6 @@ import {
   WorkoutSetRow,
 } from '@/types/training';
 
-
 interface WorkoutExerciseWithSets {
   exercise: Exercise;
   sets: WorkoutSet[];
@@ -26,7 +25,8 @@ export class WorkoutService {
   }
 
   async getAllWorkouts(): Promise<WorkoutRow[]> {
-    const query = 'SELECT * FROM workouts ORDER BY created_at DESC';
+    const query =
+      'SELECT * FROM workouts ORDER BY display_order ASC, created_at DESC';
     const rows = await this.db.getAllAsync<WorkoutRow>(query);
     return rows;
   }
@@ -116,7 +116,6 @@ export class WorkoutService {
     return row || null;
   }
 
-
   async saveWorkoutExercises(
     workoutId: string,
     exercises: WorkoutExerciseWithSets[],
@@ -169,7 +168,6 @@ export class WorkoutService {
   async getWorkoutExercises(
     workoutId: string,
   ): Promise<WorkoutExerciseWithSets[]> {
-
     const workoutExercises = await this.db.getAllAsync<WorkoutExerciseRow>(
       `SELECT * FROM workout_exercises 
        WHERE workout_id = ? 
@@ -236,5 +234,14 @@ export class WorkoutService {
     }
 
     return result;
+  }
+
+  async reorderWorkouts(workoutIds: string[]): Promise<void> {
+    for (let i = 0; i < workoutIds.length; i++) {
+      await this.db.runAsync(
+        'UPDATE workouts SET display_order = ? WHERE id = ?',
+        [i, workoutIds[i]],
+      );
+    }
   }
 }
