@@ -65,8 +65,8 @@ export const initDatabase = async () => {
       tags TEXT, -- JSON array
       completed INTEGER DEFAULT 0,
       template_id TEXT,
-      created_at TEXT NOT NULL,
       display_order INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL,
       FOREIGN KEY (template_id) REFERENCES workout_templates(id) ON DELETE SET NULL
     );
 
@@ -214,6 +214,7 @@ export const initDatabase = async () => {
     CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_exercise ON workout_sets(workout_exercise_id);
     
     CREATE INDEX IF NOT EXISTS idx_workouts_date ON workouts(date);
+    CREATE INDEX IF NOT EXISTS idx_workouts_display_order ON workouts(display_order);
     CREATE INDEX IF NOT EXISTS idx_workouts_template ON workouts(template_id);
     
     CREATE INDEX IF NOT EXISTS idx_weekly_plan_days_plan ON weekly_plan_days(weekly_plan_id);
