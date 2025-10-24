@@ -152,7 +152,6 @@ export interface PeriodizationBlock {
   description?: string;
 }
 
-
 // Row Types
 export interface ExerciseRow {
   id: string;
@@ -203,6 +202,7 @@ export interface WorkoutRow {
   tags: string | null; // JSON string
   completed: number;
   template_id: string | null;
+  display_order: number;
   created_at: string;
 }
 
