@@ -9,6 +9,7 @@ import { useApp } from '@/providers/AppProvider';
 import { WorkoutRow } from '@/types/training';
 import { Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { WorkoutCard } from '@/components/ui/WorkoutCard';
 
 export default function WorkoutsScreen() {
   const { workoutService } = useApp();
@@ -47,6 +48,32 @@ export default function WorkoutsScreen() {
         },
       },
     ]);
+  };
+
+  const moveWorkoutUp = async (index: number) => {
+    if (index === 0) return;
+
+    const newWorkouts = [...workouts];
+    const [item] = newWorkouts.splice(index, 1);
+    newWorkouts.splice(index - 1, 0, item);
+
+    setWorkouts(newWorkouts);
+
+    const workoutIds = newWorkouts.map((w) => w.id);
+    await workoutService.reorderWorkouts(workoutIds);
+  };
+
+  const moveWorkoutDown = async (index: number) => {
+    if (index === workouts.length - 1) return;
+
+    const newWorkouts = [...workouts];
+    const [item] = newWorkouts.splice(index, 1);
+    newWorkouts.splice(index + 1, 0, item);
+
+    setWorkouts(newWorkouts);
+
+    const workoutIds = newWorkouts.map((w) => w.id);
+    await workoutService.reorderWorkouts(workoutIds);
   };
 
   return (
@@ -105,39 +132,19 @@ export default function WorkoutsScreen() {
                 Nie masz jeszcze treningów
               </Text>
             ) : (
-              workouts.map((workout) => (
-                <View key={workout.id} style={styles.workoutItem}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.workoutItemText}>{workout.name}</Text>
-                  </View>
-
-                  <View style={styles.actionButtons}>
-                    <Pressable
-                      style={styles.iconButton}
-                      onPress={() =>
-                        router.push(`/edit-workout?id=${workout.id}`)
-                      }
-                    >
-                      <Ionicons
-                        name='pencil'
-                        size={20}
-                        color={colors.text.secondary}
-                      />
-                    </Pressable>
-                    <Pressable
-                      style={styles.iconButton}
-                      onPress={() =>
-                        handleDeleteWorkout(workout.id, workout.name)
-                      }
-                    >
-                      <Ionicons
-                        name='trash-outline'
-                        size={20}
-                        color={colors.danger}
-                      />
-                    </Pressable>
-                  </View>
-                </View>
+              workouts.map((workout, index) => (
+                <WorkoutCard
+                  key={workout.id}
+                  workoutName={workout.name}
+                  workoutDate={workout.date}
+                  exerciseCount={0}
+                  onPress={() => router.push(`/edit-workout?id=${workout.id}`)}
+                  onDelete={() => handleDeleteWorkout(workout.id, workout.name)}
+                  onMoveUp={() => moveWorkoutUp(index)}
+                  onMoveDown={() => moveWorkoutDown(index)}
+                  isFirst={index === 0}
+                  isLast={index === workouts.length - 1}
+                />
               ))
             )}
           </>
