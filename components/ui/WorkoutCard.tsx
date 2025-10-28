@@ -13,6 +13,8 @@ interface WorkoutCardProps {
   onMoveDown: () => void;
   isFirst: boolean;
   isLast: boolean;
+  onSetActive?: () => void;
+  isActive?: boolean;
 }
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -38,6 +40,8 @@ export const WorkoutCard = ({
   onMoveDown,
   isFirst,
   isLast,
+  isActive,
+  onSetActive,
 }: WorkoutCardProps) => {
   return (
     <Pressable onPress={onPress} style={styles.card}>
@@ -80,6 +84,22 @@ export const WorkoutCard = ({
               color={isLast ? colors.text.secondary : colors.accent}
             />
           </Pressable>
+          {onSetActive && (
+            <Pressable
+              onPress={onSetActive}
+              disabled={isActive}
+              style={[
+                styles.activeButton,
+                isActive && styles.activeButtonDisabled,
+              ]}
+            >
+              <Ionicons
+                name={isActive ? 'star' : 'star-outline'} // Wypełniona jeśli aktywny
+                size={20}
+                color={isActive ? colors.accent : colors.text.secondary}
+              />
+            </Pressable>
+          )}
 
           <Pressable onPress={onDelete} style={styles.deleteButton}>
             <Ionicons name='trash-outline' size={20} color={colors.danger} />
@@ -127,6 +147,13 @@ const styles = StyleSheet.create({
   },
   reorderButtonDisabled: {
     opacity: 0.3,
+  },
+  activeButton: {
+    padding: 8,
+    borderRadius: 6,
+  },
+  activeButtonDisabled: {
+    opacity: 0.5,
   },
 
   deleteButton: {
