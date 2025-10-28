@@ -203,6 +203,7 @@ export interface WorkoutRow {
   completed: number;
   template_id: string | null;
   display_order: number;
+  is_active: number;
   created_at: string;
 }
 
