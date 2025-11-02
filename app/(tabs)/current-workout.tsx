@@ -61,9 +61,7 @@ export default function CurrentWorkoutScreen() {
               <Button
                 title='🏋️ Rozpocznij trening'
                 variant='primary'
-                onPress={() => {
-                  /* TODO: navigate to active-workout */
-                }}
+                onPress={() => router.push('/active-workout')}
               />
             </View>
           </>
