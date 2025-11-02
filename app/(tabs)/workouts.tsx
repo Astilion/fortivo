@@ -76,6 +76,12 @@ export default function WorkoutsScreen() {
     await workoutService.reorderWorkouts(workoutIds);
   };
 
+  const setAsActive = async (workoutId: string) => {
+    await workoutService.setActiveWorkout(workoutId);
+    alert('Trening ustawiony jako aktywny!');
+    router.push('/current-workout'); // Navigate to current workout tab
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.optionsContainer}>
@@ -144,6 +150,8 @@ export default function WorkoutsScreen() {
                   onMoveDown={() => moveWorkoutDown(index)}
                   isFirst={index === 0}
                   isLast={index === workouts.length - 1}
+                  onSetActive={() => setAsActive(workout.id)}
+                  isActive={workout.is_active === 1}
                 />
               ))
             )}

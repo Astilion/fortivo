@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Exercise, WorkoutSet } from '@/types/training';
 
-interface WorkoutExerciseWithSets {
+export interface WorkoutExerciseWithSets {
   exercise: Exercise;
   sets: WorkoutSet[];
   isExpanded?: boolean;

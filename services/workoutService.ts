@@ -244,4 +244,24 @@ export class WorkoutService {
       );
     }
   }
+
+  async setActiveWorkout(id: string): Promise<void> {
+    await this.db.runAsync('UPDATE workouts SET is_active = 0');
+
+    await this.db.runAsync('UPDATE workouts SET is_active = ? WHERE id = ?', [
+      1,
+      id,
+    ]);
+  }
+
+  async getActiveWorkout(): Promise<WorkoutRow | null> {
+    const row = await this.db.getFirstAsync<WorkoutRow>(
+      'SELECT * FROM workouts WHERE is_active = 1 LIMIT 1',
+    );
+    return row || null;
+  }
+
+  async clearActiveWorkout(): Promise<void> {
+    await this.db.runAsync('UPDATE workouts SET is_active = ?');
+  }
 }

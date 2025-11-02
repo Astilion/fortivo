@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-const DB_NAME = 'fortivo.db';
+const DB_NAME = 'fortivo_v2.db';
 
 export const initDatabase = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
@@ -66,6 +66,7 @@ export const initDatabase = async () => {
       completed INTEGER DEFAULT 0,
       template_id TEXT,
       display_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 0, 
       created_at TEXT NOT NULL,
       FOREIGN KEY (template_id) REFERENCES workout_templates(id) ON DELETE SET NULL
     );
@@ -215,6 +216,7 @@ export const initDatabase = async () => {
     
     CREATE INDEX IF NOT EXISTS idx_workouts_date ON workouts(date);
     CREATE INDEX IF NOT EXISTS idx_workouts_display_order ON workouts(display_order);
+    CREATE INDEX IF NOT EXISTS idx_workouts_active ON workouts(is_active);
     CREATE INDEX IF NOT EXISTS idx_workouts_template ON workouts(template_id);
     
     CREATE INDEX IF NOT EXISTS idx_weekly_plan_days_plan ON weekly_plan_days(weekly_plan_id);
