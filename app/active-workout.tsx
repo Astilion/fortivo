@@ -77,6 +77,26 @@ export default function ActiveWorkoutScreen() {
     field: 'actualReps' | 'actualWeight',
     value: number,
   ) => {
+    setExercises((prevExercises) => {
+      const newExercises = prevExercises.map((ex) => {
+        if (ex.exercise.id === exerciseId) {
+          return {
+            ...ex,
+            sets: ex.sets.map((s) => {
+              if (s.id === setId) {
+                return {
+                  ...s,
+                  [field]: value,
+                };
+              }
+              return s;
+            }),
+          };
+        }
+        return ex;
+      });
+      return newExercises;
+    });
   };
 
   return (
