@@ -92,6 +92,16 @@ function RootLayoutNav() {
             contentStyle: { backgroundColor: colors.primary },
           }}
         />
+        <Stack.Screen
+          name='active-workout'
+          options={{
+            presentation: 'modal',
+            title: 'Aktywny Trening',
+            headerStyle: { backgroundColor: colors.primary },
+            headerTintColor: colors.text.primary,
+            contentStyle: { backgroundColor: colors.primary },
+          }}
+        />
       </Stack>
     </AppProvider>
   );
