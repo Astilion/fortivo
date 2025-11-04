@@ -99,11 +99,41 @@ export default function ActiveWorkoutScreen() {
     });
   };
 
+  // ====== PROGRESS CALCULATION ======
+  const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
+
+  const completedSets = exercises.reduce(
+    (sum, ex) => sum + ex.sets.filter((s) => s.completed).length,
+    0,
+  );
+
+  const progressPercent =
+    totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{workout?.name || 'Trening'}</Text>
+      </View>
+
+      {/* ====== PROGRESS BAR ====== */}
+      <View style={styles.progressContainer}>
+        {/* Progress bar track (background) */}
+        <View style={styles.progressBar}>
+          {/* Progress bar fill (dynamic width based on %) */}
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${progressPercent}%` }, // Dynamic width!
+            ]}
+          />
+        </View>
+
+        {/* Progress text: "5/15 (33%)" */}
+        <Text style={styles.progressText}>
+          {completedSets}/{totalSets} ({progressPercent}%)
+        </Text>
       </View>
 
       {/* Exercises List */}
@@ -118,8 +148,10 @@ export default function ActiveWorkoutScreen() {
             {/* Sets */}
             {item.sets.map((set, setIndex) => (
               <View key={set.id} style={styles.setCard}>
+                {/* Set header: number + checkbox */}
                 <View style={styles.setHeader}>
                   <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
+
                   <Pressable
                     onPress={() => toggleSetCompleted(item.exercise.id, set.id)}
                     style={styles.checkboxButton}
@@ -128,10 +160,10 @@ export default function ActiveWorkoutScreen() {
                       name={
                         set.completed ? 'checkmark-circle' : 'ellipse-outline'
                       }
+                      size={28}
                       color={
                         set.completed ? colors.accent : colors.text.secondary
                       }
-                      size={28}
                     />
                   </Pressable>
                 </View>
@@ -200,6 +232,35 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text.primary,
   },
+
+  // ====== PROGRESS BAR STYLES ======
+  progressContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: colors.secondary,
+    marginVertical: 4,
+    marginHorizontal: 20,
+    borderRadius: 12,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: colors.background,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.accent,
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+
   content: {
     flex: 1,
     padding: 20,
@@ -219,11 +280,19 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 8,
   },
+  setHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   setNumber: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.text.secondary,
-    marginBottom: 4,
+  },
+  checkboxButton: {
+    padding: 4,
   },
   inputsRow: {
     flexDirection: 'row',
@@ -244,14 +313,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text.primary,
     textAlign: 'center',
-  },
-  checkboxButton: {
-    padding: 4,
-  },
-  setHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
   },
 });
