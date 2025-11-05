@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-const DB_NAME = 'fortivo_v2.db';
+const DB_NAME = 'fortivo_v3.db';
 
 export const initDatabase = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
