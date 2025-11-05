@@ -11,6 +11,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutRow } from '@/types/training';
 import colors from '@/constants/Colors';
+import { Button } from '@/components/ui/Button';
 import { WorkoutExerciseWithSets } from '@/store/workoutStore';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -19,6 +20,7 @@ export default function ActiveWorkoutScreen() {
   const router = useRouter();
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
+  const [startTime] = useState<Date>(new Date());
 
   useFocusEffect(
     useCallback(() => {
@@ -97,6 +99,27 @@ export default function ActiveWorkoutScreen() {
       });
       return newExercises;
     });
+  };
+
+  const handleFinishWorkout = async () => {
+    if (!workout) return;
+
+    try {
+      const endTime = new Date();
+      const durationMinutes = Math.round(
+        (endTime.getTime() - startTime.getTime()) / 60000,
+      );
+      await workoutService.saveActualValues(workout.id, exercises);
+      await workoutService.saveWorkoutHistory(workout.id, durationMinutes);
+      await workoutService.clearActiveWorkout();
+
+      router.push('/(tabs)/workouts');
+
+      alert('Trening zakończony!');
+    } catch (error) {
+      console.error('Błąd zakończenia treningu', error);
+      alert('Nie udało się zapisać treningu');
+    }
   };
 
   // ====== PROGRESS CALCULATION ======
@@ -213,6 +236,10 @@ export default function ActiveWorkoutScreen() {
           </View>
         ))}
       </ScrollView>
+      {/* Footer with Finish button */}
+      <View style={styles.footer}>
+        <Button title='Zakończ trening' variant='primary' onPress={handleFinishWorkout}/>
+      </View>
     </View>
   );
 }
@@ -313,5 +340,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text.primary,
     textAlign: 'center',
+  },
+  footer: {
+    padding: 20,
+    paddingBottom: 40,
+    backgroundColor: colors.primary,
+    borderTopWidth: 2,
+    borderTopColor: colors.secondary,
   },
 });
