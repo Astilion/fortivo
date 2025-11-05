@@ -264,4 +264,50 @@ export class WorkoutService {
   async clearActiveWorkout(): Promise<void> {
     await this.db.runAsync('UPDATE workouts SET is_active = ?');
   }
+
+  async saveActualValues(
+    workoutId: string,
+    exercises: WorkoutExerciseWithSets[],
+  ): Promise<void> {
+    console.log('💾 Saving actual values...');
+    for (const ex of exercises) {
+      console.log('Exercise:', ex.exercise.name);
+      for (const set of ex.sets) {
+        console.log(
+          '  Set ID:',
+          set.id,
+          'Reps:',
+          set.actualReps,
+          'Weight:',
+          set.actualWeight,
+        );
+        await this.db.runAsync(
+          'UPDATE workout_sets SET actual_reps = ?, actual_weight = ?, completed = ? WHERE id = ?',
+          [
+            set.actualReps ?? null,
+            set.actualWeight ?? null,
+            set.completed ? 1 : 0,
+            set.id,
+          ],
+        );
+      }
+    }
+    console.log('✅ Saved!');
+  }
+
+  async saveWorkoutHistory(
+    workoutId: string,
+    durationMinutes: number,
+  ): Promise<void> {
+    const id = generateId('wh'); // workout_history
+    const completedAt = new Date().toISOString();
+    const userId = 'user_1'; // TODO: Replace with real user ID later
+
+    await this.db.runAsync(
+      `INSERT INTO workout_history (
+      id, workout_id, user_id, completed_at, actual_duration, performance_notes
+    ) VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, workoutId, userId, completedAt, durationMinutes, null],
+    );
+  }
 }
