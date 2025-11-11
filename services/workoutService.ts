@@ -9,6 +9,8 @@ import {
   ExerciseRow,
   WorkoutSet,
   WorkoutSetRow,
+  ExerciseProgressRow,
+  ExerciseProgress,
 } from '@/types/training';
 
 interface WorkoutExerciseWithSets {
@@ -309,5 +311,66 @@ export class WorkoutService {
     ) VALUES (?, ?, ?, ?, ?, ?)`,
       [id, workoutId, userId, completedAt, durationMinutes, null],
     );
+  }
+
+  async saveExerciseProgress(
+    workoutId: string,
+    exercises: WorkoutExerciseWithSets[],
+  ): Promise<void> {
+    const userId = 'user_1';
+    const date = new Date().toISOString();
+
+    for (const ex of exercises) {
+      const completedSets = ex.sets.filter((s) => s.completed);
+
+      if (completedSets.length === 0) continue;
+
+      const maxWeight = Math.max(
+        ...completedSets.map((s) => s.actualWeight || 0),
+      );
+
+      const totalVolume = completedSets.reduce((sum, set) => {
+        return sum + (set.actualReps || 0) * (set.actualWeight || 0);
+      }, 0);
+
+      const previousRecord = await this.db.getFirstAsync<ExerciseProgressRow>(
+        `SELECT * FROM exercise_progress 
+       WHERE exercise_id = ? AND user_id = ? 
+       ORDER BY max_weight DESC LIMIT 1`,
+        [ex.exercise.id, userId],
+      );
+
+      const isPersonalRecord =
+        !previousRecord || maxWeight > previousRecord.max_weight;
+
+      console.log('Exercise Progress:', {
+        exercise: ex.exercise.name,
+        completedSets: completedSets.length,
+        maxWeight: `${maxWeight}kg`,
+        totalVolume: `${totalVolume}kg`,
+        previousRecord: previousRecord?.max_weight || 'None',
+        isPersonalRecord: isPersonalRecord ? 'NEW PR!' : ' No PR',
+      });
+
+      const id = generateId('ep');
+
+      await this.db.runAsync(
+        `INSERT INTO exercise_progress (
+        id, exercise_id, user_id, date, max_weight, total_volume, 
+        estimated_one_rep_max, personal_record
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          ex.exercise.id,
+          userId,
+          date,
+          maxWeight,
+          totalVolume,
+          null,
+          isPersonalRecord ? 1 : 0,
+        ],
+      );
+    }
+    console.log('Exercise progress saved successfully!');
   }
 }

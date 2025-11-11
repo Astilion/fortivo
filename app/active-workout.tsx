@@ -111,6 +111,7 @@ export default function ActiveWorkoutScreen() {
       );
       await workoutService.saveActualValues(workout.id, exercises);
       await workoutService.saveWorkoutHistory(workout.id, durationMinutes);
+      await workoutService.saveExerciseProgress(workout.id, exercises);
       await workoutService.clearActiveWorkout();
 
       router.push('/(tabs)/workouts');
@@ -238,7 +239,11 @@ export default function ActiveWorkoutScreen() {
       </ScrollView>
       {/* Footer with Finish button */}
       <View style={styles.footer}>
-        <Button title='Zakończ trening' variant='primary' onPress={handleFinishWorkout}/>
+        <Button
+          title='Zakończ trening'
+          variant='primary'
+          onPress={handleFinishWorkout}
+        />
       </View>
     </View>
   );
