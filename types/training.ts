@@ -152,6 +152,16 @@ export interface PeriodizationBlock {
   description?: string;
 }
 
+export interface WorkoutHistoryWithDetails {
+  id: string;
+  workoutId: string;
+  workoutName: string;
+  completedAt: string;
+  actualDuration: number;
+  exerciseCount?: number;
+  totalVolume?: number;
+}
+
 // Row Types
 export interface ExerciseRow {
   id: string;
@@ -276,6 +286,14 @@ export interface WorkoutHistoryRow {
   completed_at: string;
   actual_duration: number;
   performance_notes: string | null;
+}
+
+export interface WorkoutHistoryQueryRow {
+  id: string;
+  workout_id: string;
+  workout_name: string;
+  completed_at: string;
+  actual_duration: number;
 }
 
 export interface UserSettingsRow {

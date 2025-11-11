@@ -40,6 +40,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name='workout-history'
+        options={{
+          title: 'Historia',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name='bar-chart' size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name='workouts'
         options={{
           title: 'Plany Treningowe',

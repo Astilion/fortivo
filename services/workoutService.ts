@@ -11,6 +11,8 @@ import {
   WorkoutSetRow,
   ExerciseProgressRow,
   ExerciseProgress,
+  WorkoutHistoryWithDetails,
+  WorkoutHistoryQueryRow,
 } from '@/types/training';
 
 interface WorkoutExerciseWithSets {
@@ -372,5 +374,36 @@ export class WorkoutService {
       );
     }
     console.log('Exercise progress saved successfully!');
+  }
+
+  async getWorkoutHistory(
+    userId: string = 'user_1',
+  ): Promise<WorkoutHistoryWithDetails[]> {
+    console.log('📊 Loading workout history...');
+
+    const rows = await this.db.getAllAsync<WorkoutHistoryQueryRow>(
+      `SELECT 
+      wh.id,
+      wh.workout_id,
+      wh.completed_at,
+      wh.actual_duration,
+      w.name as workout_name
+    FROM workout_history wh
+    JOIN workouts w ON wh.workout_id = w.id
+    WHERE wh.user_id = ?
+    ORDER BY wh.completed_at DESC`,
+      [userId],
+    );
+
+    console.log(`✅ Found ${rows.length} workout sessions`);
+    console.log('First row:', rows[0]);
+
+    return rows.map((row) => ({
+      id: row.id,
+      workoutId: row.workout_id,
+      workoutName: row.workout_name,
+      completedAt: row.completed_at,
+      actualDuration: row.actual_duration,
+    }));
   }
 }
