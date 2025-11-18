@@ -13,13 +13,10 @@ import {
   ExerciseProgress,
   WorkoutHistoryWithDetails,
   WorkoutHistoryQueryRow,
+  WorkoutExerciseWithSets,
+  WorkoutHistoryDetails,
+  WorkoutHistoryRow,
 } from '@/types/training';
-
-interface WorkoutExerciseWithSets {
-  exercise: Exercise;
-  sets: WorkoutSet[];
-  isExpanded?: boolean;
-}
 
 export class WorkoutService {
   private db: SQLite.SQLiteDatabase;
@@ -405,5 +402,50 @@ export class WorkoutService {
       completedAt: row.completed_at,
       actualDuration: row.actual_duration,
     }));
+  }
+
+  async getWorkoutHistoryDetails(
+    historyId: string,
+  ): Promise<WorkoutHistoryDetails> {
+    const historyRow = await this.db.getFirstAsync<WorkoutHistoryRow>(
+      `SELECT wh.*, w.name as workout_name
+     FROM workout_history wh
+     JOIN workouts w ON wh.workout_id = w.id
+     WHERE wh.id = ?`,
+      [historyId],
+    );
+
+    if (!historyRow) {
+      throw new Error('Workout history not found');
+    }
+
+    const exercises = await this.getWorkoutExercises(historyRow.workout_id);
+
+    const stats = {
+      totalVolume: exercises.reduce(
+        (sum, ex) =>
+          sum +
+          ex.sets.reduce(
+            (s, set) => s + (set.actualReps || 0) * (set.actualWeight || 0),
+            0,
+          ),
+        0,
+      ),
+      completedSets: exercises.reduce(
+        (sum, ex) => sum + ex.sets.filter((s) => s.completed).length,
+        0,
+      ),
+      totalSets: exercises.reduce((sum, ex) => sum + ex.sets.length, 0),
+    };
+
+    return {
+      id: historyRow.id,
+      workoutId: historyRow.workout_id,
+      workoutName: historyRow.workout_name!,
+      completedAt: new Date(historyRow.completed_at),
+      actualDuration: historyRow.actual_duration,
+      exercises,
+      stats,
+    };
   }
 }

@@ -38,10 +38,10 @@ export default function WorkoutHistoryScreen() {
   };
 
   const handleWorkoutPress = (historyId: string) => {
-    // router.push({
-    //   pathname: '/workout-details',
-    //   params: { historyId },
-    // });
+    router.push({
+      pathname: '/workout-details',
+      params: { historyId },
+    });
     console.log('Workout pressed:', historyId);
   };
 

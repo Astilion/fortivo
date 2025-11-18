@@ -7,17 +7,12 @@ import { useEffect } from 'react';
 import colors from '@/constants/Colors';
 import 'react-native-reanimated';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -25,7 +20,7 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -43,6 +38,15 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+// Shared modal options
+const modalOptions = {
+  presentation: 'modal' as const,
+  headerStyle: { backgroundColor: colors.primary },
+  headerTintColor: colors.text.primary,
+  contentStyle: { backgroundColor: colors.primary },
+  headerBackTitle: 'Wróć',
+};
+
 function RootLayoutNav() {
   return (
     <AppProvider>
@@ -51,55 +55,45 @@ function RootLayoutNav() {
         <Stack.Screen
           name='exercise-details'
           options={{
-            presentation: 'modal',
+            ...modalOptions,
             title: 'Szczegóły ćwiczenia',
-            headerStyle: {
-              backgroundColor: colors.primary,
-            },
-            headerTintColor: colors.text.primary,
-            headerTitleStyle: {
-              color: colors.text.primary,
-            },
           }}
         />
         <Stack.Screen
           name='create-workout'
           options={{
-            presentation: 'modal',
+            ...modalOptions,
             title: 'Nowy trening',
-            headerStyle: { backgroundColor: colors.primary },
-            headerTintColor: colors.text.primary,
-            contentStyle: { backgroundColor: colors.primary },
-          }}
-        />
-        <Stack.Screen
-          name='select-exercise'
-          options={{
-            presentation: 'modal',
-            title: 'Wybierz ćwiczenie',
-            headerStyle: { backgroundColor: colors.primary },
-            headerTintColor: colors.text.primary,
-            contentStyle: { backgroundColor: colors.primary },
           }}
         />
         <Stack.Screen
           name='edit-workout'
           options={{
-            presentation: 'modal',
+            ...modalOptions,
             title: 'Edytuj trening',
-            headerStyle: { backgroundColor: colors.primary },
-            headerTintColor: colors.text.primary,
-            contentStyle: { backgroundColor: colors.primary },
+          }}
+        />
+        <Stack.Screen
+          name='select-exercise'
+          options={{
+            ...modalOptions,
+            title: 'Wybierz ćwiczenie',
           }}
         />
         <Stack.Screen
           name='active-workout'
           options={{
-            presentation: 'modal',
-            title: 'Aktywny Trening',
-            headerStyle: { backgroundColor: colors.primary },
-            headerTintColor: colors.text.primary,
-            contentStyle: { backgroundColor: colors.primary },
+            ...modalOptions,
+            presentation: 'fullScreenModal', 
+            title: 'Aktywny trening',
+            gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name='workout-details'
+          options={{
+            ...modalOptions,
+            title: 'Szczegóły treningu',
           }}
         />
       </Stack>

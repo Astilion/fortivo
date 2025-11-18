@@ -161,6 +161,25 @@ export interface WorkoutHistoryWithDetails {
   exerciseCount?: number;
   totalVolume?: number;
 }
+export interface WorkoutExerciseWithSets {
+  exercise: Exercise;
+  sets: WorkoutSet[];
+  isExpanded?: boolean;
+}
+
+export interface WorkoutHistoryDetails {
+  id: string;
+  workoutId: string;
+  workoutName: string;
+  completedAt: Date;
+  actualDuration: number;
+  exercises: WorkoutExerciseWithSets[];
+  stats: {
+    totalVolume: number;
+    completedSets: number;
+    totalSets: number;
+  };
+}
 
 // Row Types
 export interface ExerciseRow {
@@ -286,6 +305,7 @@ export interface WorkoutHistoryRow {
   completed_at: string;
   actual_duration: number;
   performance_notes: string | null;
+  workout_name?: string;
 }
 
 export interface WorkoutHistoryQueryRow {
