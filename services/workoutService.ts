@@ -16,6 +16,8 @@ import {
   WorkoutExerciseWithSets,
   WorkoutHistoryDetails,
   WorkoutHistoryRow,
+  ExerciseProgressWithWorkout,
+  ExerciseProgressQueryRow,
 } from '@/types/training';
 
 export class WorkoutService {
@@ -447,5 +449,40 @@ export class WorkoutService {
       exercises,
       stats,
     };
+  }
+
+  async getExerciseProgress(
+    exerciseId: string,
+    userId: string = 'user_1',
+  ): Promise<ExerciseProgressWithWorkout[]> {
+    console.log(`Loading progress for exercise: ${exerciseId}`);
+
+    const rows = await this.db.getAllAsync<ExerciseProgressQueryRow>(
+      `SELECT 
+    ep.*, 
+    w.name as workout_name 
+  FROM exercise_progress ep 
+  LEFT JOIN workout_history wh 
+    ON DATE(ep.date) = DATE(wh.completed_at) 
+    AND wh.user_id = ep.user_id 
+  LEFT JOIN workouts w 
+    ON wh.workout_id = w.id
+  WHERE ep.exercise_id = ? AND ep.user_id = ? 
+  ORDER BY ep.date DESC`,
+      [exerciseId, userId],
+    );
+
+    console.log(`Found ${rows.length} sessions`);
+    console.log('Sample:', rows[0]);
+
+    return rows.map((row) => ({
+      id: row.id,
+      exerciseId: row.exercise_id,
+      date: new Date(row.date),
+      maxWeight: row.max_weight,
+      totalVolume: row.total_volume,
+      personalRecord: row.personal_record === 1,
+      workoutName: row.workout_name || undefined,
+    }));
   }
 }

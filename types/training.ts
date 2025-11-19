@@ -181,6 +181,16 @@ export interface WorkoutHistoryDetails {
   };
 }
 
+export interface ExerciseProgressWithWorkout {
+  id: string;
+  exerciseId: string;
+  date: Date;
+  maxWeight: number;
+  totalVolume: number;
+  personalRecord: boolean;
+  workoutName?: string;
+}
+
 // Row Types
 export interface ExerciseRow {
   id: string;
@@ -333,4 +343,16 @@ export interface PeriodizationBlockRow {
   weeks: number;
   description: string | null;
   block_order: number;
+}
+
+export interface ExerciseProgressQueryRow {
+  id: string;
+  exercise_id: string;
+  user_id: string;
+  date: string;
+  max_weight: number;
+  total_volume: number;
+  estimated_one_rep_max: number | null;
+  personal_record: number;
+  workout_name: string | null;
 }
