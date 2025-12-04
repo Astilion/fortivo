@@ -4,6 +4,7 @@ import {
   Text,
   ScrollView,
   ActivityIndicator,
+  Pressable,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
@@ -124,9 +125,18 @@ export default function WorkoutDetailsScreen() {
         {details.exercises.map((item, exIndex) => (
           <View key={item.exercise.id} style={styles.exerciseBlock}>
             {/* Exercise name */}
-            <Text style={styles.exerciseName}>
-              {exIndex + 1}. {item.exercise.name}
-            </Text>
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: '/exercise-progress',
+                  params: { exerciseId: item.exercise.id },
+                })
+              }
+            >
+              <Text style={styles.exerciseName}>
+                {exIndex + 1}. {item.exercise.name}
+              </Text>
+            </Pressable>
 
             {/* Sets */}
             {item.sets.map((set, setIndex) => (

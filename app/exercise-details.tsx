@@ -4,8 +4,9 @@ import { useExerciseStore } from '@/store/exerciseStore';
 import colors from '@/constants/Colors';
 import { capitalize } from '@/utils/capitalize';
 import { Button } from '@/components/ui/Button';
-
+import { useRouter } from 'expo-router';
 export default function ExerciseDetailsScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const exercises = useExerciseStore((state) => state.exercises);
   const exercise = exercises.find((ex) => ex.id === id);
@@ -65,6 +66,18 @@ export default function ExerciseDetailsScreen() {
           title=' Link YouTube'
           variant='danger'
           onPress={openYouTubeSearch}
+        />
+      </View>
+      <View style={{ marginTop: 12 }}>
+        <Button
+          title='📊 Zobacz historię'
+          variant='primary'
+          onPress={() =>
+            router.push({
+              pathname: '/exercise-progress',
+              params: { exerciseId: exercise.id, exerciseName: exercise.name },
+            })
+          }
         />
       </View>
     </ScrollView>

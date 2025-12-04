@@ -84,7 +84,7 @@ function RootLayoutNav() {
           name='active-workout'
           options={{
             ...modalOptions,
-            presentation: 'fullScreenModal', 
+            presentation: 'fullScreenModal',
             title: 'Aktywny trening',
             gestureEnabled: false,
           }}
@@ -94,6 +94,13 @@ function RootLayoutNav() {
           options={{
             ...modalOptions,
             title: 'Szczegóły treningu',
+          }}
+        />
+        <Stack.Screen
+          name='exercise-progress'
+          options={{
+            ...modalOptions,
+            title: 'Historia ćwiczenia',
           }}
         />
       </Stack>
