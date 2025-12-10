@@ -74,6 +74,7 @@ export default function ExerciseProgressScreen() {
       </View>
     );
   }
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -118,13 +119,15 @@ export default function ExerciseProgressScreen() {
           keyExtractor={(item, index) => `${item.id}-${index}`}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <View style={[styles.card, item.personalRecord && styles.cardPR]}>
               <View style={styles.cardHeader}>
                 <Text style={styles.date}>{formatDate(item.date)}</Text>
                 {item.personalRecord && (
                   <View style={styles.prBadge}>
-                    <Ionicons name='trophy' size={16} color={colors.accent} />
-                    <Text style={styles.prText}>PR</Text>
+                    <Ionicons name='trophy' size={18} color={colors.primary} />{' '}
+                    {/* Większa ikona */}
+                    <Text style={styles.prText}>REKORD!</Text>{' '}
+                    {/* Zmiana tekstu */}
                   </View>
                 )}
               </View>
@@ -226,15 +229,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.background,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: colors.accent,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8,
   },
   prText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: colors.accent,
+    color: colors.primary,
   },
   cardContent: {
     flexDirection: 'row',
@@ -275,5 +278,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text.secondary,
     textAlign: 'center',
+  },
+  cardPR: {
+    backgroundColor: colors.background, // Ciemniejsze tło
+    borderWidth: 2,
+    borderColor: colors.accent, // Żółta ramka
   },
 });
