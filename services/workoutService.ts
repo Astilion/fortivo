@@ -485,4 +485,76 @@ export class WorkoutService {
       workoutName: row.workout_name || undefined,
     }));
   }
+
+  async getWorkoutsThisWeek(userId: string = 'user_1'): Promise<number> {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday start
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+    const result = await this.db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) as count 
+     FROM workout_history 
+     WHERE user_id = ? 
+     AND completed_at >= ? 
+     AND completed_at < ?`,
+      [userId, startOfWeek.toISOString(), endOfWeek.toISOString()],
+    );
+
+    return result?.count || 0;
+  }
+
+  async getWorkoutsThisMonth(userId: string = 'user_1'): Promise<number> {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const result = await this.db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) as count 
+     FROM workout_history 
+     WHERE user_id = ? 
+     AND completed_at >= ? 
+     AND completed_at < ?`,
+      [userId, startOfMonth.toISOString(), endOfMonth.toISOString()],
+    );
+
+    return result?.count || 0;
+  }
+
+  async getCurrentStreak(userId: string = 'user_1'): Promise<number> {
+    const rows = await this.db.getAllAsync<{ completed_at: string }>(
+      `SELECT DATE(completed_at) as completed_at 
+     FROM workout_history 
+     WHERE user_id = ? 
+     GROUP BY DATE(completed_at)
+     ORDER BY completed_at DESC`,
+      [userId],
+    );
+
+    if (rows.length === 0) return 0;
+
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < rows.length; i++) {
+      const workoutDate = new Date(rows[i].completed_at);
+      workoutDate.setHours(0, 0, 0, 0);
+
+      const expectedDate = new Date(today);
+      expectedDate.setDate(today.getDate() - streak);
+
+      // Check if workout is on expected date
+      if (workoutDate.getTime() === expectedDate.getTime()) {
+        streak++;
+      } else if (workoutDate.getTime() < expectedDate.getTime()) {
+        break;
+      }
+    }
+
+    return streak;
+  }
 }
