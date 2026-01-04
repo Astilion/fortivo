@@ -79,6 +79,9 @@ export default function WorkoutHistoryScreen() {
           data={history}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           renderItem={({ item }) => (
             <WorkoutHistoryCard
               workoutName={item.workoutName}

@@ -118,6 +118,9 @@ export default function ExerciseProgressScreen() {
           data={progress}
           keyExtractor={(item, index) => `${item.id}-${index}`}
           contentContainerStyle={styles.listContent}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           renderItem={({ item }) => (
             <View style={[styles.card, item.personalRecord && styles.cardPR]}>
               <View style={styles.cardHeader}>

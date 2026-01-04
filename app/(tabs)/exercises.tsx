@@ -71,6 +71,9 @@ export default function ExercisesScreen() {
           data={filteredExercises}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ gap: 12 }}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           renderItem={({ item }) => (
             <Card
               onPress={() => router.push(`/exercise-details?id=${item.id}`)}

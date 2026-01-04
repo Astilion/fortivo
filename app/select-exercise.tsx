@@ -82,6 +82,9 @@ export default function SelectExerciseScreen() {
           data={filteredExercises}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ gap: 12 }}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           renderItem={({ item }) => (
             <Card onPress={() => handleSelectExercise(item.id)}>
               <Text style={styles.exerciseName}>{item.name}</Text>
