@@ -1,16 +1,12 @@
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-  Pressable,
-} from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRecentWorkouts } from '@/hooks/useRecentWorkouts';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { LoadingView } from '@/components/ui/LoadingView';
+import { ErrorView } from '@/components/ui/ErrorView';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -19,16 +15,23 @@ export default function HomeScreen() {
     stats,
     loading: statsLoading,
     error: statsError,
+    refresh: refreshStats,
   } = useDashboardStats();
 
   const {
     workouts,
-    loading: workoutLoading,
+    loading: workoutsLoading,
     error: workoutsError,
+    refresh: refreshWorkouts,
   } = useRecentWorkouts(5);
 
-  const loading = statsLoading || workoutLoading;
+  const loading = statsLoading || workoutsLoading;
   const error = statsError || workoutsError;
+
+  const handleRetry = useCallback(() => {
+    refreshStats();
+    refreshWorkouts();
+  }, [refreshStats, refreshWorkouts]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -38,7 +41,6 @@ export default function HomeScreen() {
       year: 'numeric',
     });
   };
-
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Dzień dobry';
@@ -47,23 +49,11 @@ export default function HomeScreen() {
   };
 
   if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size='large' color={colors.accent} />
-      </View>
-    );
+    return <LoadingView />;
   }
-
   if (error) {
-    return (
-      <View style={styles.centerContainer}>
-        <Ionicons name='alert-circle-outline' size={48} color={colors.danger} />
-        <Text style={styles.errorText}>Wystąpił błąd</Text>
-        <Text style={styles.errorDetails}>{error}</Text>
-      </View>
-    );
+    return <ErrorView error={error} onRetry={handleRetry} />;
   }
-
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
@@ -71,7 +61,6 @@ export default function HomeScreen() {
         <Text style={styles.greeting}>{getGreeting()}! 👋</Text>
         <Text style={styles.subtitle}>Twój postęp treningowy</Text>
       </View>
-
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
@@ -192,16 +181,9 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: colors.primary,
   },
   header: {
@@ -320,19 +302,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.primary,
     marginLeft: 12,
-  },
-  errorText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
-    textAlign: 'center',
-    marginTop: 12,
-  },
-  errorDetails: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    textAlign: 'center',
-    marginTop: 4,
-    marginHorizontal: 20,
   },
 });
