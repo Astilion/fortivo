@@ -6,65 +6,29 @@ import {
   ActivityIndicator,
   Pressable,
 } from 'react-native';
-import { useState, useCallback } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useApp } from '@/providers/AppProvider';
-import { WorkoutHistoryWithDetails } from '@/types/training';
+import { useRouter } from 'expo-router';
 import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-
-interface DashboardStats {
-  workoutsThisWeek: number;
-  workoutsThisMonth: number;
-  currentStreak: number;
-}
+import { useRecentWorkouts } from '@/hooks/useRecentWorkouts';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 export default function HomeScreen() {
-  const { workoutService } = useApp();
   const router = useRouter();
 
-  const [stats, setStats] = useState<DashboardStats>({
-    workoutsThisWeek: 0,
-    workoutsThisMonth: 0,
-    currentStreak: 0,
-  });
-  const [recentWorkouts, setRecentWorkouts] = useState<
-    WorkoutHistoryWithDetails[]
-  >([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    stats,
+    loading: statsLoading,
+    error: statsError,
+  } = useDashboardStats();
 
-  useFocusEffect(
-    useCallback(() => {
-      loadDashboard();
-    }, []),
-  );
+  const {
+    workouts,
+    loading: workoutLoading,
+    error: workoutsError,
+  } = useRecentWorkouts(5);
 
-  const loadDashboard = async () => {
-    try {
-      setLoading(true);
-
-      // Load stats
-      const [week, month, streak] = await Promise.all([
-        workoutService.getWorkoutsThisWeek(),
-        workoutService.getWorkoutsThisMonth(),
-        workoutService.getCurrentStreak(),
-      ]);
-
-      setStats({
-        workoutsThisWeek: week,
-        workoutsThisMonth: month,
-        currentStreak: streak,
-      });
-
-      // Load recent workouts (limit 5)
-      const history = await workoutService.getWorkoutHistory();
-      setRecentWorkouts(history.slice(0, 5));
-    } catch (error) {
-      console.error('Error loading dashboard:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = statsLoading || workoutLoading;
+  const error = statsError || workoutsError;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -86,6 +50,16 @@ export default function HomeScreen() {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size='large' color={colors.accent} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <Ionicons name='alert-circle-outline' size={48} color={colors.danger} />
+        <Text style={styles.errorText}>Wystąpił błąd</Text>
+        <Text style={styles.errorDetails}>{error}</Text>
       </View>
     );
   }
@@ -128,7 +102,7 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {recentWorkouts.length === 0 ? (
+        {workouts.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons
               name='fitness-outline'
@@ -141,7 +115,7 @@ export default function HomeScreen() {
             </Text>
           </View>
         ) : (
-          recentWorkouts.map((workout) => (
+          workouts.map((workout) => (
             <Pressable
               key={workout.id}
               style={styles.workoutCard}
@@ -346,5 +320,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.primary,
     marginLeft: 12,
+  },
+  errorText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.primary,
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  errorDetails: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    marginTop: 4,
+    marginHorizontal: 20,
   },
 });
