@@ -1,10 +1,4 @@
-import {
-  StyleSheet,
-  View,
-  Text,
-  FlatList,
-  ActivityIndicator,
-} from 'react-native';
+import { StyleSheet, View, Text, FlatList } from 'react-native';
 import { useState, useCallback } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useApp } from '@/providers/AppProvider';
@@ -12,31 +6,35 @@ import { WorkoutHistoryWithDetails } from '@/types/training';
 import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
+import { ErrorView } from '@/components/ui/ErrorView';
+import { LoadingView } from '@/components/ui/LoadingView';
 
 export default function WorkoutHistoryScreen() {
   const { workoutService } = useApp();
   const router = useRouter();
   const [history, setHistory] = useState<WorkoutHistoryWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadHistory();
-    }, []),
-  );
+  const [error, setError] = useState<string | null>(null);
 
   const loadHistory = async () => {
     try {
+      setError(null);
       setLoading(true);
       const data = await workoutService.getWorkoutHistory();
       setHistory(data);
-    } catch (error) {
-      console.error('Error loading workout history:', error);
+    } catch (err) {
+      console.error('Error loading workout history:', err);
+      setError('Nie udało się załadować historii treningów');
     } finally {
       setLoading(false);
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      loadHistory();
+    }, [loadHistory]),
+  );
   const handleWorkoutPress = (historyId: string) => {
     router.push({
       pathname: '/workout-details',
@@ -44,13 +42,13 @@ export default function WorkoutHistoryScreen() {
     });
     console.log('Workout pressed:', historyId);
   };
+  const handleRetry = loadHistory;
 
   if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size='large' color={colors.accent} />
-      </View>
-    );
+    return <LoadingView />;
+  }
+  if (error) {
+    return <ErrorView error={error} onRetry={handleRetry} />;
   }
 
   return (
@@ -99,12 +97,6 @@ export default function WorkoutHistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: colors.primary,
   },
   header: {
