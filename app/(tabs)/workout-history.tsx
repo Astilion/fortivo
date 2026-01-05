@@ -1,40 +1,18 @@
 import { StyleSheet, View, Text, FlatList } from 'react-native';
-import { useState, useCallback } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useApp } from '@/providers/AppProvider';
-import { WorkoutHistoryWithDetails } from '@/types/training';
+import { useRouter } from 'expo-router';
+
 import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { LoadingView } from '@/components/ui/LoadingView';
+import { useWorkoutHistory } from '@/hooks/useWorkoutHistory';
 
 export default function WorkoutHistoryScreen() {
-  const { workoutService } = useApp();
   const router = useRouter();
-  const [history, setHistory] = useState<WorkoutHistoryWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const loadHistory = async () => {
-    try {
-      setError(null);
-      setLoading(true);
-      const data = await workoutService.getWorkoutHistory();
-      setHistory(data);
-    } catch (err) {
-      console.error('Error loading workout history:', err);
-      setError('Nie udało się załadować historii treningów');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { history, loading, error, refresh } = useWorkoutHistory();
 
-  useFocusEffect(
-    useCallback(() => {
-      loadHistory();
-    }, [loadHistory]),
-  );
   const handleWorkoutPress = (historyId: string) => {
     router.push({
       pathname: '/workout-details',
@@ -42,7 +20,7 @@ export default function WorkoutHistoryScreen() {
     });
     console.log('Workout pressed:', historyId);
   };
-  const handleRetry = loadHistory;
+  const handleRetry = refresh;
 
   if (loading) {
     return <LoadingView />;
