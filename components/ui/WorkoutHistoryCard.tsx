@@ -7,16 +7,16 @@ interface WorkoutHistoryCardProps {
   completedAt: string;
   duration: number;
   onPress: () => void;
+  showTime?: boolean;
 }
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString: string, showTime: boolean = true) => {
   const date = new Date(dateString);
   return date.toLocaleDateString('pl-PL', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    ...(showTime && { hour: '2-digit', minute: '2-digit' }),
   });
 };
 
@@ -25,6 +25,7 @@ export const WorkoutHistoryCard = ({
   completedAt,
   duration,
   onPress,
+  showTime = true,
 }: WorkoutHistoryCardProps) => {
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -44,7 +45,9 @@ export const WorkoutHistoryCard = ({
             size={16}
             color={colors.text.secondary}
           />
-          <Text style={styles.infoText}>{formatDate(completedAt)}</Text>
+          <Text style={styles.infoText}>
+            {formatDate(completedAt, showTime)}
+          </Text>
         </View>
 
         <View style={styles.infoItem}>

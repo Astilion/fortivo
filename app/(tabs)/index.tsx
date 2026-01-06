@@ -7,6 +7,7 @@ import { useRecentWorkouts } from '@/hooks/useRecentWorkouts';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
+import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -33,14 +34,6 @@ export default function HomeScreen() {
     refreshWorkouts();
   }, [refreshStats, refreshWorkouts]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pl-PL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Dzień dobry';
@@ -105,45 +98,19 @@ export default function HomeScreen() {
           </View>
         ) : (
           workouts.map((workout) => (
-            <Pressable
+            <WorkoutHistoryCard
               key={workout.id}
-              style={styles.workoutCard}
+              workoutName={workout.workoutName}
+              completedAt={workout.completedAt}
+              duration={workout.actualDuration}
+              showTime={false}
               onPress={() =>
                 router.push({
                   pathname: '/workout-details',
                   params: { historyId: workout.id },
                 })
               }
-            >
-              <View style={styles.workoutCardContent}>
-                <View style={styles.workoutInfo}>
-                  <Text style={styles.workoutName}>{workout.workoutName}</Text>
-                  <View style={styles.workoutMeta}>
-                    <Ionicons
-                      name='calendar-outline'
-                      size={14}
-                      color={colors.text.secondary}
-                    />
-                    <Text style={styles.workoutMetaText}>
-                      {formatDate(workout.completedAt)}
-                    </Text>
-                    <Ionicons
-                      name='time-outline'
-                      size={14}
-                      color={colors.text.secondary}
-                    />
-                    <Text style={styles.workoutMetaText}>
-                      {workout.actualDuration} min
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons
-                  name='chevron-forward'
-                  size={20}
-                  color={colors.text.secondary}
-                />
-              </View>
-            </Pressable>
+            />
           ))
         )}
       </View>
@@ -257,36 +224,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text.secondary,
     marginTop: 4,
-  },
-  workoutCard: {
-    backgroundColor: colors.secondary,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  workoutCardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  workoutInfo: {
-    flex: 1,
-  },
-  workoutName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
-    marginBottom: 6,
-  },
-  workoutMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  workoutMetaText: {
-    fontSize: 13,
-    color: colors.text.secondary,
-    marginRight: 8,
   },
   actionButton: {
     flexDirection: 'row',
