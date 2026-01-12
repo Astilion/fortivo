@@ -2,7 +2,6 @@ import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import colors from '@/constants/Colors';
-import { Ionicons } from '@expo/vector-icons';
 import { useRecentWorkouts } from '@/hooks/useRecentWorkouts';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { LoadingView } from '@/components/ui/LoadingView';
@@ -11,6 +10,7 @@ import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
 import { StatCard } from '@/components/ui/StatCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { getGreeting } from '@/utils/date';
+import { ActionButton } from '@/components/ui/ActionButton';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -107,31 +107,17 @@ export default function HomeScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Szybkie akcje</Text>
 
-        <Pressable
-          style={styles.actionButton}
+        <ActionButton
+          icon='play-circle'
+          title='Rozpocznij trening'
           onPress={() => router.push('/current-workout')}
-        >
-          <Ionicons name='play-circle' size={24} color={colors.accent} />
-          <Text style={styles.actionButtonText}>Rozpocznij trening</Text>
-          <Ionicons
-            name='chevron-forward'
-            size={20}
-            color={colors.text.secondary}
-          />
-        </Pressable>
+        />
 
-        <Pressable
-          style={styles.actionButton}
+        <ActionButton
+          icon='list'
+          title='Moje plany'
           onPress={() => router.push('/(tabs)/workouts')}
-        >
-          <Ionicons name='list' size={24} color={colors.accent} />
-          <Text style={styles.actionButtonText}>Moje plany</Text>
-          <Ionicons
-            name='chevron-forward'
-            size={20}
-            color={colors.text.secondary}
-          />
-        </Pressable>
+        />
       </View>
     </ScrollView>
   );
@@ -179,20 +165,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.accent,
     fontWeight: '600',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.secondary,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  actionButtonText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
-    marginLeft: 12,
   },
 });
