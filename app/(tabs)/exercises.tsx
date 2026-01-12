@@ -1,11 +1,4 @@
-import {
-  StyleSheet,
-  View,
-  Text,
-  ActivityIndicator,
-  FlatList,
-  ScrollView,
-} from 'react-native';
+import { StyleSheet, View, Text, FlatList, ScrollView } from 'react-native';
 import { useState } from 'react';
 import colors from '@/constants/Colors';
 import { useExerciseStore } from '@/store/exerciseStore';
@@ -14,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { useRouter } from 'expo-router';
 import { WORKOUT_CATEGORIES } from '@/constants/Training';
 import { Button } from '@/components/ui/Button';
+import { LoadingView } from '@/components/ui/LoadingView';
 
 export default function ExercisesScreen() {
   const router = useRouter();
@@ -34,6 +28,10 @@ export default function ExercisesScreen() {
     return matchesSearch && matchesCategory;
   });
 
+  if (loading) {
+    return <LoadingView />;
+  }
+
   return (
     <View style={styles.container}>
       <Input
@@ -42,7 +40,6 @@ export default function ExercisesScreen() {
         placeholder='Wyszukaj ćwiczenie...'
         icon='search'
       />
-
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -63,27 +60,21 @@ export default function ExercisesScreen() {
           />
         ))}
       </ScrollView>
-
-      {loading ? (
-        <ActivityIndicator size='large' color={colors.accent} />
-      ) : (
-        <FlatList
-          data={filteredExercises}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ gap: 12 }}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={10}
-          windowSize={5}
-          renderItem={({ item }) => (
-            <Card
-              onPress={() => router.push(`/exercise-details?id=${item.id}`)}
-            >
-              <Text style={styles.exerciseName}>{item.name}</Text>
-              <Text style={styles.exerciseCategory}>{item.category}</Text>
-            </Card>
-          )}
-        />
-      )}
+      <FlatList
+        data={filteredExercises}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ gap: 12 }}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        renderItem={({ item }) => (
+          <Card onPress={() => router.push(`/exercise-details?id=${item.id}`)}>
+            <Text style={styles.exerciseName}>{item.name}</Text>
+            <Text style={styles.exerciseCategory}>{item.category}</Text>
+          </Card>
+        )}
+      />
+      )
     </View>
   );
 }
