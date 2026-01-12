@@ -9,6 +9,7 @@ import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
 import { StatCard } from '@/components/ui/StatCard';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -84,17 +85,11 @@ export default function HomeScreen() {
         </View>
 
         {workouts.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons
-              name='fitness-outline'
-              size={48}
-              color={colors.text.secondary}
-            />
-            <Text style={styles.emptyText}>Brak treningów</Text>
-            <Text style={styles.emptySubtext}>
-              Rozpocznij swój pierwszy trening!
-            </Text>
-          </View>
+          <EmptyState
+            icon='fitness-outline'
+            title='Brak treningów'
+            subtitle='Rozpocznij swój pierwszy trening!'
+          />
         ) : (
           workouts.map((workout) => (
             <WorkoutHistoryCard
@@ -190,21 +185,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.accent,
     fontWeight: '600',
-  },
-  emptyState: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
-    marginTop: 12,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    marginTop: 4,
   },
   actionButton: {
     flexDirection: 'row',

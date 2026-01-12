@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutRow } from '@/types/training';
 import { Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { WorkoutCard } from '@/components/ui/WorkoutCard';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function WorkoutsScreen() {
   const { workoutService } = useApp();
@@ -134,9 +134,11 @@ export default function WorkoutsScreen() {
             </Text>
 
             {workouts.length === 0 ? (
-              <Text style={styles.sectionTitle}>
-                Nie masz jeszcze treningów
-              </Text>
+              <EmptyState
+                icon='barbell-outline'
+                title='Nie masz jeszcze treningów'
+                subtitle='Stwórz swój pierwszy plan treningowy'
+              />
             ) : (
               workouts.map((workout, index) => (
                 <WorkoutCard

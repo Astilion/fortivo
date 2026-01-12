@@ -6,6 +6,7 @@ import { WorkoutRow } from '@/types/training';
 import { WorkoutExerciseWithSets } from '@/store/workoutStore';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 export default function CurrentWorkoutScreen() {
   const { workoutService } = useApp();
   const [activeWorkout, setActiveWorkout] = useState<WorkoutRow | null>(null);
@@ -67,25 +68,15 @@ export default function CurrentWorkoutScreen() {
           </>
         ) : (
           // CASE 2: Brak aktywnego treningu
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>Nie masz aktywnego treningu</Text>
-
-            <View style={styles.emptyActions}>
-              <Button
-                title='+ Stwórz nowy trening'
-                variant='primary'
-                onPress={() => router.push('/create-workout')}
-              />
-
-              <Button
-                title='📋 Wybierz z biblioteki'
-                variant='secondary'
-                onPress={() => {
-                  /* TODO: navigate to workouts + select mode */
-                }}
-              />
-            </View>
-          </View>
+          <EmptyState
+            icon='barbell-outline'
+            title='Nie masz aktywnego treningu'
+            subtitle='Stwórz nowy lub wybierz z biblioteki'
+            action={{
+              label: '+ Stwórz nowy trening',
+              onPress: () => router.push('/create-workout'),
+            }}
+          />
         )}
       </View>
     </View>
@@ -154,23 +145,5 @@ const styles = StyleSheet.create({
   // Actions
   actions: {
     paddingBottom: 20,
-  },
-
-  // Empty state
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: colors.text.secondary,
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  emptyActions: {
-    width: '100%',
-    gap: 12,
   },
 });
