@@ -11,6 +11,7 @@ import { useApp } from '@/providers/AppProvider';
 import { ExerciseProgressWithWorkout } from '@/types/training';
 import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { formatDate } from '@/utils/date';
 
 export default function ExerciseProgressScreen() {
   const { exerciseId, exerciseName } = useLocalSearchParams<{
@@ -48,13 +49,7 @@ export default function ExerciseProgressScreen() {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pl-PL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
+
 
   const bestPR =
     progress.length > 0 ? Math.max(...progress.map((p) => p.maxWeight)) : 0;

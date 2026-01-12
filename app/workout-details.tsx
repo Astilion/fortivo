@@ -12,6 +12,7 @@ import { useApp } from '@/providers/AppProvider';
 import { WorkoutHistoryDetails } from '@/types/training';
 import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { formatDate } from '@/utils/date';
 
 export default function WorkoutDetailsScreen() {
   const { historyId } = useLocalSearchParams<{ historyId: string }>();
@@ -45,15 +46,6 @@ export default function WorkoutDetailsScreen() {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pl-PL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   if (loading) {
     return (

@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '@/constants/Colors';
+import { formatDate } from '@/utils/date';
 
 interface WorkoutHistoryCardProps {
   workoutName: string;
@@ -9,16 +10,6 @@ interface WorkoutHistoryCardProps {
   onPress: () => void;
   showTime?: boolean;
 }
-
-const formatDate = (dateString: string, showTime: boolean = true) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('pl-PL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    ...(showTime && { hour: '2-digit', minute: '2-digit' }),
-  });
-};
 
 export const WorkoutHistoryCard = ({
   workoutName,

@@ -10,6 +10,7 @@ import { ErrorView } from '@/components/ui/ErrorView';
 import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
 import { StatCard } from '@/components/ui/StatCard';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { getGreeting } from '@/utils/date';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -35,13 +36,6 @@ export default function HomeScreen() {
     refreshStats();
     refreshWorkouts();
   }, [refreshStats, refreshWorkouts]);
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Dzień dobry';
-    if (hour < 18) return 'Dzień dobry';
-    return 'Dobry wieczór';
-  };
 
   if (loading) {
     return <LoadingView />;

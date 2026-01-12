@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-
+import { formatDate } from '@/utils/date';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '@/constants/Colors';
 
@@ -16,14 +16,7 @@ interface WorkoutCardProps {
   onSetActive?: () => void;
   isActive?: boolean;
 }
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('pl-PL', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-};
+
 const getExerciseLabel = (count: number) => {
   if (count === 1) return 'ćwiczenie';
   if (count >= 2 && count <= 4) return 'ćwiczenia';
