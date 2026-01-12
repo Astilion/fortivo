@@ -8,6 +8,7 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
+import { StatCard } from '@/components/ui/StatCard';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -56,23 +57,21 @@ export default function HomeScreen() {
       </View>
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Ionicons name='calendar-outline' size={32} color={colors.accent} />
-          <Text style={styles.statValue}>{stats.workoutsThisWeek}</Text>
-          <Text style={styles.statLabel}>Ten tydzień</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Ionicons name='bar-chart-outline' size={32} color={colors.accent} />
-          <Text style={styles.statValue}>{stats.workoutsThisMonth}</Text>
-          <Text style={styles.statLabel}>Ten miesiąc</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Ionicons name='flame-outline' size={32} color={colors.accent} />
-          <Text style={styles.statValue}>{stats.currentStreak}</Text>
-          <Text style={styles.statLabel}>Dni z rzędu</Text>
-        </View>
+        <StatCard
+          icon='calendar-outline'
+          value={stats.workoutsThisWeek}
+          label='Ten tydzień'
+        />
+        <StatCard
+          icon='bar-chart-outline'
+          value={stats.workoutsThisMonth}
+          label='Ten miesiąc'
+        />
+        <StatCard
+          icon='flame-outline'
+          value={stats.currentStreak}
+          label='Dni z rzędu'
+        />
       </View>
 
       {/* Recent Workouts */}
@@ -171,24 +170,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 16,
     gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: colors.secondary,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    gap: 8,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text.primary,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: colors.text.secondary,
-    textAlign: 'center',
   },
   section: {
     padding: 20,
