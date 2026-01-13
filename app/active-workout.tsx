@@ -5,6 +5,7 @@ import {
   ScrollView,
   TextInput,
   Pressable,
+  Alert,
 } from 'react-native';
 import { useState, useCallback } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -119,7 +120,7 @@ export default function ActiveWorkoutScreen() {
       alert('Trening zakończony!');
     } catch (error) {
       console.error('Błąd zakończenia treningu', error);
-      alert('Nie udało się zapisać treningu');
+      Alert.alert('Błąd', 'Nie udało się zapisać treningu');
     }
   };
 

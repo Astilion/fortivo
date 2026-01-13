@@ -1,4 +1,4 @@
-import { View, Text, ScrollView } from 'react-native';
+import { Alert, Text, ScrollView } from 'react-native';
 import { useEffect } from 'react';
 import { useApp } from '@/providers/AppProvider';
 import { useWorkoutStore } from '@/store/workoutStore';
@@ -43,7 +43,7 @@ export default function EditWorkoutScreen() {
       }
     } catch (error) {
       console.error('Błąd ładowania:', error);
-      alert('Nie udało się załadować treningu');
+      Alert.alert('Błąd','Nie udało się załadować treningu');
     }
   };
 
@@ -53,10 +53,10 @@ export default function EditWorkoutScreen() {
       await workoutService.saveWorkoutExercises(id, draft.exercises);
       clearDraft();
       router.back();
-      alert('Zmiany zapisane!');
+      Alert.alert('Sukces','Zmiany zapisane!');
     } catch (error) {
       console.error('Błąd zapisu', error);
-      alert('Nie udało się zapisać treningu');
+      Alert.alert('Błąd','Nie udało się zapisać treningu');
     }
   };
 

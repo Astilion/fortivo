@@ -42,7 +42,7 @@ export default function WorkoutsScreen() {
             loadWorkouts();
           } catch (error) {
             console.error('Błąd usuwania:', error);
-            alert('Nie udało się usunąć');
+            Alert.alert('Błąd', 'Nie udało się usunąć');
           }
         },
       },
@@ -77,7 +77,7 @@ export default function WorkoutsScreen() {
 
   const setAsActive = async (workoutId: string) => {
     await workoutService.setActiveWorkout(workoutId);
-    alert('Trening ustawiony jako aktywny!');
+    Alert.alert('Sukces','Trening ustawiony jako aktywny!');
     router.push('/current-workout'); // Navigate to current workout tab
   };
 

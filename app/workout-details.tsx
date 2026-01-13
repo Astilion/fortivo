@@ -5,6 +5,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Pressable,
+  Alert
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
@@ -23,7 +24,7 @@ export default function WorkoutDetailsScreen() {
 
   useEffect(() => {
     if (!historyId) {
-      alert('Brak ID treningu');
+      Alert.alert('Błąd','Brak ID treningu');
       router.back();
       return;
     }
@@ -39,7 +40,7 @@ export default function WorkoutDetailsScreen() {
       setDetails(data);
     } catch (error) {
       console.error('Error loading workout details:', error);
-      alert('Nie udało się załadować szczegółów treningu');
+      Alert.alert('Błąd','Nie udało się załadować szczegółów treningu');
       router.back();
     } finally {
       setLoading(false);

@@ -1,4 +1,5 @@
 import {
+  Alert,
   View,
   Text,
   FlatList,
@@ -26,7 +27,7 @@ export default function ExerciseProgressScreen() {
 
   useEffect(() => {
     if (!exerciseId) {
-      alert('Brak ID ćwiczenia');
+      Alert.alert('Błąd','Brak ID ćwiczenia');
       router.back();
       return;
     }
@@ -42,7 +43,7 @@ export default function ExerciseProgressScreen() {
       setProgress(data);
     } catch (error) {
       console.error('Error loading exercise progress:', error);
-      alert('Nie udało się załadować historii ćwiczenia');
+      Alert.alert('Błąd','Nie udało się załadować historii ćwiczenia');
       router.back();
     } finally {
       setLoading(false);

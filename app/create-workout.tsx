@@ -1,4 +1,4 @@
-import { View, Text, ScrollView } from 'react-native';
+import { Text, ScrollView, Alert } from 'react-native';
 import { useApp } from '@/providers/AppProvider';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { Button } from '@/components/ui/Button';
@@ -46,10 +46,10 @@ export default function CreateWorkoutScreen() {
 
       clearDraft();
       router.back();
-      alert('Trening zapisany!');
+      Alert.alert('Sukces','Trening zapisany!');
     } catch (error) {
       console.error('Błąd zapisu', error);
-      alert('Nie udało się zapisać treningu');
+      Alert.alert('Błąd','Nie udało się zapisać treningu');
     }
   };
 
