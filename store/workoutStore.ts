@@ -1,5 +1,5 @@
-import { create } from 'zustand';
 import { Exercise, WorkoutSet } from '@/types/training';
+import { create } from 'zustand';
 
 export interface WorkoutExerciseWithSets {
   exercise: Exercise;

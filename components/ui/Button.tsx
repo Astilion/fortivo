@@ -1,5 +1,5 @@
 import colors from '@/constants/Colors';
-import { Pressable, Text, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
 interface ButtonProps {
   onPress: () => void;

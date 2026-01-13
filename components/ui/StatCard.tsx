@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
 import colors from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, View } from 'react-native';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 interface StatCardProps {

@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
 import { useApp } from '@/providers/AppProvider';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 interface DashboardStats {
   workoutsThisWeek: number;

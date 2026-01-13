@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
-import * as SQLite from 'expo-sqlite';
-import initDatabase from '@/database/database';
-import { ExerciseService, Exercise } from '@/services/exerciseService';
-import { useExerciseStore } from '@/store/exerciseStore';
-import { WorkoutService } from '@/services/workoutService';
 import exercisesData from '@/assets/data/exercises.json';
+import initDatabase from '@/database/database';
+import { Exercise, ExerciseService } from '@/services/exerciseService';
+import { WorkoutService } from '@/services/workoutService';
+import { useExerciseStore } from '@/store/exerciseStore';
+import * as SQLite from 'expo-sqlite';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 
 interface AppContextType {
   db: SQLite.SQLiteDatabase;

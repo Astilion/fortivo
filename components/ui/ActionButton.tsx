@@ -1,6 +1,6 @@
-import { Text, StyleSheet, Pressable } from 'react-native';
 import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text } from 'react-native';
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
 interface ActionButtonProps {

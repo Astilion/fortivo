@@ -1,13 +1,13 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import colors from '@/constants/Colors';
 import { AppProvider } from '@/providers/AppProvider';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import colors from '@/constants/Colors';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 
 export { ErrorBoundary } from 'expo-router';
 export const unstable_settings = {

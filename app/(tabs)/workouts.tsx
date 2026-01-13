@@ -1,15 +1,13 @@
-import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
-import { useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
-import colors from '@/constants/Colors';
-import { useRouter } from 'expo-router';
-import { WORKOUT_CATEGORIES } from '@/constants/Training';
 import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { WorkoutCard } from '@/components/ui/WorkoutCard';
+import colors from '@/constants/Colors';
+import { WORKOUT_CATEGORIES } from '@/constants/Training';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutRow } from '@/types/training';
-import { Alert } from 'react-native';
-import { WorkoutCard } from '@/components/ui/WorkoutCard';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function WorkoutsScreen() {
   const { workoutService } = useApp();

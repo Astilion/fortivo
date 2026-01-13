@@ -1,24 +1,22 @@
-import * as SQLite from 'expo-sqlite';
 import { generateId } from '@/database/database';
 import {
-  Workout,
-  WorkoutRow,
-  WorkoutExercise,
-  WorkoutExerciseRow,
   Exercise,
-  ExerciseRow,
-  WorkoutSet,
-  WorkoutSetRow,
+  ExerciseProgressQueryRow,
   ExerciseProgressRow,
-  ExerciseProgress,
-  WorkoutHistoryWithDetails,
-  WorkoutHistoryQueryRow,
+  ExerciseProgressWithWorkout,
+  ExerciseRow,
+  Workout,
+  WorkoutExerciseRow,
   WorkoutExerciseWithSets,
   WorkoutHistoryDetails,
+  WorkoutHistoryQueryRow,
   WorkoutHistoryRow,
-  ExerciseProgressWithWorkout,
-  ExerciseProgressQueryRow,
+  WorkoutHistoryWithDetails,
+  WorkoutRow,
+  WorkoutSet,
+  WorkoutSetRow
 } from '@/types/training';
+import * as SQLite from 'expo-sqlite';
 
 export class WorkoutService {
   private db: SQLite.SQLiteDatabase;

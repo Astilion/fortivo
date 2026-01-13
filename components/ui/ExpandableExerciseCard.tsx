@@ -1,8 +1,7 @@
-import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import colors from '@/constants/Colors';
-import { Button } from './Button';
 import { WorkoutSet } from '@/types/training';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface ExpandableExerciseCardProps {
   exerciseName: string;

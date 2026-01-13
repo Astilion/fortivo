@@ -300,3 +300,4 @@ export class ExerciseService {
 }
 
 export { Exercise } from '../types/training';
+

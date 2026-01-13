@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { Button } from './Button';
-import { Ionicons } from '@expo/vector-icons';
 import colors from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, View } from 'react-native';
+import { Button } from './Button';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 

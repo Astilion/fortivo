@@ -1,12 +1,12 @@
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
-import colors from '@/constants/Colors';
-import { useApp } from '@/providers/AppProvider';
-import { useState, useCallback } from 'react';
-import { WorkoutRow } from '@/types/training';
-import { WorkoutExerciseWithSets } from '@/store/workoutStore';
-import { useFocusEffect, useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import colors from '@/constants/Colors';
+import { useApp } from '@/providers/AppProvider';
+import { WorkoutExerciseWithSets } from '@/store/workoutStore';
+import { WorkoutRow } from '@/types/training';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 export default function CurrentWorkoutScreen() {
   const { workoutService } = useApp();
   const [activeWorkout, setActiveWorkout] = useState<WorkoutRow | null>(null);

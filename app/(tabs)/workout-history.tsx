@@ -1,11 +1,11 @@
-import { StyleSheet, View, Text, FlatList } from 'react-native';
-import { useRouter } from 'expo-router';
-import colors from '@/constants/Colors';
-import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { LoadingView } from '@/components/ui/LoadingView';
+import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
+import colors from '@/constants/Colors';
 import { useWorkoutHistory } from '@/hooks/useWorkoutHistory';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { useRouter } from 'expo-router';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 export default function WorkoutHistoryScreen() {
   const router = useRouter();

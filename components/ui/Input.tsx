@@ -1,6 +1,6 @@
-import { View, TextInput, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import colors from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, TextInput, View } from 'react-native';
 
 interface InputProps {
   value: string;

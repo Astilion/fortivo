@@ -1,11 +1,11 @@
-import { Text, ScrollView, Alert } from 'react-native';
-import { useApp } from '@/providers/AppProvider';
-import { useWorkoutStore } from '@/store/workoutStore';
 import { Button } from '@/components/ui/Button';
+import { ExpandableExerciseCard } from '@/components/ui/ExpandableExerciseCard';
 import { Input } from '@/components/ui/Input';
 import { commonStyles } from '@/constants/Styles';
+import { useApp } from '@/providers/AppProvider';
+import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter } from 'expo-router';
-import { ExpandableExerciseCard } from '@/components/ui/ExpandableExerciseCard';
+import { Alert, ScrollView, Text } from 'react-native';
 
 export default function CreateWorkoutScreen() {
   const router = useRouter();

@@ -1,19 +1,19 @@
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-  Pressable,
-  Alert,
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
+import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutHistoryDetails } from '@/types/training';
-import colors from '@/constants/Colors';
-import { Ionicons } from '@expo/vector-icons';
 import { formatDate } from '@/utils/date';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 export default function WorkoutDetailsScreen() {
   const { historyId } = useLocalSearchParams<{ historyId: string }>();

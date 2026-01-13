@@ -1,21 +1,21 @@
-import {
-  ActivityIndicator,
-  View,
-  Text,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-} from 'react-native';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
+import colors from '@/constants/Colors';
+import { commonStyles } from '@/constants/Styles';
+import { WORKOUT_CATEGORIES } from '@/constants/Training';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter } from 'expo-router';
-import { commonStyles } from '@/constants/Styles';
 import { useState } from 'react';
-import { WORKOUT_CATEGORIES } from '@/constants/Training';
-import colors from '@/constants/Colors';
+import {
+  ActivityIndicator,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 export default function SelectExerciseScreen() {
   const router = useRouter();

@@ -1,10 +1,9 @@
-import { View, Text, ScrollView, StyleSheet, Linking } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { useExerciseStore } from '@/store/exerciseStore';
-import colors from '@/constants/Colors';
-import { capitalize } from '@/utils/capitalize';
 import { Button } from '@/components/ui/Button';
-import { useRouter } from 'expo-router';
+import colors from '@/constants/Colors';
+import { useExerciseStore } from '@/store/exerciseStore';
+import { capitalize } from '@/utils/capitalize';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 export default function ExerciseDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();

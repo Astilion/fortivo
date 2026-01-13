@@ -1,16 +1,16 @@
-import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
-import { useCallback } from 'react';
-import { useRouter } from 'expo-router';
-import colors from '@/constants/Colors';
-import { useRecentWorkouts } from '@/hooks/useRecentWorkouts';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { LoadingView } from '@/components/ui/LoadingView';
-import { ErrorView } from '@/components/ui/ErrorView';
-import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
-import { StatCard } from '@/components/ui/StatCard';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { getGreeting } from '@/utils/date';
 import { ActionButton } from '@/components/ui/ActionButton';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorView } from '@/components/ui/ErrorView';
+import { LoadingView } from '@/components/ui/LoadingView';
+import { StatCard } from '@/components/ui/StatCard';
+import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
+import colors from '@/constants/Colors';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useRecentWorkouts } from '@/hooks/useRecentWorkouts';
+import { getGreeting } from '@/utils/date';
+import { useRouter } from 'expo-router';
+import { useCallback } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function HomeScreen() {
   const router = useRouter();

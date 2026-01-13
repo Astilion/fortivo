@@ -1,5 +1,5 @@
 import colors from '@/constants/Colors';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 interface CardProps {
   children: React.ReactNode;

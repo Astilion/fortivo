@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
-import { WorkoutHistoryWithDetails } from '@/types/training';
 import { useApp } from '@/providers/AppProvider';
+import { WorkoutHistoryWithDetails } from '@/types/training';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 export const useRecentWorkouts = (limit: number = 5) => {
   const { workoutService } = useApp();

@@ -1,13 +1,13 @@
-import { StyleSheet, View, Text, FlatList, ScrollView } from 'react-native';
-import { useState } from 'react';
-import colors from '@/constants/Colors';
-import { useExerciseStore } from '@/store/exerciseStore';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { useRouter } from 'expo-router';
-import { WORKOUT_CATEGORIES } from '@/constants/Training';
-import { Button } from '@/components/ui/Button';
 import { LoadingView } from '@/components/ui/LoadingView';
+import colors from '@/constants/Colors';
+import { WORKOUT_CATEGORIES } from '@/constants/Training';
+import { useExerciseStore } from '@/store/exerciseStore';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function ExercisesScreen() {
   const router = useRouter();

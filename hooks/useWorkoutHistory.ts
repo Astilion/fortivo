@@ -1,7 +1,7 @@
 import { useApp } from '@/providers/AppProvider';
+import { WorkoutHistoryWithDetails } from '@/types/training';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { WorkoutHistoryWithDetails } from '@/types/training';
 
 export const useWorkoutHistory = () => {
   const { workoutService } = useApp();

@@ -1,5 +1,5 @@
-import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import colors from '@/constants/Colors';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 interface LoadingViewProps {
   message?: string;
 }
