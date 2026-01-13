@@ -1,5 +1,5 @@
 import { Alert, Text, ScrollView } from 'react-native';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useApp } from '@/providers/AppProvider';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { Button } from '@/components/ui/Button';
@@ -29,12 +29,11 @@ export default function EditWorkoutScreen() {
 
   useEffect(() => {
     loadWorkout();
-  }, [id]);
+  }, [id, workoutService]);
 
-  const loadWorkout = async () => {
+  const loadWorkout = useCallback(async () => {
     try {
       clearDraft();
-
       const workout = await workoutService.getWorkoutById(id);
       if (workout) {
         setWorkoutName(workout.name);
@@ -42,10 +41,10 @@ export default function EditWorkoutScreen() {
         setExercises(exercises);
       }
     } catch (error) {
-      console.error('Błąd ładowania:', error);
-      Alert.alert('Błąd','Nie udało się załadować treningu');
+      console.error('Error loading workout:', error);
+      Alert.alert('Błąd', 'Nie udało się załadować treningu');
     }
-  };
+  }, [id, workoutService]);
 
   const handleSaveWorkout = async () => {
     try {
@@ -53,10 +52,10 @@ export default function EditWorkoutScreen() {
       await workoutService.saveWorkoutExercises(id, draft.exercises);
       clearDraft();
       router.back();
-      Alert.alert('Sukces','Zmiany zapisane!');
+      Alert.alert('Sukces', 'Zmiany zapisane!');
     } catch (error) {
       console.error('Błąd zapisu', error);
-      Alert.alert('Błąd','Nie udało się zapisać treningu');
+      Alert.alert('Błąd', 'Nie udało się zapisać treningu');
     }
   };
 

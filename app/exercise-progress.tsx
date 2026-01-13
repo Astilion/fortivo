@@ -27,30 +27,28 @@ export default function ExerciseProgressScreen() {
 
   useEffect(() => {
     if (!exerciseId) {
-      Alert.alert('Błąd','Brak ID ćwiczenia');
+      Alert.alert('Błąd', 'Brak ID ćwiczenia');
       router.back();
       return;
     }
+
+    const loadProgress = async () => {
+      if (!exerciseId) return;
+
+      try {
+        setLoading(true);
+        const data = await workoutService.getExerciseProgress(exerciseId!);
+        setProgress(data);
+      } catch (error) {
+        console.error('Error loading exercise progress:', error);
+        Alert.alert('Błąd', 'Nie udało się załadować historii ćwiczenia');
+        router.back();
+      } finally {
+        setLoading(false);
+      }
+    };
     loadProgress();
-  }, [exerciseId]);
-
-  const loadProgress = async () => {
-    if (!exerciseId) return;
-
-    try {
-      setLoading(true);
-      const data = await workoutService.getExerciseProgress(exerciseId!);
-      setProgress(data);
-    } catch (error) {
-      console.error('Error loading exercise progress:', error);
-      Alert.alert('Błąd','Nie udało się załadować historii ćwiczenia');
-      router.back();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
+  }, [exerciseId, workoutService, router]);
 
   const bestPR =
     progress.length > 0 ? Math.max(...progress.map((p) => p.maxWeight)) : 0;
