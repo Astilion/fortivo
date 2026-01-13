@@ -272,18 +272,8 @@ export class WorkoutService {
     workoutId: string,
     exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
-    console.log('💾 Saving actual values...');
     for (const ex of exercises) {
-      console.log('Exercise:', ex.exercise.name);
       for (const set of ex.sets) {
-        console.log(
-          '  Set ID:',
-          set.id,
-          'Reps:',
-          set.actualReps,
-          'Weight:',
-          set.actualWeight,
-        );
         await this.db.runAsync(
           'UPDATE workout_sets SET actual_reps = ?, actual_weight = ?, completed = ? WHERE id = ?',
           [
@@ -295,7 +285,6 @@ export class WorkoutService {
         );
       }
     }
-    console.log('✅ Saved!');
   }
 
   async saveWorkoutHistory(
@@ -343,16 +332,6 @@ export class WorkoutService {
 
       const isPersonalRecord =
         !previousRecord || maxWeight > previousRecord.max_weight;
-
-      console.log('Exercise Progress:', {
-        exercise: ex.exercise.name,
-        completedSets: completedSets.length,
-        maxWeight: `${maxWeight}kg`,
-        totalVolume: `${totalVolume}kg`,
-        previousRecord: previousRecord?.max_weight || 'None',
-        isPersonalRecord: isPersonalRecord ? 'NEW PR!' : ' No PR',
-      });
-
       const id = generateId('ep');
 
       await this.db.runAsync(
@@ -372,14 +351,11 @@ export class WorkoutService {
         ],
       );
     }
-    console.log('Exercise progress saved successfully!');
   }
 
   async getWorkoutHistory(
     userId: string = 'user_1',
   ): Promise<WorkoutHistoryWithDetails[]> {
-    console.log('📊 Loading workout history...');
-
     const rows = await this.db.getAllAsync<WorkoutHistoryQueryRow>(
       `SELECT 
       wh.id,
@@ -393,9 +369,6 @@ export class WorkoutService {
     ORDER BY wh.completed_at DESC`,
       [userId],
     );
-
-    console.log(`✅ Found ${rows.length} workout sessions`);
-    console.log('First row:', rows[0]);
 
     return rows.map((row) => ({
       id: row.id,
@@ -455,8 +428,6 @@ export class WorkoutService {
     exerciseId: string,
     userId: string = 'user_1',
   ): Promise<ExerciseProgressWithWorkout[]> {
-    console.log(`Loading progress for exercise: ${exerciseId}`);
-
     const rows = await this.db.getAllAsync<ExerciseProgressQueryRow>(
       `SELECT 
     ep.*, 
@@ -471,9 +442,6 @@ export class WorkoutService {
   ORDER BY ep.date DESC`,
       [exerciseId, userId],
     );
-
-    console.log(`Found ${rows.length} sessions`);
-    console.log('Sample:', rows[0]);
 
     return rows.map((row) => ({
       id: row.id,

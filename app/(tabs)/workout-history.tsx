@@ -17,7 +17,6 @@ export default function WorkoutHistoryScreen() {
       pathname: '/workout-details',
       params: { historyId },
     });
-    console.log('Workout pressed:', historyId);
   };
   const handleRetry = refresh;
 

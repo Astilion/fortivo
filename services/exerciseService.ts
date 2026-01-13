@@ -16,7 +16,6 @@ export class ExerciseService {
     );
 
     if (existingCount && existingCount.count > 0) {
-      console.log('Exercises already seeded');
       return;
     }
 
@@ -47,8 +46,6 @@ export class ExerciseService {
     } finally {
       await stmt.finalizeAsync();
     }
-
-    console.log(`Seeded ${exercises.length} exercises`);
   }
 
   // Get all exercises

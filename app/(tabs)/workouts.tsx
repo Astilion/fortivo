@@ -27,7 +27,6 @@ export default function WorkoutsScreen() {
 
   const loadWorkouts = async () => {
     const allWorkouts = await workoutService.getAllWorkouts();
-    console.log('📋 Treningi z bazy:', allWorkouts);
     setWorkouts(allWorkouts);
   };
 
