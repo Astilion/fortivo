@@ -33,8 +33,7 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 const modalOptions: NativeStackNavigationOptions = {
-  presentation: 'card',
-  animation: 'slide_from_right',
+  presentation: 'transparentModal',
   animationTypeForReplace: 'push',
   headerShown: false,
   contentStyle: {
@@ -51,7 +50,6 @@ function RootLayoutNav() {
           contentStyle: {
             backgroundColor: colors.primary,
           },
-          animation: 'slide_from_right',
         }}
       >
         <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
