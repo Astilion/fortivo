@@ -82,6 +82,7 @@ export default function EditWorkoutScreen() {
               exerciseName={item.exercise.name}
               exerciseCategory={item.exercise.category}
               exerciseId={item.exercise.id}
+              measurementType={item.exercise.measurementType}
               sets={item.sets}
               isExpanded={item.isExpanded || false}
               onToggleExpand={() => toggleExpanded(item.exercise.id)}

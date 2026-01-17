@@ -7,6 +7,7 @@ interface ExpandableExerciseCardProps {
   exerciseName: string;
   exerciseCategory: string;
   exerciseId: string;
+  measurementType?: 'reps' | 'time' | 'distance';
   sets: WorkoutSet[];
   isExpanded: boolean;
   onToggleExpand: () => void;
@@ -25,6 +26,7 @@ export const ExpandableExerciseCard = ({
   exerciseName,
   exerciseCategory,
   exerciseId,
+  measurementType,
   sets,
   isExpanded,
   onToggleExpand,
@@ -37,6 +39,49 @@ export const ExpandableExerciseCard = ({
   isFirst = false,
   isLast = false,
 }: ExpandableExerciseCardProps) => {
+  const getValueField = () => {
+    switch (measurementType) {
+      case 'time':
+        return 'duration';
+      case 'distance':
+        return 'distance';
+      default:
+        return 'reps';
+    }
+  };
+  const getActualValueField = () => {
+    switch (measurementType) {
+      case 'time':
+        return 'actualDuration';
+      case 'distance':
+        return 'actualDistance';
+      default:
+        return 'actualReps';
+    }
+  };
+
+  const getLabel = () => {
+    switch (measurementType) {
+      case 'time':
+        return 'Czas (s)';
+      case 'distance':
+        return 'Dystans (m)';
+      default:
+        return 'Powtórzenia';
+    }
+  };
+
+  const getPlaceholder = () => {
+    switch (measurementType) {
+      case 'time':
+        return '30';
+      case 'distance':
+        return '50';
+      default:
+        return '8';
+    }
+  };
+
   return (
     <View style={styles.card}>
       {/* Header */}
@@ -109,7 +154,7 @@ export const ExpandableExerciseCard = ({
               Obciążenie
             </Text>
             <Text style={[styles.tableHeaderText, styles.repsColumnHeader]}>
-              Powtórzenia
+              {getLabel()}
             </Text>
             <View style={styles.actionColumnHeader} />
           </View>
@@ -139,16 +184,34 @@ export const ExpandableExerciseCard = ({
               </View>
 
               {/* Reps Input */}
+              {/* Value Input (Reps/Time/Distance) */}
               <View style={styles.repsColumn}>
                 <TextInput
                   style={styles.input}
-                  value={set.reps?.toString() || '8'}
+                  value={
+                    measurementType === 'time'
+                      ? set.duration?.toString() || ''
+                      : measurementType === 'distance'
+                        ? set.distance?.toString() || ''
+                        : set.reps?.toString() || ''
+                  }
                   onChangeText={(text) => {
-                    const reps = parseInt(text) || 0;
-                    onUpdateSet(set.id, { reps });
+                    const value =
+                      measurementType === 'distance'
+                        ? parseFloat(text) || 0
+                        : parseInt(text) || 0;
+
+                    const updates: Partial<WorkoutSet> =
+                      measurementType === 'time'
+                        ? { duration: value }
+                        : measurementType === 'distance'
+                          ? { distance: value }
+                          : { reps: value };
+
+                    onUpdateSet(set.id, updates);
                   }}
                   keyboardType='numeric'
-                  placeholder='8'
+                  placeholder={getPlaceholder()}
                   placeholderTextColor={colors.text.secondary}
                 />
               </View>

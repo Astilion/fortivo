@@ -2,6 +2,7 @@
   {
     "id": "ex_pushup_001",
     "name": "Pompki Klasyczne",
+    "measurementType": "reps",
     "category": "kalistenika",
     "muscleGroups": ["Klatka Piersiowa", "Triceps", "Barki", "Brzuch"],
     "equipment": ["masa ciała"],
@@ -12,6 +13,7 @@
   {
     "id": "ex_squat_001",
     "name": "Przysiad Klasyczny",
+    "measurementType": "reps",
     "category": "kalistenika",
     "muscleGroups": ["Nogi", "Pośladki", "Brzuch"],
     "equipment": ["masa ciała"],
@@ -22,6 +24,7 @@
   {
     "id": "ex_pullup_001",
     "name": "Podciąganie na drążku",
+    "measurementType": "reps",
     "category": "siła",
     "muscleGroups": ["Plecy", "Biceps", "Przedramię", "Brzuch"],
     "instructions": "Zawiśnij na drążku nachwytem. Podciągnij ciało do góry, aż broda znajdzie się ponad drążkiem, a następnie opuść się w kontrolowany sposób.",
@@ -33,6 +36,7 @@
   {
     "id": "ex_deadlift_001",
     "name": "Martwy Ciąg Klasyczny",
+    "measurementType": "reps",
     "category": "siła",
     "muscleGroups": ["Nogi", "Pośladki", "Plecy", "Przedramię", "Brzuch"],
     "instructions": "Stań z nogami na szerokości bioder. Chwyć sztangę tuż poza kolanami. Utrzymaj plecy prosto, odepnij się od ziemi przez pięty i wyprostuj się.",
@@ -44,6 +48,7 @@
   {
     "id": "ex_benchpress_001",
     "name": "Wyciskanie sztangi na ławce płaskiej",
+    "measurementType": "reps",
     "category": "siła",
     "muscleGroups": ["Klatka Piersiowa", "Triceps", "Barki"],
     "instructions": "Połóż się na ławce, chwyć sztangę szerzej niż barki. Opuść sztangę do klatki piersiowej, unieś ją do góry, aż ramiona będą wyprostowane.",
@@ -55,6 +60,7 @@
   {
     "id": "ex_ohpress_001",
     "name": "Wyciskanie sztangi nad głowę (OHP)",
+    "measurementType": "reps",
     "category": "siła",
     "muscleGroups": ["Barki", "Triceps", "Klatka Piersiowa"],
     "instructions": "Stań ze sztangą przy klatce piersiowej. Wyciskaj nad głowę, aż ramiona się zablokują. Opuszczaj pod kontrolą.",
@@ -66,6 +72,7 @@
   {
     "id": "ex_bicepscurl_001",
     "name": "Uginanie ramion z hantlami stojąc",
+    "measurementType": "reps",
     "category": "hipertrofia",
     "muscleGroups": ["Biceps"],
     "instructions": "Trzymaj hantle po bokach, dłońmi do przodu. Unoś ciężarki w górę, trzymając łokcie blisko ciała, i powoli opuszczaj.",
@@ -77,6 +84,7 @@
   {
     "id": "ex_tricepsext_001",
     "name": "Wyprosty ramion na wyciągu",
+    "measurementType": "reps",
     "category": "hipertrofia",
     "muscleGroups": ["Triceps"],
     "instructions": "Stań twarzą do wyciągu. Chwyć uchwyt. Pchaj uchwyt w dół, aż ramiona będą wyprostowane, a następnie powoli wróć do pozycji wyjściowej.",
@@ -88,6 +96,7 @@
   {
     "id": "ex_latpulldown_001",
     "name": "Ściąganie drążka wyciągu górnego",
+    "measurementType": "reps",
     "category": "hipertrofia",
     "muscleGroups": ["Plecy", "Biceps", "Przedramię"],
     "instructions": "Usiądź na maszynie, chwyć drążek szeroko. Pociągnij drążek w dół do klatki piersiowej, a następnie powoli wróć do góry.",
@@ -100,6 +109,7 @@
     "id": "ex_plank_001",
     "name": "Deska (Plank)",
     "category": "core",
+    "measurementType": "time",
     "muscleGroups": ["Brzuch", "Barki"],
     "instructions": "Utrzymaj pozycję pompki na przedramionach, utrzymuj ciało w linii prostej, napnij mięśnie korpusu.",
     "equipment": ["masa ciała"],

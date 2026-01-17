@@ -7,6 +7,9 @@ export interface Exercise {
   instructions?: string;
   equipment?: string[];
   difficulty?: 'Początkujący' | 'Średniozaawansowany' | 'Zaawansowany';
+  measurementType?: 'reps' | 'time' | 'distance';
+  duration?: number; // in seconds, for time-based exercises
+  distance?: number; // in meters, for distance-based exercises
   isCustom: boolean;
   userId?: string; // Only for custom exercises
   createdAt: Date;
@@ -27,6 +30,10 @@ export interface WorkoutSet {
   actualReps?: number; // Track what was actually done vs planned
   actualWeight?: number;
   actualRpe?: number;
+  duration?: number; // in seconds
+  actualDuration?: number;
+  distance?: number; // in meters
+  actualDistance?: number;
 }
 
 export interface WorkoutExercise {
@@ -200,6 +207,7 @@ export interface ExerciseRow {
   instructions: string | null;
   equipment: string | null; // JSON string
   difficulty: string | null;
+  measurement_type: string;
   is_custom: number;
   user_id: string | null;
   photo: string | null;
@@ -221,6 +229,10 @@ export interface WorkoutSetRow {
   actual_reps: number | null;
   actual_weight: number | null;
   actual_rpe: number | null;
+  duration: number | null;
+  actual_duration: number | null;
+  distance: number | null;
+  actual_distance: number | null;
 }
 
 export interface WorkoutExerciseRow {

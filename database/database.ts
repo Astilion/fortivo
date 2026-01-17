@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-const DB_NAME = 'fortivo_v3.db';
+const DB_NAME = 'fortivo_v4.db';
 
 export const initDatabase = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
@@ -14,16 +14,17 @@ export const initDatabase = async () => {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       category TEXT NOT NULL,
-      muscle_groups TEXT NOT NULL, -- JSON array
+      muscle_groups TEXT NOT NULL,
       instructions TEXT,
-      equipment TEXT, -- JSON array
+      equipment TEXT,
       difficulty TEXT CHECK(difficulty IN ('Początkujący', 'Średniozaawansowany', 'Zaawansowany')),
+      measurement_type TEXT CHECK(measurement_type IN ('reps', 'time', 'distance')) DEFAULT 'reps',
       is_custom INTEGER DEFAULT 0,
       user_id TEXT,
       photo TEXT,
       video TEXT,
       created_at TEXT NOT NULL
-    );
+);
 
     -- ==================== WORKOUT SETS ====================
     CREATE TABLE IF NOT EXISTS workout_sets (
@@ -39,9 +40,13 @@ export const initDatabase = async () => {
       notes TEXT,
       actual_reps INTEGER,
       actual_weight REAL,
-      actual_rpe REAL,
+      actual_rpe REAL, 
+      duration INTEGER,
+      distance REAL,
+      actual_duration INTEGER,
+      actual_distance REAL,
       FOREIGN KEY (workout_exercise_id) REFERENCES workout_exercises(id) ON DELETE CASCADE
-    );
+);
 
     -- ==================== WORKOUT EXERCISES ====================
     CREATE TABLE IF NOT EXISTS workout_exercises (

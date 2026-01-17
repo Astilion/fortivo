@@ -21,9 +21,9 @@ export class ExerciseService {
 
     const stmt = await this.db.prepareAsync(
       `INSERT INTO exercises (
-        id, name, category, muscle_groups, instructions, equipment, 
-        difficulty, is_custom, user_id, photo, video, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    id, name, category, muscle_groups, instructions, equipment, 
+    difficulty, measurement_type, is_custom, user_id, photo, video, created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
 
     try {
@@ -36,6 +36,7 @@ export class ExerciseService {
           exercise.instructions || null,
           exercise.equipment ? JSON.stringify(exercise.equipment) : null,
           exercise.difficulty || null,
+          exercise.measurementType || 'reps',
           0,
           null,
           exercise.photo || null,
@@ -290,6 +291,8 @@ export class ExerciseService {
         | 'Średniozaawansowany'
         | 'Zaawansowany'
         | undefined,
+      measurementType:
+        (row.measurement_type as 'reps' | 'time' | 'distance') || 'reps', // <-- NOWE
       isCustom: row.is_custom === 1,
       userId: row.user_id || undefined,
       photo: row.photo || undefined,
@@ -300,4 +303,3 @@ export class ExerciseService {
 }
 
 export { Exercise } from '../types/training';
-

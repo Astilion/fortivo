@@ -14,7 +14,7 @@ import {
   WorkoutHistoryWithDetails,
   WorkoutRow,
   WorkoutSet,
-  WorkoutSetRow
+  WorkoutSetRow,
 } from '@/types/training';
 import * as SQLite from 'expo-sqlite';
 
@@ -143,13 +143,14 @@ export class WorkoutService {
 
         await this.db.runAsync(
           `INSERT INTO workout_sets (
-            id, workout_exercise_id, set_order, reps, weight, rpe, 
-            tempo, rest_time, completed, notes, actual_reps, actual_weight, actual_rpe
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    id, workout_exercise_id, set_order, reps, weight, rpe, 
+    tempo, rest_time, completed, notes, actual_reps, actual_weight, actual_rpe,
+    duration, actual_duration, distance, actual_distance
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             setId,
             workoutExerciseId,
-            j, // set_order
+            j,
             set.reps,
             set.weight || null,
             set.rpe || null,
@@ -160,6 +161,10 @@ export class WorkoutService {
             set.actualReps || null,
             set.actualWeight || null,
             set.actualRpe || null,
+            set.duration || null,
+            set.actualDuration || null,
+            set.distance || null,
+            set.actualDistance || null,
           ],
         );
       }
@@ -206,6 +211,9 @@ export class WorkoutService {
           | 'Średniozaawansowany'
           | 'Zaawansowany'
           | undefined,
+        measurementType:
+          (exerciseRow.measurement_type as 'reps' | 'time' | 'distance') ||
+          'reps',
         isCustom: exerciseRow.is_custom === 1,
         userId: exerciseRow.user_id || undefined,
         photo: exerciseRow.photo || undefined,
@@ -225,6 +233,10 @@ export class WorkoutService {
         actualReps: setRow.actual_reps || undefined,
         actualWeight: setRow.actual_weight || undefined,
         actualRpe: setRow.actual_rpe || undefined,
+        duration: setRow.duration || undefined, // <-- NOWE
+        actualDuration: setRow.actual_duration || undefined, // <-- NOWE
+        distance: setRow.distance || undefined, // <-- NOWE
+        actualDistance: setRow.actual_distance || undefined, // <-- NOWE
       }));
 
       result.push({
