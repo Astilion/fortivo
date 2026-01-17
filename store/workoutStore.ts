@@ -58,7 +58,7 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
       draft: {
         ...state.draft,
         exercises: [
-          ...state.draft.exercises,
+          ...state.draft.exercises.map((ex) => ({ ...ex, isExpanded: false })),
           {
             exercise,
             sets: [createDefaultSet(0)],
@@ -95,7 +95,7 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
         exercises: state.draft.exercises.map((ex) =>
           ex.exercise.id === exerciseId
             ? { ...ex, isExpanded: !ex.isExpanded }
-            : ex,
+            : { ...ex, isExpanded: false },
         ),
       },
     })),
