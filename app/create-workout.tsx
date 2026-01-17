@@ -34,22 +34,18 @@ export default function CreateWorkoutScreen() {
         completed: false,
         templateId: undefined,
       };
-
       const savedWorkout = await workoutService.createWorkout(workoutData);
-
       if (draft.exercises.length > 0) {
         await workoutService.saveWorkoutExercises(
           savedWorkout.id,
           draft.exercises,
         );
       }
-
       clearDraft();
       router.back();
-      Alert.alert('Sukces','Trening zapisany!');
     } catch (error) {
       console.error('Błąd zapisu', error);
-      Alert.alert('Błąd','Nie udało się zapisać treningu');
+      Alert.alert('Błąd', 'Nie udało się zapisać treningu');
     }
   };
 

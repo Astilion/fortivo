@@ -51,7 +51,6 @@ export default function EditWorkoutScreen() {
       await workoutService.saveWorkoutExercises(id, draft.exercises);
       clearDraft();
       router.back();
-      Alert.alert('Sukces', 'Zmiany zapisane!');
     } catch (error) {
       console.error('Błąd zapisu', error);
       Alert.alert('Błąd', 'Nie udało się zapisać treningu');

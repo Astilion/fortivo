@@ -7,7 +7,14 @@ import { useApp } from '@/providers/AppProvider';
 import { WorkoutRow } from '@/types/training';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 export default function WorkoutsScreen() {
   const { workoutService } = useApp();
@@ -75,8 +82,7 @@ export default function WorkoutsScreen() {
 
   const setAsActive = async (workoutId: string) => {
     await workoutService.setActiveWorkout(workoutId);
-    Alert.alert('Sukces','Trening ustawiony jako aktywny!');
-    router.push('/current-workout'); // Navigate to current workout tab
+    router.push('/current-workout');
   };
 
   return (
