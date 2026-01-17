@@ -23,7 +23,8 @@ export default function ExercisesScreen() {
       ex.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
-      selectedCategory === 'wszystkie' || ex.category === selectedCategory;
+      selectedCategory === 'wszystkie' ||
+      ex.categories.includes(selectedCategory);
 
     return matchesSearch && matchesCategory;
   });
@@ -70,7 +71,13 @@ export default function ExercisesScreen() {
         renderItem={({ item }) => (
           <Card onPress={() => router.push(`/exercise-details?id=${item.id}`)}>
             <Text style={styles.exerciseName}>{item.name}</Text>
-            <Text style={styles.exerciseCategory}>{item.category}</Text>
+            <View style={styles.categoriesRow}>
+              {item.categories.map((cat, idx) => (
+                <Text key={idx} style={styles.categoryChip}>
+                  {cat}
+                </Text>
+              ))}
+            </View>
           </Card>
         )}
       />
@@ -103,6 +110,13 @@ const styles = StyleSheet.create({
   exerciseCategory: {
     color: colors.text.secondary,
   },
+  categoriesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 4,
+  },
+  categoryChip: { fontSize: 12, color: colors.accent },
   filterContent: {
     gap: 8,
     paddingHorizontal: 4,

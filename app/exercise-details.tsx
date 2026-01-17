@@ -27,7 +27,13 @@ export default function ExerciseDetailsScreen() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>{exercise.name}</Text>
 
-      <Text style={styles.category}>{exercise.category}</Text>
+      <View style={styles.categoriesRow}>
+        {exercise.categories.map((cat, idx) => (
+          <Text key={idx} style={styles.categoryChip}>
+            {cat}
+          </Text>
+        ))}
+      </View>
 
       <Text style={styles.sectionTitle}>Partie mięśniowe:</Text>
       {exercise.muscleGroups.map((muscle, index) => (
@@ -100,12 +106,13 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: 8,
   },
-  category: {
-    fontSize: 16,
-    color: colors.accent,
+  categoriesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     marginBottom: 24,
-    textTransform: 'capitalize',
   },
+  categoryChip: { fontSize: 14, color: colors.accent, fontWeight: '600' },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',

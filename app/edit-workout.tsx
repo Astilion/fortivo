@@ -80,7 +80,7 @@ export default function EditWorkoutScreen() {
             <ExpandableExerciseCard
               key={item.exercise.id}
               exerciseName={item.exercise.name}
-              exerciseCategory={item.exercise.category}
+              exerciseCategories={item.exercise.categories}
               exerciseId={item.exercise.id}
               measurementType={item.exercise.measurementType}
               sets={item.sets}

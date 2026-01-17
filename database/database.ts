@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-const DB_NAME = 'fortivo_v4.db';
+const DB_NAME = 'fortivo_v5.db';
 
 export const initDatabase = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
@@ -13,7 +13,7 @@ export const initDatabase = async () => {
     CREATE TABLE IF NOT EXISTS exercises (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      category TEXT NOT NULL,
+      categories TEXT NOT NULL,
       muscle_groups TEXT NOT NULL,
       instructions TEXT,
       equipment TEXT,
@@ -210,7 +210,7 @@ export const initDatabase = async () => {
     );
 
     -- ==================== INDEXES ====================
-    CREATE INDEX IF NOT EXISTS idx_exercises_category ON exercises(category);
+    CREATE INDEX IF NOT EXISTS idx_exercises_categories ON exercises(categories);
     CREATE INDEX IF NOT EXISTS idx_exercises_custom ON exercises(is_custom);
     CREATE INDEX IF NOT EXISTS idx_exercises_user ON exercises(user_id);
     

@@ -21,7 +21,7 @@ export class ExerciseService {
 
     const stmt = await this.db.prepareAsync(
       `INSERT INTO exercises (
-    id, name, category, muscle_groups, instructions, equipment, 
+    id, name, categories, muscle_groups, instructions, equipment, 
     difficulty, measurement_type, is_custom, user_id, photo, video, created_at
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
@@ -31,7 +31,7 @@ export class ExerciseService {
         await stmt.executeAsync([
           exercise.id,
           exercise.name,
-          exercise.category,
+          JSON.stringify(exercise.categories),
           JSON.stringify(exercise.muscleGroups),
           exercise.instructions || null,
           exercise.equipment ? JSON.stringify(exercise.equipment) : null,
@@ -70,8 +70,9 @@ export class ExerciseService {
     category: string,
     userId?: string,
   ): Promise<Exercise[]> {
-    let query = 'SELECT * FROM exercises WHERE category = ? AND (is_custom = 0';
-    const params: any[] = [category];
+    let query =
+      'SELECT * FROM exercises WHERE categories LIKE ? AND (is_custom = 0';
+    const params: any[] = [`%"${category}"%`];
 
     if (userId) {
       query += ' OR (is_custom = 1 AND user_id = ?))';
@@ -123,8 +124,8 @@ export class ExerciseService {
   async searchExercises(query: string, userId?: string): Promise<Exercise[]> {
     const searchTerm = `%${query}%`;
     let sql = `SELECT * FROM exercises 
-               WHERE (name LIKE ? OR category LIKE ?) 
-               AND (is_custom = 0`;
+             WHERE (name LIKE ? OR categories LIKE ?) 
+             AND (is_custom = 0`;
     const params: any[] = [searchTerm, searchTerm];
 
     if (userId) {
@@ -156,11 +157,12 @@ export class ExerciseService {
       [
         id,
         exercise.name,
-        exercise.category,
+        JSON.stringify(exercise.categories),
         JSON.stringify(exercise.muscleGroups),
         exercise.instructions || null,
         exercise.equipment ? JSON.stringify(exercise.equipment) : null,
         exercise.difficulty || null,
+        exercise.measurementType || 'reps',
         1,
         userId,
         exercise.photo || null,
@@ -199,9 +201,9 @@ export class ExerciseService {
       fields.push('name = ?');
       values.push(updates.name);
     }
-    if (updates.category !== undefined) {
-      fields.push('category = ?');
-      values.push(updates.category);
+    if (updates.categories !== undefined) {
+      fields.push('categories = ?');
+      values.push(JSON.stringify(updates.categories));
     }
     if (updates.muscleGroups !== undefined) {
       fields.push('muscle_groups = ?');
@@ -251,18 +253,14 @@ export class ExerciseService {
 
   // Get all categories
   async getCategories(userId?: string): Promise<string[]> {
-    let query = 'SELECT DISTINCT category FROM exercises WHERE is_custom = 0';
-    const params: any[] = [];
+    const exercises = await this.getAllExercises(userId);
+    const categoriesSet = new Set<string>();
 
-    if (userId) {
-      query += ' OR (is_custom = 1 AND user_id = ?)';
-      params.push(userId);
-    }
+    exercises.forEach((exercise) => {
+      exercise.categories.forEach((cat) => categoriesSet.add(cat));
+    });
 
-    query += ' ORDER BY category ASC';
-
-    const rows = await this.db.getAllAsync<{ category: string }>(query, params);
-    return rows.map((row) => row.category);
+    return Array.from(categoriesSet).sort();
   }
 
   // Get all muscle groups
@@ -282,7 +280,7 @@ export class ExerciseService {
     return {
       id: row.id,
       name: row.name,
-      category: row.category,
+      categories: JSON.parse(row.categories),
       muscleGroups: JSON.parse(row.muscle_groups),
       instructions: row.instructions || undefined,
       equipment: row.equipment ? JSON.parse(row.equipment) : undefined,

@@ -201,7 +201,7 @@ export class WorkoutService {
       const exercise: Exercise = {
         id: exerciseRow.id,
         name: exerciseRow.name,
-        category: exerciseRow.category,
+        categories: JSON.parse(exerciseRow.categories),
         muscleGroups: JSON.parse(exerciseRow.muscle_groups),
         equipment: exerciseRow.equipment
           ? JSON.parse(exerciseRow.equipment)

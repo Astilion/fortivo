@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface ExpandableExerciseCardProps {
   exerciseName: string;
-  exerciseCategory: string;
+  exerciseCategories: string[];
   exerciseId: string;
   measurementType?: 'reps' | 'time' | 'distance';
   sets: WorkoutSet[];
@@ -24,7 +24,7 @@ interface ExpandableExerciseCardProps {
 
 export const ExpandableExerciseCard = ({
   exerciseName,
-  exerciseCategory,
+  exerciseCategories,
   exerciseId,
   measurementType,
   sets,
@@ -94,7 +94,13 @@ export const ExpandableExerciseCard = ({
           />
           <View style={styles.titleContainer}>
             <Text style={styles.exerciseName}>{exerciseName}</Text>
-            <Text style={styles.exerciseCategory}>{exerciseCategory}</Text>
+            <View style={styles.categoriesContainer}>
+              {exerciseCategories.map((cat, idx) => (
+                <View key={idx} style={styles.categoryChip}>
+                  <Text style={styles.categoryChipText}>{cat}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         </View>
 
@@ -274,13 +280,25 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: 4,
   },
-  exerciseCategory: {
-    fontSize: 14,
-    color: colors.text.secondary,
+  categoriesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  categoryChip: {
+    backgroundColor: colors.accent + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  categoryChipText: {
+    fontSize: 11,
+    color: colors.accent,
+    fontWeight: '600',
     textTransform: 'capitalize',
   },
 
-  // NEW: Header actions container
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',

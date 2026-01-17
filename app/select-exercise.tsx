@@ -31,7 +31,8 @@ export default function SelectExerciseScreen() {
       ex.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
-      selectedCategory === 'wszystkie' || ex.category === selectedCategory;
+      selectedCategory === 'wszystkie' ||
+      ex.categories.includes(selectedCategory);
 
     return matchesSearch && matchesCategory;
   });
@@ -88,7 +89,13 @@ export default function SelectExerciseScreen() {
           renderItem={({ item }) => (
             <Card onPress={() => handleSelectExercise(item.id)}>
               <Text style={styles.exerciseName}>{item.name}</Text>
-              <Text style={styles.exerciseCategory}>{item.category}</Text>
+              <View style={styles.categoriesRow}>
+                {item.categories.map((cat, idx) => (
+                  <Text key={idx} style={styles.categoryChip}>
+                    {cat}
+                  </Text>
+                ))}
+              </View>
             </Card>
           )}
         />
@@ -116,4 +123,11 @@ const styles = StyleSheet.create({
     flexGrow: 0,
     flexShrink: 0,
   },
+  categoriesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 4,
+  },
+  categoryChip: { fontSize: 12, color: colors.accent },
 });

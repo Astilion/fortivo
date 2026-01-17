@@ -2,7 +2,7 @@
 export interface Exercise {
   id: string;
   name: string;
-  category: string;
+  categories: string[];
   muscleGroups: string[];
   instructions?: string;
   equipment?: string[];
@@ -202,7 +202,7 @@ export interface ExerciseProgressWithWorkout {
 export interface ExerciseRow {
   id: string;
   name: string;
-  category: string;
+  categories: string;
   muscle_groups: string; // JSON string
   instructions: string | null;
   equipment: string | null; // JSON string
