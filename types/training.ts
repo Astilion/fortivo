@@ -2,6 +2,7 @@
 export interface Exercise {
   id: string;
   name: string;
+  nameEN?: string;
   categories: string[];
   muscleGroups: string[];
   instructions?: string;
@@ -202,6 +203,7 @@ export interface ExerciseProgressWithWorkout {
 export interface ExerciseRow {
   id: string;
   name: string;
+  name_en: string;
   categories: string;
   muscle_groups: string; // JSON string
   instructions: string | null;
@@ -367,4 +369,9 @@ export interface ExerciseProgressQueryRow {
   estimated_one_rep_max: number | null;
   personal_record: number;
   workout_name: string | null;
+}
+export interface FavoriteExerciseRow {
+  user_id: string;
+  exercise_id: string;
+  created_at: string;
 }

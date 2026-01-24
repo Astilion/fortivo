@@ -15,7 +15,10 @@ import {
   StyleSheet,
   Text,
   View,
+  Pressable,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { capitalize } from '@/utils/capitalize';
 
 export default function SelectExerciseScreen() {
   const router = useRouter();
@@ -28,15 +31,27 @@ export default function SelectExerciseScreen() {
   const filteredExercises = exercises.filter((ex) => {
     const matchesSearch =
       searchQuery.trim() === '' ||
-      ex.name.toLowerCase().includes(searchQuery.toLowerCase());
+      ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (ex.nameEN &&
+        ex.nameEN.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesCategory =
       selectedCategory === 'wszystkie' ||
+      selectedCategory === 'ulubione' ||
       ex.categories.includes(selectedCategory);
 
-    return matchesSearch && matchesCategory;
+    const matchesFavorites =
+      selectedCategory !== 'ulubione' || favoriteExercises.includes(ex.id);
+
+    return matchesSearch && matchesCategory && matchesFavorites;
   });
   const addExercise = useWorkoutStore((state) => state.addExercise);
+  const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
+  const isFavorite = useExerciseStore((state) => state.isFavorite);
+
+  const favoriteExercises = useExerciseStore(
+    (state) => state.favoriteExercises,
+  );
 
   const handleSelectExercise = (exerciseId: string) => {
     const exercise = exercises.find((ex) => ex.id === exerciseId);
@@ -62,14 +77,19 @@ export default function SelectExerciseScreen() {
         contentContainerStyle={styles.filterContent}
       >
         <Button
-          title='wszystkie'
+          title='Wszystkie'
           variant={selectedCategory === 'wszystkie' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('wszystkie')}
+        />
+        <Button
+          title='⭐ Ulubione'
+          variant={selectedCategory === 'ulubione' ? 'primary' : 'secondary'}
+          onPress={() => setSelectedCategory('ulubione')}
         />
         {WORKOUT_CATEGORIES.map((cat) => (
           <Button
             key={cat}
-            title={cat}
+            title={capitalize(cat)}
             variant={selectedCategory === cat ? 'primary' : 'secondary'}
             onPress={() => setSelectedCategory(cat)}
           />
@@ -88,13 +108,34 @@ export default function SelectExerciseScreen() {
           windowSize={5}
           renderItem={({ item }) => (
             <Card onPress={() => handleSelectExercise(item.id)}>
-              <Text style={styles.exerciseName}>{item.name}</Text>
-              <View style={styles.categoriesRow}>
-                {item.categories.map((cat, idx) => (
-                  <Text key={idx} style={styles.categoryChip}>
-                    {cat}
-                  </Text>
-                ))}
+              <View style={styles.cardHeader}>
+                <View style={styles.cardContent}>
+                  <Text style={styles.exerciseName}>{item.name}</Text>
+                  <View style={styles.categoriesRow}>
+                    {item.categories.map((cat, idx) => (
+                      <Text key={idx} style={styles.categoryChip}>
+                        {capitalize(cat)}
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(item.id);
+                  }}
+                  style={styles.favoriteButton}
+                >
+                  <Ionicons
+                    name={isFavorite(item.id) ? 'star' : 'star-outline'}
+                    size={24}
+                    color={
+                      isFavorite(item.id)
+                        ? colors.accent
+                        : colors.text.secondary
+                    }
+                  />
+                </Pressable>
               </View>
             </Card>
           )}
@@ -130,4 +171,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   categoryChip: { fontSize: 12, color: colors.accent },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  cardContent: {
+    flex: 1,
+  },
+  favoriteButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
 });

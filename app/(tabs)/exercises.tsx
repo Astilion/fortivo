@@ -1,18 +1,33 @@
 import { Button } from '@/components/ui/Button';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
-import { WORKOUT_CATEGORIES } from '@/constants/Training';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { capitalize } from '@/utils/capitalize';
+import {
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 export default function ExercisesScreen() {
   const router = useRouter();
   const exercises = useExerciseStore((state) => state.exercises);
   const loading = useExerciseStore((state) => state.loading);
+  const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
+  const isFavorite = useExerciseStore((state) => state.isFavorite);
+
+  const favoriteExercises = useExerciseStore(
+    (state) => state.favoriteExercises,
+  );
+  const categories = useExerciseStore((state) => state.categories);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
@@ -20,13 +35,19 @@ export default function ExercisesScreen() {
   const filteredExercises = exercises.filter((ex) => {
     const matchesSearch =
       searchQuery.trim() === '' ||
-      ex.name.toLowerCase().includes(searchQuery.toLowerCase());
+      ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (ex.nameEN &&
+        ex.nameEN.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesCategory =
       selectedCategory === 'wszystkie' ||
+      selectedCategory === 'ulubione' ||
       ex.categories.includes(selectedCategory);
 
-    return matchesSearch && matchesCategory;
+    const matchesFavorites =
+      selectedCategory !== 'ulubione' || favoriteExercises.includes(ex.id);
+
+    return matchesSearch && matchesCategory && matchesFavorites;
   });
 
   if (loading) {
@@ -48,18 +69,25 @@ export default function ExercisesScreen() {
         contentContainerStyle={styles.filterContent}
       >
         <Button
-          title='wszystkie'
+          title='Wszystkie'
           variant={selectedCategory === 'wszystkie' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('wszystkie')}
         />
-        {WORKOUT_CATEGORIES.map((cat) => (
-          <Button
-            key={cat}
-            title={cat}
-            variant={selectedCategory === cat ? 'primary' : 'secondary'}
-            onPress={() => setSelectedCategory(cat)}
-          />
-        ))}
+        <Button
+          title='⭐ Ulubione'
+          variant={selectedCategory === 'ulubione' ? 'primary' : 'secondary'}
+          onPress={() => setSelectedCategory('ulubione')}
+        />
+        {categories
+          .filter((cat) => cat !== 'wszystkie')
+          .map((cat) => (
+            <Button
+              key={cat}
+              title={capitalize(cat)} // <-- KAPITALIZUJ
+              variant={selectedCategory === cat ? 'primary' : 'secondary'}
+              onPress={() => setSelectedCategory(cat)}
+            />
+          ))}
       </ScrollView>
       <FlatList
         data={filteredExercises}
@@ -70,13 +98,32 @@ export default function ExercisesScreen() {
         windowSize={5}
         renderItem={({ item }) => (
           <Card onPress={() => router.push(`/exercise-details?id=${item.id}`)}>
-            <Text style={styles.exerciseName}>{item.name}</Text>
-            <View style={styles.categoriesRow}>
-              {item.categories.map((cat, idx) => (
-                <Text key={idx} style={styles.categoryChip}>
-                  {cat}
-                </Text>
-              ))}
+            <View style={styles.cardHeader}>
+              <View style={styles.cardContent}>
+                <Text style={styles.exerciseName}>{item.name}</Text>
+                <View style={styles.categoriesRow}>
+                  {item.categories.map((cat, idx) => (
+                    <Text key={idx} style={styles.categoryChip}>
+                      {capitalize(cat)}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  toggleFavorite(item.id);
+                }}
+                style={styles.favoriteButton}
+              >
+                <Ionicons
+                  name={isFavorite(item.id) ? 'star' : 'star-outline'}
+                  size={24}
+                  color={
+                    isFavorite(item.id) ? colors.accent : colors.text.secondary
+                  }
+                />
+              </Pressable>
             </View>
           </Card>
         )}
@@ -120,6 +167,18 @@ const styles = StyleSheet.create({
   filterContent: {
     gap: 8,
     paddingHorizontal: 4,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  cardContent: {
+    flex: 1,
+  },
+  favoriteButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   filterScroll: {
     marginBottom: 16,

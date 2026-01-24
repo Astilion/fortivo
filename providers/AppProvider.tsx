@@ -10,7 +10,7 @@ import { ActivityIndicator, Text, View } from 'react-native';
 interface AppContextType {
   db: SQLite.SQLiteDatabase;
   exerciseService: ExerciseService;
-  workoutService: WorkoutService
+  workoutService: WorkoutService;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -60,6 +60,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const loadExercises = useExerciseStore((state) => state.loadExercises);
   const loadCategories = useExerciseStore((state) => state.loadCategories);
+  const loadFavorites = useExerciseStore((state) => state.loadFavorites);
 
   useEffect(() => {
     initializeApp();
@@ -72,7 +73,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Initialize services
       const exerciseService = new ExerciseService(database);
-      const workoutService = new WorkoutService(database)
+      const workoutService = new WorkoutService(database);
 
       // Validate and seed exercises
       const validatedExercises = validateExerciseData(exercisesData);
@@ -82,12 +83,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       initializeService(exerciseService);
 
       // Load initial data
-      await Promise.all([loadExercises(), loadCategories()]);
+      await Promise.all([loadExercises(), loadCategories(), loadFavorites()]);
 
       setContext({
         db: database,
         exerciseService,
-        workoutService
+        workoutService,
       });
 
       setIsReady(true);

@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { generateId } from '../database/database';
-import { Exercise, ExerciseRow } from '../types/training';
+import { Exercise, ExerciseRow, FavoriteExerciseRow } from '../types/training';
 
 export class ExerciseService {
   private db: SQLite.SQLiteDatabase;
@@ -15,15 +15,25 @@ export class ExerciseService {
       'SELECT COUNT(*) as count FROM exercises WHERE is_custom = 0',
     );
 
-    if (existingCount && existingCount.count > 0) {
+    // Only skip if we already have exactly this many exercises
+    if (existingCount && existingCount.count === exercises.length) {
+      console.log(
+        `✅ Already seeded ${exercises.length} exercises, skipping...`,
+      );
       return;
     }
 
+    // Clear old built-in exercises and reseed
+    console.log(
+      `🔄 Reseeding exercises (old: ${existingCount?.count || 0}, new: ${exercises.length})...`,
+    );
+    await this.db.runAsync('DELETE FROM exercises WHERE is_custom = 0');
+
     const stmt = await this.db.prepareAsync(
       `INSERT INTO exercises (
-    id, name, categories, muscle_groups, instructions, equipment, 
-    difficulty, measurement_type, is_custom, user_id, photo, video, created_at
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, name, name_en, categories, muscle_groups, instructions, equipment, 
+      difficulty, measurement_type, is_custom, user_id, photo, video, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
 
     try {
@@ -31,6 +41,7 @@ export class ExerciseService {
         await stmt.executeAsync([
           exercise.id,
           exercise.name,
+          exercise.nameEN || null,
           JSON.stringify(exercise.categories),
           JSON.stringify(exercise.muscleGroups),
           exercise.instructions || null,
@@ -280,6 +291,7 @@ export class ExerciseService {
     return {
       id: row.id,
       name: row.name,
+      nameEN: row.name_en || undefined,
       categories: JSON.parse(row.categories),
       muscleGroups: JSON.parse(row.muscle_groups),
       instructions: row.instructions || undefined,
@@ -297,6 +309,52 @@ export class ExerciseService {
       video: row.video || undefined,
       createdAt: new Date(row.created_at),
     };
+  }
+
+  // ==================== FAVORITES ====================
+
+  async addFavorite(
+    exerciseId: string,
+    userId: string = 'user_1',
+  ): Promise<void> {
+    const createdAt = new Date().toISOString();
+
+    await this.db.runAsync(
+      `INSERT OR IGNORE INTO favorite_exercises (user_id, exercise_id, created_at) 
+     VALUES (?, ?, ?)`,
+      [userId, exerciseId, createdAt],
+    );
+  }
+
+  async removeFavorite(
+    exerciseId: string,
+    userId: string = 'user_1',
+  ): Promise<void> {
+    await this.db.runAsync(
+      `DELETE FROM favorite_exercises WHERE user_id = ? AND exercise_id = ?`,
+      [userId, exerciseId],
+    );
+  }
+
+  async getFavorites(userId: string = 'user_1'): Promise<string[]> {
+    const rows = await this.db.getAllAsync<FavoriteExerciseRow>(
+      'SELECT exercise_id FROM favorite_exercises WHERE user_id = ?',
+      [userId],
+    );
+
+    return rows.map((row) => row.exercise_id);
+  }
+
+  async isFavorite(
+    exerciseId: string,
+    userId: string = 'user_1',
+  ): Promise<boolean> {
+    const row = await this.db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM favorite_exercises WHERE user_id = ? AND exercise_id = ?',
+      [userId, exerciseId],
+    );
+
+    return (row?.count || 0) > 0;
   }
 }
 

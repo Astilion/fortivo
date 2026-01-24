@@ -5,6 +5,7 @@ interface ExerciseState {
   // State
   exercises: Exercise[];
   categories: string[];
+  favoriteExercises: string[];
   loading: boolean;
   error: string | null;
   userId: string; // Add userId to state
@@ -29,6 +30,9 @@ interface ExerciseState {
     >,
   ) => Promise<void>;
   deleteExercise: (id: string) => Promise<void>;
+  loadFavorites: () => Promise<void>;
+  toggleFavorite: (exerciseId: string) => Promise<void>;
+  isFavorite: (exerciseId: string) => boolean;
   reset: () => void;
 }
 
@@ -36,6 +40,7 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
   // Initial state
   exercises: [],
   categories: [],
+  favoriteExercises: [],
   loading: false,
   error: null,
   userId: 'default-user', // Default userId
@@ -76,7 +81,7 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
 
     try {
       const categories = await exerciseService.getCategories(userId);
-      set({ categories: ['all', ...categories] });
+      set({ categories });
     } catch (error) {
       console.error('Failed to load categories:', error);
     }
@@ -199,12 +204,57 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       throw error;
     }
   },
+  // ==================== FAVORITES ====================
 
+  loadFavorites: async () => {
+    const { exerciseService, userId } = get();
+    if (!exerciseService) return;
+
+    try {
+      const favoriteExercises = await exerciseService.getFavorites(userId);
+      set({ favoriteExercises });
+    } catch (error) {
+      console.error('Failed to load favorites:', error);
+    }
+  },
+
+  toggleFavorite: async (exerciseId: string) => {
+    const { exerciseService, userId, favoriteExercises } = get();
+    if (!exerciseService) return;
+
+    try {
+      const isFav = favoriteExercises.includes(exerciseId);
+
+      if (isFav) {
+        // Remove from favorites
+        await exerciseService.removeFavorite(exerciseId, userId);
+        set({
+          favoriteExercises: favoriteExercises.filter(
+            (id) => id !== exerciseId,
+          ),
+        });
+      } else {
+        // Add to favorites
+        await exerciseService.addFavorite(exerciseId, userId);
+        set({
+          favoriteExercises: [...favoriteExercises, exerciseId],
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  },
+
+  isFavorite: (exerciseId: string) => {
+    const { favoriteExercises } = get();
+    return favoriteExercises.includes(exerciseId);
+  },
   // Reset state
   reset: () => {
     set({
       exercises: [],
       categories: [],
+      favoriteExercises: [],
       loading: false,
       error: null,
     });

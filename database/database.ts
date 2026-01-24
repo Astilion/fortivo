@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-const DB_NAME = 'fortivo_v5.db';
+const DB_NAME = 'fortivo_v6.db';
 
 export const initDatabase = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
@@ -13,6 +13,7 @@ export const initDatabase = async () => {
     CREATE TABLE IF NOT EXISTS exercises (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      name_en TEXT,
       categories TEXT NOT NULL,
       muscle_groups TEXT NOT NULL,
       instructions TEXT,
@@ -209,6 +210,15 @@ export const initDatabase = async () => {
       FOREIGN KEY (training_plan_id) REFERENCES training_plans(id) ON DELETE CASCADE
     );
 
+    -- ==================== FAVORITE EXERCISES ====================
+    CREATE TABLE IF NOT EXISTS favorite_exercises (
+      user_id TEXT NOT NULL,
+      exercise_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (user_id, exercise_id),
+      FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
+    );
+
     -- ==================== INDEXES ====================
     CREATE INDEX IF NOT EXISTS idx_exercises_categories ON exercises(categories);
     CREATE INDEX IF NOT EXISTS idx_exercises_custom ON exercises(is_custom);
@@ -244,6 +254,8 @@ export const initDatabase = async () => {
     
     CREATE INDEX IF NOT EXISTS idx_workout_history_workout ON workout_history(workout_id);
     CREATE INDEX IF NOT EXISTS idx_workout_history_user_date ON workout_history(user_id, completed_at);
+    CREATE INDEX IF NOT EXISTS idx_favorite_exercises_user ON favorite_exercises(user_id);
+    CREATE INDEX IF NOT EXISTS idx_favorite_exercises_exercise ON favorite_exercises(exercise_id);
   `);
 
   return db;
