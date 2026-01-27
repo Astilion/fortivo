@@ -35,7 +35,13 @@ export default function RootLayout() {
 const modalOptions: NativeStackNavigationOptions = {
   presentation: 'transparentModal',
   animationTypeForReplace: 'push',
-  headerShown: false,
+  headerShown: true,
+  headerStyle: {
+    backgroundColor: colors.primary,
+  },
+  headerTintColor: colors.text.primary,
+  headerTitleStyle: { fontWeight: 'bold', color: colors.text.primary },
+  headerShadowVisible: false,
   contentStyle: {
     backgroundColor: colors.primary,
   },
@@ -53,13 +59,13 @@ function RootLayoutNav() {
         }}
       >
         <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-        <Stack.Screen name='exercise-details' options={modalOptions} />
+        <Stack.Screen name='exercise-details' options={{...modalOptions, title: 'Szczegóły ćwiczenia'}} />
 
-        <Stack.Screen name='create-workout' options={modalOptions} />
+        <Stack.Screen name='create-workout' options={{...modalOptions, title: 'Utwórz nowy trening'}} />
 
-        <Stack.Screen name='edit-workout' options={modalOptions} />
+        <Stack.Screen name='edit-workout' options={{...modalOptions, title: 'Edytuj trening'}} />
 
-        <Stack.Screen name='select-exercise' options={modalOptions} />
+        <Stack.Screen name='select-exercise' options={{...modalOptions, title: 'Lista ćwiczeń'}} />
 
         <Stack.Screen
           name='active-workout'
@@ -70,9 +76,9 @@ function RootLayoutNav() {
           }}
         />
 
-        <Stack.Screen name='workout-details' options={modalOptions} />
+        <Stack.Screen name='workout-details' options={{...modalOptions, title: 'Szczegóły treningu'}} />
 
-        <Stack.Screen name='exercise-progress' options={modalOptions} />
+        <Stack.Screen name='exercise-progress' options={{...modalOptions, title: 'Historia ćwiczenia'}} />
       </Stack>
     </AppProvider>
   );
