@@ -464,6 +464,13 @@ export class WorkoutService {
       stats,
     };
   }
+  
+  async countWorkouts(): Promise<number> {
+    const result = await this.db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM workouts',
+    );
+    return result?.count || 0;
+  }
 
   async getExerciseProgress(
     exerciseId: string,
