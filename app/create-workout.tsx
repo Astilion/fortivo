@@ -6,9 +6,8 @@ import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter } from 'expo-router';
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 
 export default function CreateWorkoutScreen() {
   const router = useRouter();
@@ -29,12 +28,9 @@ export default function CreateWorkoutScreen() {
   } = useWorkoutStore();
   const { workoutService } = useApp();
 
-  useFocusEffect(
-    useCallback(() => {
-      clearDraft();
-    }, [clearDraft]),
-  );
-
+  useEffect(() => {
+    clearDraft();
+  }, []);
   const handleSaveWorkout = async () => {
     // Reset errors
     setShowNameError(false);

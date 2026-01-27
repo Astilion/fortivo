@@ -283,14 +283,45 @@ export class WorkoutService {
     exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
     for (const ex of exercises) {
-      for (const set of ex.sets) {
+      const workoutExerciseRow = await this.db.getFirstAsync<{ id: string }>(
+        'SELECT id FROM workout_exercises WHERE workout_id = ? AND exercise_id = ?',
+        [workoutId, ex.exercise.id],
+      );
+
+      if (!workoutExerciseRow) continue;
+
+      await this.db.runAsync(
+        'DELETE FROM workout_sets WHERE workout_exercise_id = ?',
+        [workoutExerciseRow.id],
+      );
+
+      for (let i = 0; i < ex.sets.length; i++) {
+        const set = ex.sets[i];
+
         await this.db.runAsync(
-          'UPDATE workout_sets SET actual_reps = ?, actual_weight = ?, completed = ? WHERE id = ?',
+          `INSERT INTO workout_sets (
+          id, workout_exercise_id, set_order, reps, weight, rpe, 
+          tempo, rest_time, completed, notes, actual_reps, actual_weight, actual_rpe,
+          duration, actual_duration, distance, actual_distance
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
-            set.actualReps ?? null,
-            set.actualWeight ?? null,
-            set.completed ? 1 : 0,
             set.id,
+            workoutExerciseRow.id,
+            i,
+            set.reps,
+            set.weight || null,
+            set.rpe || null,
+            set.tempo || null,
+            set.restTime || null,
+            set.completed ? 1 : 0,
+            set.notes || null,
+            set.actualReps || null,
+            set.actualWeight || null,
+            set.actualRpe || null,
+            set.duration || null,
+            set.actualDuration || null,
+            set.distance || null,
+            set.actualDistance || null,
           ],
         );
       }

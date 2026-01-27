@@ -2,10 +2,11 @@ import { Button } from '@/components/ui/Button';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutExerciseWithSets } from '@/store/workoutStore';
-import { WorkoutRow } from '@/types/training';
+import { WorkoutRow, WorkoutSet } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
+import { generateId } from '@/database/database';
 import {
   Alert,
   Pressable,
@@ -71,6 +72,58 @@ export default function ActiveWorkoutScreen() {
         return ex;
       });
       return newExercises;
+    });
+  };
+  const addSet = (exerciseId: string) => {
+    setExercises((prevExercises) => {
+      return prevExercises.map((ex) => {
+        if (ex.exercise.id === exerciseId) {
+          // Get last set as template (same pattern as workoutStore)
+          const lastSet = ex.sets[ex.sets.length - 1];
+
+          const newSet: WorkoutSet = {
+            id: generateId('ws'),
+            reps: lastSet?.reps || 10,
+            weight: lastSet?.weight || 0,
+            rpe: lastSet?.rpe || undefined,
+            tempo: lastSet?.tempo || undefined,
+            restTime: lastSet?.restTime || undefined,
+            completed: false,
+            notes: undefined,
+            actualReps: lastSet?.reps || 8,
+            actualWeight: lastSet?.weight || 0,
+            actualRpe: undefined,
+            duration: undefined,
+            actualDuration: undefined,
+            distance: undefined,
+            actualDistance: undefined,
+          };
+
+          return {
+            ...ex,
+            sets: [...ex.sets, newSet],
+          };
+        }
+        return ex;
+      });
+    });
+  };
+  const removeSet = (exerciseId: string, setId: string) => {
+    setExercises((prevExercises) => {
+      return prevExercises.map((ex) => {
+        if (ex.exercise.id === exerciseId) {
+          if (ex.sets.length <= 1) {
+            Alert.alert('Uwaga', 'Nie możesz usunąć ostatniej serii');
+            return ex;
+          }
+
+          return {
+            ...ex,
+            sets: ex.sets.filter((s) => s.id !== setId),
+          };
+        }
+        return ex;
+      });
     });
   };
 
@@ -177,20 +230,37 @@ export default function ActiveWorkoutScreen() {
                 <View style={styles.setHeader}>
                   <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
 
-                  <Pressable
-                    onPress={() => toggleSetCompleted(item.exercise.id, set.id)}
-                    style={styles.checkboxButton}
-                  >
-                    <Ionicons
-                      name={
-                        set.completed ? 'checkmark-circle' : 'ellipse-outline'
+                  <View style={styles.setActions}>
+                    {item.sets.length > 1 && (
+                      <Pressable
+                        onPress={() => removeSet(item.exercise.id, set.id)}
+                        style={styles.deleteButton}
+                      >
+                        <Ionicons
+                          name='close-circle'
+                          size={24}
+                          color={colors.danger}
+                        />
+                      </Pressable>
+                    )}
+                    {/* Checkbox */}
+                    <Pressable
+                      onPress={() =>
+                        toggleSetCompleted(item.exercise.id, set.id)
                       }
-                      size={28}
-                      color={
-                        set.completed ? colors.accent : colors.text.secondary
-                      }
-                    />
-                  </Pressable>
+                      style={styles.checkboxButton}
+                    >
+                      <Ionicons
+                        name={
+                          set.completed ? 'checkmark-circle' : 'ellipse-outline'
+                        }
+                        size={28}
+                        color={
+                          set.completed ? colors.accent : colors.text.secondary
+                        }
+                      />
+                    </Pressable>
+                  </View>
                 </View>
 
                 {/* Inputs row */}
@@ -235,6 +305,17 @@ export default function ActiveWorkoutScreen() {
                 </View>
               </View>
             ))}
+            <Pressable
+              style={styles.addSetButton}
+              onPress={() => addSet(item.exercise.id)}
+            >
+              <Ionicons
+                name='add-circle-outline'
+                size={20}
+                color={colors.accent}
+              />
+              <Text style={styles.addSetText}>Dodaj serię</Text>
+            </Pressable>
           </View>
         ))}
       </ScrollView>
@@ -324,6 +405,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.secondary,
   },
+  setActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deleteButton: {
+    padding: 4,
+  },
   checkboxButton: {
     padding: 4,
   },
@@ -353,5 +442,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderTopWidth: 2,
     borderTopColor: colors.secondary,
+  },
+  addSetButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.secondary,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderStyle: 'dashed',
+  },
+  addSetText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.accent,
   },
 });
