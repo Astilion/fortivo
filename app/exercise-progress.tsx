@@ -71,11 +71,6 @@ export default function ExerciseProgressScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>{exerciseName || 'Historia ćwiczenia'}</Text>
-      </View>
-
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
