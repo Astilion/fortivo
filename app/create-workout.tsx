@@ -2,13 +2,19 @@ import { Button } from '@/components/ui/Button';
 import { ExpandableExerciseCard } from '@/components/ui/ExpandableExerciseCard';
 import { Input } from '@/components/ui/Input';
 import { commonStyles } from '@/constants/Styles';
+import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter } from 'expo-router';
-import { Alert, ScrollView, Text } from 'react-native';
+import { useState, useCallback } from 'react';
+import { Alert, ScrollView, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function CreateWorkoutScreen() {
   const router = useRouter();
+  const [showNameError, setShowNameError] = useState(false);
+  const [showExercisesError, setShowExercisesError] = useState(false);
+
   const {
     draft,
     setWorkoutName,
@@ -23,7 +29,28 @@ export default function CreateWorkoutScreen() {
   } = useWorkoutStore();
   const { workoutService } = useApp();
 
+  useFocusEffect(
+    useCallback(() => {
+      clearDraft();
+    }, [clearDraft]),
+  );
+
   const handleSaveWorkout = async () => {
+    // Reset errors
+    setShowNameError(false);
+    setShowExercisesError(false);
+
+    // Validation
+    if (!draft.name.trim()) {
+      setShowNameError(true);
+      return;
+    }
+
+    if (draft.exercises.length === 0) {
+      setShowExercisesError(true);
+      return;
+    }
+
     try {
       const workoutData = {
         name: draft.name,
@@ -54,20 +81,34 @@ export default function CreateWorkoutScreen() {
       style={commonStyles.container}
       contentContainerStyle={{ gap: 16, paddingBottom: 80 }}
     >
-      <Text style={commonStyles.title}>Utwórz nowy trening</Text>
-
-      <Input
-        value={draft.name}
-        onChangeText={setWorkoutName}
-        placeholder='Nazwa treningu...'
-      />
+      <View>
+        <Input
+          value={draft.name}
+          onChangeText={(text) => {
+            setWorkoutName(text);
+            if (showNameError) setShowNameError(false);
+          }}
+          placeholder='Nazwa treningu...'
+        />
+        {showNameError && (
+          <Text
+            style={{
+              color: colors.danger,
+              fontSize: 12,
+              marginTop: 4,
+              marginLeft: 4,
+            }}
+          >
+            Podaj nazwę treningu aby kontynuować
+          </Text>
+        )}
+      </View>
 
       {draft.exercises.length > 0 && (
         <>
           <Text style={commonStyles.subtitle}>
             Ćwiczenia ({draft.exercises.length}):
           </Text>
-
           {draft.exercises.map((item, index) => (
             <ExpandableExerciseCard
               key={item.exercise.id}
@@ -95,15 +136,30 @@ export default function CreateWorkoutScreen() {
 
       <Button
         title='+ Dodaj Ćwiczenie'
-        onPress={() => router.push('/select-exercise')}
+        onPress={() => {
+          router.push('/select-exercise');
+          if (showExercisesError) setShowExercisesError(false);
+        }}
         variant='primary'
       />
+
+      {showExercisesError && (
+        <Text
+          style={{
+            color: colors.danger,
+            fontSize: 12,
+            marginTop: -8,
+            marginLeft: 4,
+          }}
+        >
+          Dodaj przynajmniej jedno ćwiczenie
+        </Text>
+      )}
 
       <Button
         title='Zapisz Trening'
         onPress={handleSaveWorkout}
         variant='primary'
-        disabled={!draft.name.trim() || draft.exercises.length === 0}
       />
     </ScrollView>
   );

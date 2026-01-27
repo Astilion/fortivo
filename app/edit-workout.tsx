@@ -2,14 +2,18 @@ import { Button } from '@/components/ui/Button';
 import { ExpandableExerciseCard } from '@/components/ui/ExpandableExerciseCard';
 import { Input } from '@/components/ui/Input';
 import { commonStyles } from '@/constants/Styles';
+import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect } from 'react';
-import { Alert, ScrollView, Text } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, ScrollView, Text, View } from 'react-native';
 
 export default function EditWorkoutScreen() {
   const router = useRouter();
+  const [showNameError, setShowNameError] = useState(false);
+  const [showExercisesError, setShowExercisesError] = useState(false);
+  
   const {
     draft,
     setWorkoutName,
@@ -46,6 +50,19 @@ export default function EditWorkoutScreen() {
   }, [id, workoutService]);
 
   const handleSaveWorkout = async () => {
+    setShowNameError(false);
+    setShowExercisesError(false);
+
+    if (!draft.name.trim()) {
+      setShowNameError(true);
+      return;
+    }
+    
+    if (draft.exercises.length === 0) {
+      setShowExercisesError(true);
+      return;
+    }
+
     try {
       await workoutService.updateWorkout(id, { name: draft.name });
       await workoutService.saveWorkoutExercises(id, draft.exercises);
@@ -62,20 +79,32 @@ export default function EditWorkoutScreen() {
       style={commonStyles.container}
       contentContainerStyle={{ gap: 16, paddingBottom: 80 }}
     >
-      <Text style={commonStyles.title}>Edytuj Trening</Text>
-
-      <Input
-        value={draft.name}
-        onChangeText={setWorkoutName}
-        placeholder='Nazwa treningu...'
-      />
+      <View>
+        <Input
+          value={draft.name}
+          onChangeText={(text) => {
+            setWorkoutName(text);
+            if (showNameError) setShowNameError(false);
+          }}
+          placeholder='Nazwa treningu...'
+        />
+        {showNameError && (
+          <Text style={{ 
+            color: colors.danger, 
+            fontSize: 12, 
+            marginTop: 4,
+            marginLeft: 4,
+          }}>
+            Podaj nazwę treningu aby kontynuować
+          </Text>
+        )}
+      </View>
 
       {draft.exercises.length > 0 && (
         <>
           <Text style={commonStyles.subtitle}>
             Ćwiczenia ({draft.exercises.length}):
           </Text>
-
           {draft.exercises.map((item, index) => (
             <ExpandableExerciseCard
               key={item.exercise.id}
@@ -103,15 +132,28 @@ export default function EditWorkoutScreen() {
 
       <Button
         title='+ Dodaj Ćwiczenie'
-        onPress={() => router.push('/select-exercise')}
+        onPress={() => {
+          router.push('/select-exercise');
+          if (showExercisesError) setShowExercisesError(false);
+        }}
         variant='primary'
       />
+      
+      {showExercisesError && (
+        <Text style={{ 
+          color: colors.danger, 
+          fontSize: 12, 
+          marginTop: -8,
+          marginLeft: 4,
+        }}>
+          Dodaj przynajmniej jedno ćwiczenie
+        </Text>
+      )}
 
       <Button
         title='Zapisz zmiany'
         onPress={handleSaveWorkout}
         variant='primary'
-        disabled={!draft.name.trim() || draft.exercises.length === 0}
       />
     </ScrollView>
   );
