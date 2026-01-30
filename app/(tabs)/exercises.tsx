@@ -6,7 +6,7 @@ import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { capitalize } from '@/utils/capitalize';
 import {
   FlatList,
@@ -31,6 +31,12 @@ export default function ExercisesScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
+
+    useEffect(() => {
+    if (selectedCategory !== 'wszystkie') {
+      setSearchQuery('');
+    }
+  }, [selectedCategory]); 
 
   const filteredExercises = exercises.filter((ex) => {
     const matchesSearch =
