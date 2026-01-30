@@ -16,6 +16,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { parseDecimal, parseInteger } from '@/utils/numbers';
 
 export default function ActiveWorkoutScreen() {
   const { workoutService } = useApp();
@@ -269,10 +270,11 @@ export default function ActiveWorkoutScreen() {
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Ciężar (kg)</Text>
                     <TextInput
+                      key={`weight-${set.id}-${set.actualWeight}`}
                       style={styles.input}
-                      value={set.actualWeight?.toString() || '0'}
-                      onChangeText={(text) => {
-                        const val = parseFloat(text) || 0;
+                      defaultValue={set.actualWeight?.toString() || '0'}
+                      onEndEditing={(e) => {
+                        const val = parseDecimal(e.nativeEvent.text);
                         updateActualValue(
                           item.exercise.id,
                           set.id,
@@ -280,7 +282,7 @@ export default function ActiveWorkoutScreen() {
                           val,
                         );
                       }}
-                      keyboardType='numeric'
+                      keyboardType='decimal-pad'
                     />
                   </View>
 
@@ -288,10 +290,11 @@ export default function ActiveWorkoutScreen() {
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Powtórzenia</Text>
                     <TextInput
+                      key={`reps-${set.id}-${set.actualReps}`} 
                       style={styles.input}
-                      value={set.actualReps?.toString() || '0'}
-                      onChangeText={(text) => {
-                        const val = parseInt(text) || 0;
+                      defaultValue={set.actualReps?.toString() || '0'} 
+                      onEndEditing={(e) => {
+                        const val = parseInteger(e.nativeEvent.text);
                         updateActualValue(
                           item.exercise.id,
                           set.id,

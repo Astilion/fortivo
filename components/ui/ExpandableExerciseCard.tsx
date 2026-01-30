@@ -1,6 +1,7 @@
 import colors from '@/constants/Colors';
 import { WorkoutSet } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
+import { parseDecimal, parseInteger } from '@/utils/numbers';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface ExpandableExerciseCardProps {
@@ -26,7 +27,7 @@ export const ExpandableExerciseCard = ({
   exerciseName,
   exerciseCategories,
   exerciseId,
-  measurementType,
+  measurementType = 'reps',
   sets,
   isExpanded,
   onToggleExpand,
@@ -39,27 +40,6 @@ export const ExpandableExerciseCard = ({
   isFirst = false,
   isLast = false,
 }: ExpandableExerciseCardProps) => {
-  const getValueField = () => {
-    switch (measurementType) {
-      case 'time':
-        return 'duration';
-      case 'distance':
-        return 'distance';
-      default:
-        return 'reps';
-    }
-  };
-  const getActualValueField = () => {
-    switch (measurementType) {
-      case 'time':
-        return 'actualDuration';
-      case 'distance':
-        return 'actualDistance';
-      default:
-        return 'actualReps';
-    }
-  };
-
   const getLabel = () => {
     switch (measurementType) {
       case 'time':
@@ -79,6 +59,17 @@ export const ExpandableExerciseCard = ({
         return '50';
       default:
         return '8';
+    }
+  };
+
+  const getCurrentValue = (set: WorkoutSet) => {
+    switch (measurementType) {
+      case 'time':
+        return set.duration;
+      case 'distance':
+        return set.distance;
+      default:
+        return set.reps;
     }
   };
 
@@ -173,39 +164,32 @@ export const ExpandableExerciseCard = ({
                 <Text style={styles.setText}>{index + 1}</Text>
               </View>
 
-              {/* Weight Input */}
               <View style={styles.weightColumn}>
                 <TextInput
+                  key={`weight-${set.id}-${set.weight}`} 
                   style={styles.input}
-                  value={set.weight?.toString() || '0'}
-                  onChangeText={(text) => {
-                    const weight = parseFloat(text) || 0;
+                  defaultValue={set.weight?.toString() || '0'} 
+                  onEndEditing={(e) => {
+                    const weight = parseDecimal(e.nativeEvent.text);
                     onUpdateSet(set.id, { weight });
                   }}
-                  keyboardType='numeric'
+                  keyboardType='decimal-pad' 
                   placeholder='0'
                   placeholderTextColor={colors.text.secondary}
                 />
                 <Text style={styles.unitText}>kg</Text>
               </View>
 
-              {/* Reps Input */}
-              {/* Value Input (Reps/Time/Distance) */}
               <View style={styles.repsColumn}>
                 <TextInput
+                  key={`value-${set.id}-${getCurrentValue(set)}`} 
                   style={styles.input}
-                  value={
-                    measurementType === 'time'
-                      ? set.duration?.toString() || ''
-                      : measurementType === 'distance'
-                        ? set.distance?.toString() || ''
-                        : set.reps?.toString() || ''
-                  }
-                  onChangeText={(text) => {
+                  defaultValue={getCurrentValue(set)?.toString() || ''}
+                  onEndEditing={(e) => {
                     const value =
                       measurementType === 'distance'
-                        ? parseFloat(text) || 0
-                        : parseInt(text) || 0;
+                        ? parseDecimal(e.nativeEvent.text)
+                        : parseInteger(e.nativeEvent.text);
 
                     const updates: Partial<WorkoutSet> =
                       measurementType === 'time'
@@ -216,7 +200,9 @@ export const ExpandableExerciseCard = ({
 
                     onUpdateSet(set.id, updates);
                   }}
-                  keyboardType='numeric'
+                  keyboardType={
+                    measurementType === 'distance' ? 'decimal-pad' : 'numeric' 
+                  }
                   placeholder={getPlaceholder()}
                   placeholderTextColor={colors.text.secondary}
                 />
