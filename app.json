@@ -1,28 +1,39 @@
 {
   "expo": {
     "name": "Fortivo",
-    "slug": "Fortivo",
+    "slug": "fortivo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "fortivo",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1C2227"
     },
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.astilion.fortivo",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Fortivo needs camera access to take progress photos.",
+        "NSPhotoLibraryUsageDescription": "Fortivo needs photo library access to save and view your progress photos."
+      }
     },
     "android": {
+      "package": "com.astilion.fortivo",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1C2227"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -31,10 +42,21 @@
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite"
+      [
+        "expo-sqlite",
+        {
+          "enableFTS": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "63ef7e8d-e606-4eca-a419-77c3ef12dcd4"
+      }
     }
   }
 }
