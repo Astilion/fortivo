@@ -2256,6 +2256,18 @@
     "createdAt": "2025-01-18T12:00:00.000Z"
   },
   {
+    "id": "bench_press_013",
+    "name": "Wyciskanie Sztangi na Ławce Płaskiej",
+    "nameEN": "Bench Press",
+    "categories": ["klatka", "góra", "push"],
+    "muscleGroups": ["Klatka Piersiowa", "Triceps"],
+    "equipment": ["sztanga"],
+    "difficulty": "Średniozaawansowany",
+    "measurementType": "reps",
+    "isCustom": false,
+    "createdAt": "2025-01-18T12:00:00.000Z"
+  },
+  {
     "id": "extension_004",
     "name": "Triceps rollback extension",
     "nameEN": "",
