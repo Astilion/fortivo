@@ -19,7 +19,8 @@
       "supportsTablet": false,
       "infoPlist": {
         "NSCameraUsageDescription": "Fortivo needs camera access to take progress photos.",
-        "NSPhotoLibraryUsageDescription": "Fortivo needs photo library access to save and view your progress photos."
+        "NSPhotoLibraryUsageDescription": "Fortivo needs photo library access to save and view your progress photos.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {

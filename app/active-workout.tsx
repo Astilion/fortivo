@@ -169,15 +169,17 @@ export default function ActiveWorkoutScreen() {
       await workoutService.saveExerciseProgress(workout.id, exercises);
       await workoutService.clearActiveWorkout();
 
-      router.push('/(tabs)/workouts');
+      router.back();
 
-      alert('Trening zakończony!');
+      setTimeout(() => {
+        router.push('/(tabs)/workout-history');
+        Alert.alert('Sukces! 💪', 'Trening został zapisany');
+      }, 300);
     } catch (error) {
       console.error('Błąd zakończenia treningu', error);
       Alert.alert('Błąd', 'Nie udało się zapisać treningu');
     }
   };
-
   // ====== PROGRESS CALCULATION ======
   const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
 
@@ -290,9 +292,9 @@ export default function ActiveWorkoutScreen() {
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Powtórzenia</Text>
                     <TextInput
-                      key={`reps-${set.id}-${set.actualReps}`} 
+                      key={`reps-${set.id}-${set.actualReps}`}
                       style={styles.input}
-                      defaultValue={set.actualReps?.toString() || '0'} 
+                      defaultValue={set.actualReps?.toString() || '0'}
                       onEndEditing={(e) => {
                         const val = parseInteger(e.nativeEvent.text);
                         updateActualValue(

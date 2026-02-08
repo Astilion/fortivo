@@ -96,6 +96,7 @@ export default function RootLayout() {
             ...commonScreenOptions,
             presentation: 'fullScreenModal',
             gestureEnabled: false,
+            title: 'Aktywny trening'
           }}
         />
 
