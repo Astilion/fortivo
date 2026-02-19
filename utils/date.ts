@@ -13,7 +13,6 @@ export const formatDate = (
 
 export const getGreeting = (): string => {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Dzień dobry';
   if (hour < 18) return 'Dzień dobry';
   return 'Dobry wieczór';
 };

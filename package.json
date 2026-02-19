@@ -7,6 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
@@ -15,6 +17,8 @@
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
     "@react-navigation/native": "^7.1.8",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
     "date-fns": "^4.1.0",
     "expo": "~54.0.10",
     "expo-constants": "~18.0.9",
@@ -25,6 +29,7 @@
     "expo-sqlite": "~16.0.8",
     "expo-status-bar": "~3.0.8",
     "expo-web-browser": "~15.0.7",
+    "jest-expo": "~54.0.17",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.63.0",
@@ -39,6 +44,7 @@
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@react-native/eslint-config": "^0.81.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.5.2",
     "@types/react": "~19.1.0",
     "@typescript-eslint/eslint-plugin": "^8.44.1",
@@ -49,6 +55,12 @@
     "prettier": "^3.6.2",
     "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
+    ]
   },
   "private": true
 }
