@@ -3,6 +3,7 @@ import initDatabase from '@/database/database';
 import { Exercise, ExerciseService } from '@/services/exerciseService';
 import { WorkoutService } from '@/services/workoutService';
 import { useExerciseStore } from '@/store/exerciseStore';
+import { ProfileService } from '@/services/profileService';
 import * as SQLite from 'expo-sqlite';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
@@ -11,6 +12,7 @@ interface AppContextType {
   db: SQLite.SQLiteDatabase;
   exerciseService: ExerciseService;
   workoutService: WorkoutService;
+  profileService: ProfileService;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -74,6 +76,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       // Initialize services
       const exerciseService = new ExerciseService(database);
       const workoutService = new WorkoutService(database);
+      const profileService = new ProfileService(database);
 
       // Validate and seed exercises
       const validatedExercises = validateExerciseData(exercisesData);
@@ -89,6 +92,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         db: database,
         exerciseService,
         workoutService,
+        profileService
       });
 
       setIsReady(true);
