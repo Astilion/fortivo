@@ -1,5 +1,6 @@
 import { UserSettings, UserSettingsRow } from '@/types/training';
 import * as SQLite from 'expo-sqlite';
+import { logger } from '@/utils/logger';
 
 export class ProfileService {
   private db: SQLite.SQLiteDatabase;
@@ -15,6 +16,7 @@ export class ProfileService {
     );
 
     if (!row) {
+      logger.db('no settings found, returning defaults', { userId });
       return {
         userId,
         preferredWeightUnit: 'kg',
@@ -26,6 +28,7 @@ export class ProfileService {
       };
     }
 
+    logger.db('fetched user settings', { userId, settings: row });
     return {
       userId: row.user_id,
       preferredWeightUnit: row.preferred_weight_unit as 'kg' | 'lbs',
@@ -51,5 +54,6 @@ export class ProfileService {
         settings.weekStartsOn,
       ],
     );
+    logger.db('updated user settings', { userId: settings.userId, settings });
   }
 }
