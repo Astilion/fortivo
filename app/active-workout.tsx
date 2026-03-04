@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { parseDecimal, parseInteger } from '@/utils/numbers';
+import { useProfileSettings } from '@/hooks/useProfileSettings';
 
 export default function ActiveWorkoutScreen() {
   const { workoutService } = useApp();
@@ -24,6 +25,7 @@ export default function ActiveWorkoutScreen() {
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
   const [startTime] = useState<Date>(new Date());
+  const { settings } = useProfileSettings();
 
   useFocusEffect(
     useCallback(() => {
@@ -131,7 +133,7 @@ export default function ActiveWorkoutScreen() {
   const updateActualValue = (
     exerciseId: string,
     setId: string,
-    field: 'actualReps' | 'actualWeight',
+    field: 'actualReps' | 'actualWeight' | 'actualRpe',
     value: number,
   ) => {
     setExercises((prevExercises) => {
@@ -270,7 +272,9 @@ export default function ActiveWorkoutScreen() {
                 <View style={styles.inputsRow}>
                   {/* Weight */}
                   <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Ciężar (kg)</Text>
+                    <Text style={styles.inputLabel}>
+                      {`Ciężar (${settings?.preferredWeightUnit ?? 'kg'})`}
+                    </Text>
                     <TextInput
                       key={`weight-${set.id}-${set.actualWeight}`}
                       style={styles.input}
@@ -307,6 +311,27 @@ export default function ActiveWorkoutScreen() {
                       keyboardType='numeric'
                     />
                   </View>
+                  {settings?.trackRPE && (
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>RPE</Text>
+                      <TextInput
+                        style={styles.input}
+                        defaultValue={set.actualRpe?.toString() || ''}
+                        onEndEditing={(e) => {
+                          const val = parseDecimal(e.nativeEvent.text);
+                          updateActualValue(
+                            item.exercise.id,
+                            set.id,
+                            'actualRpe',
+                            val,
+                          );
+                        }}
+                        keyboardType='decimal-pad'
+                        placeholder='1-10'
+                        placeholderTextColor={colors.muted}
+                      />
+                    </View>
+                  )}
                 </View>
               </View>
             ))}
