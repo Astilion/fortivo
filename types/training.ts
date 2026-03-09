@@ -144,6 +144,7 @@ export interface UserSettings {
   trackTempo: boolean;
   trackRestTime: boolean;
   weekStartsOn: number;
+  goalWeight?: number;
 }
 
 // Helper Types
@@ -356,6 +357,7 @@ export interface UserSettingsRow {
   track_tempo: number;
   track_rest_time: number;
   week_starts_on: number;
+  goal_weight: number | null;
 }
 
 export interface PeriodizationBlockRow {

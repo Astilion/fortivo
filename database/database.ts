@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-const DB_NAME = 'fortivo_v7.db';
+const DB_NAME = 'fortivo_v8.db';
 
 export const initDatabase = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
@@ -196,7 +196,8 @@ export const initDatabase = async () => {
       track_rpe INTEGER DEFAULT 1,
       track_tempo INTEGER DEFAULT 0,
       track_rest_time INTEGER DEFAULT 1,
-      week_starts_on INTEGER DEFAULT 1 CHECK(week_starts_on BETWEEN 0 AND 6)
+      week_starts_on INTEGER DEFAULT 1 CHECK(week_starts_on BETWEEN 0 AND 6),
+      goal_weight REAL
     );
 
     -- ==================== PERIODIZATION BLOCKS ====================

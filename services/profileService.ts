@@ -37,13 +37,14 @@ export class ProfileService {
       trackTempo: row.track_tempo === 1,
       trackRestTime: row.track_rest_time === 1,
       weekStartsOn: row.week_starts_on,
+      goalWeight: row.goal_weight ?? undefined,
     };
   }
 
   async updateUserSettings(settings: UserSettings): Promise<void> {
     await this.db.runAsync(
-      `INSERT OR REPLACE INTO user_settings (user_id, preferred_weight_unit, default_rest_time, track_rpe, track_tempo, track_rest_time, week_starts_on)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO user_settings (user_id, preferred_weight_unit, default_rest_time, track_rpe, track_tempo, track_rest_time, week_starts_on, goal_weight)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         settings.userId,
         settings.preferredWeightUnit,
@@ -52,6 +53,7 @@ export class ProfileService {
         settings.trackTempo ? 1 : 0,
         settings.trackRestTime ? 1 : 0,
         settings.weekStartsOn,
+        settings.goalWeight ?? null,
       ],
     );
     logger.db('updated user settings', { userId: settings.userId, settings });

@@ -57,16 +57,51 @@ export default function ProfileScreen() {
   const { settings, setSettings, loading, error, updateSettings } =
     useProfileSettings();
   const [restTimeInput, setRestTimeInput] = useState<string>('');
+  const [goalWeightInput, setGoalWeightInput] = useState<string>('');
+  const [goalWeightError, setGoalWeightError] = useState<string | null>(null);
+
   useEffect(() => {
     if (settings) {
       setRestTimeInput(settings.defaultRestTime.toString());
+      setGoalWeightInput(
+        settings.goalWeight ? settings.goalWeight.toString() : '',
+      );
     }
-  }, [settings?.defaultRestTime]);
+  }, [settings?.defaultRestTime, settings?.goalWeight]);
 
   const handleWeightUnitChange = (unit: WeightUnit) => {
     const updatedSettings = { ...settings!, preferredWeightUnit: unit };
     setSettings(updatedSettings);
     profileService.updateUserSettings(updatedSettings);
+  };
+
+  const handleGoalWeightChange = (value: string) => {
+    setGoalWeightInput(value);
+  };
+
+  const handleGoalWeightBlur = async () => {
+    const numericValue = parseFloat(goalWeightInput);
+    const finalValue =
+      isNaN(numericValue) || numericValue < 35 || numericValue > 300
+        ? undefined
+        : numericValue;
+    if (goalWeightInput !== '' && finalValue === undefined) {
+      setGoalWeightError('Waga musi być między 35 a 300kg');
+      setGoalWeightInput('');
+    } else {
+      setGoalWeightError(null);
+      setGoalWeightInput(finalValue?.toString() ?? '');
+      const updatedSettings = {
+        ...settings!,
+        goalWeight: finalValue,
+      };
+      setSettings(updatedSettings);
+      try {
+        await profileService.updateUserSettings(updatedSettings);
+      } catch (error) {
+        console.error('Error updating goal weight:', error);
+      }
+    }
   };
 
   const handleRestTimeChange = (value: string) => {
@@ -173,6 +208,34 @@ export default function ProfileScreen() {
               ))}
             </View>
           </SettingsRow>
+        </View>
+        {/* -- Sekcja: Cel Wagowy -- */}
+        <SectionHeader icon='trophy-outline' title='CEL' />
+        <View style={styles.card}>
+          <SettingsRow
+            label='Cel wagowy'
+            description='Twoja docelowa waga'
+            isLast
+          >
+            <View style={styles.numberInputWrapper}>
+              <TextInput
+                style={styles.numberInput}
+                value={goalWeightInput}
+                onChangeText={handleGoalWeightChange}
+                onBlur={handleGoalWeightBlur}
+                keyboardType='decimal-pad'
+                maxLength={6}
+                placeholder='--'
+                placeholderTextColor={colors.muted}
+              />
+              <Text style={styles.numberInputUnit}>
+                {settings?.preferredWeightUnit ?? 'kg'}
+              </Text>
+            </View>
+          </SettingsRow>
+          {goalWeightError && (
+            <Text style={styles.goalWeightError}>{goalWeightError}</Text>
+          )}
         </View>
 
         {/* ── Sekcja: Trening ── */}
@@ -411,7 +474,13 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontWeight: '500',
   },
-
+  // error text for goal weight input
+  goalWeightError: {
+    fontSize: 12,
+    color: colors.danger,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
   // Meta text
   metaText: {
     fontSize: 15,
