@@ -198,6 +198,14 @@ export interface ExerciseProgressWithWorkout {
   personalRecord: boolean;
   workoutName?: string;
 }
+export interface WeightEntry {
+  id: string;
+  userId: string;
+  weight: number;
+  date: string;
+  notes?: string;
+  createdAt: string;
+}
 
 // Row Types
 export interface ExerciseRow {
@@ -373,5 +381,13 @@ export interface ExerciseProgressQueryRow {
 export interface FavoriteExerciseRow {
   user_id: string;
   exercise_id: string;
+  created_at: string;
+}
+export interface WeightEntryRow {
+  id: string;
+  user_id: string;
+  weight: number;
+  date: string;
+  notes: string | null;
   created_at: string;
 }

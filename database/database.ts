@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-const DB_NAME = 'fortivo_v6.db';
+const DB_NAME = 'fortivo_v7.db';
 
 export const initDatabase = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
@@ -210,6 +210,16 @@ export const initDatabase = async () => {
       FOREIGN KEY (training_plan_id) REFERENCES training_plans(id) ON DELETE CASCADE
     );
 
+    -- ==================== WEIGHT ENTRIES ====================
+    CREATE TABLE IF NOT EXISTS weight_entries (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      weight REAL NOT NULL,
+      date TEXT NOT NULL,
+      notes TEXT,
+      created_at TEXT NOT NULL
+    );
+
     -- ==================== FAVORITE EXERCISES ====================
     CREATE TABLE IF NOT EXISTS favorite_exercises (
       user_id TEXT NOT NULL,
@@ -256,6 +266,8 @@ export const initDatabase = async () => {
     CREATE INDEX IF NOT EXISTS idx_workout_history_user_date ON workout_history(user_id, completed_at);
     CREATE INDEX IF NOT EXISTS idx_favorite_exercises_user ON favorite_exercises(user_id);
     CREATE INDEX IF NOT EXISTS idx_favorite_exercises_exercise ON favorite_exercises(exercise_id);
+
+    CREATE INDEX IF NOT EXISTS idx_weight_entries_user_date ON weight_entries(user_id, date);
   `);
 
   return db;
