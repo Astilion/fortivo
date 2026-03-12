@@ -96,7 +96,7 @@ export default function RootLayout() {
             ...commonScreenOptions,
             presentation: 'fullScreenModal',
             gestureEnabled: false,
-            title: 'Aktywny trening'
+            title: 'Aktywny trening',
           }}
         />
 
@@ -108,6 +108,10 @@ export default function RootLayout() {
         <Stack.Screen
           name='exercise-progress'
           options={{ ...commonScreenOptions, title: 'Historia ćwiczenia' }}
+        />
+        <Stack.Screen
+          name='weight-tracking'
+          options={{ ...commonScreenOptions, title: 'Śledzenie wagi' }}
         />
       </Stack>
     </AppProvider>

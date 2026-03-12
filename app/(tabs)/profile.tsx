@@ -1,6 +1,7 @@
 import { useProfileSettings } from '@/hooks/useProfileSettings';
 import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -9,8 +10,9 @@ import {
   Switch,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   View,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/providers/AppProvider';
@@ -54,6 +56,7 @@ const SettingsRow: React.FC<SettingsRowProps> = ({
 
 export default function ProfileScreen() {
   const { profileService } = useApp();
+  const router = useRouter();
   const { settings, setSettings, loading, error, updateSettings } =
     useProfileSettings();
   const [restTimeInput, setRestTimeInput] = useState<string>('');
@@ -236,6 +239,15 @@ export default function ProfileScreen() {
           {goalWeightError && (
             <Text style={styles.goalWeightError}>{goalWeightError}</Text>
           )}
+          <Pressable onPress={() => router.push('/weight-tracking')}>
+            <SettingsRow label='Historia wagi' isLast>
+              <Ionicons
+                name='chevron-forward'
+                size={20}
+                color={colors.text.secondary}
+              />
+            </SettingsRow>
+          </Pressable>
         </View>
 
         {/* ── Sekcja: Trening ── */}
