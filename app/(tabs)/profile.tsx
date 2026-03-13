@@ -165,17 +165,13 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profil</Text>
-        {loading && (
-          <ActivityIndicator
-            size='small'
-            color={colors.accent}
-            style={styles.headerSpinner}
-          />
-        )}
-      </View>
+      {loading && (
+        <ActivityIndicator
+          size='small'
+          color={colors.accent}
+          style={styles.headerSpinner}
+        />
+      )}
 
       <ScrollView
         style={styles.scroll}
@@ -240,7 +236,17 @@ export default function ProfileScreen() {
             <Text style={styles.goalWeightError}>{goalWeightError}</Text>
           )}
           <Pressable onPress={() => router.push('/weight-tracking')}>
-            <SettingsRow label='Historia wagi' isLast>
+            <SettingsRow label='Historia wagi'>
+              <Ionicons
+                name='chevron-forward'
+                size={20}
+                color={colors.text.secondary}
+              />
+            </SettingsRow>
+          </Pressable>
+
+          <Pressable onPress={() => router.push('/body-measurements')}>
+            <SettingsRow label='Historia Pomiarów' isLast>
               <Ionicons
                 name='chevron-forward'
                 size={20}

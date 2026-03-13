@@ -72,22 +72,22 @@ export default function RootLayout() {
 
         <Stack.Screen
           name='exercise-details'
-          options={{ ...commonScreenOptions, title: 'Szczegóły ćwiczenia' }}
+          options={{ ...commonScreenOptions, title: 'Szczegóły Ćwiczenia' }}
         />
 
         <Stack.Screen
           name='create-workout'
-          options={{ ...commonScreenOptions, title: 'Utwórz nowy trening' }}
+          options={{ ...commonScreenOptions, title: 'Utwórz Nowy Trening' }}
         />
 
         <Stack.Screen
           name='edit-workout'
-          options={{ ...commonScreenOptions, title: 'Edytuj trening' }}
+          options={{ ...commonScreenOptions, title: 'Edytuj Trening' }}
         />
 
         <Stack.Screen
           name='select-exercise'
-          options={{ ...commonScreenOptions, title: 'Lista ćwiczeń' }}
+          options={{ ...commonScreenOptions, title: 'Lista Ćwiczeń' }}
         />
 
         <Stack.Screen
@@ -102,16 +102,20 @@ export default function RootLayout() {
 
         <Stack.Screen
           name='workout-details'
-          options={{ ...commonScreenOptions, title: 'Szczegóły treningu' }}
+          options={{ ...commonScreenOptions, title: 'Szczegóły Treningu' }}
         />
 
         <Stack.Screen
           name='exercise-progress'
-          options={{ ...commonScreenOptions, title: 'Historia ćwiczenia' }}
+          options={{ ...commonScreenOptions, title: 'Historia Ćwiczenia' }}
         />
         <Stack.Screen
           name='weight-tracking'
-          options={{ ...commonScreenOptions, title: 'Śledzenie wagi' }}
+          options={{ ...commonScreenOptions, title: 'Śledzenie Wagi' }}
+        />
+        <Stack.Screen
+          name='body-measurements'
+          options={{ ...commonScreenOptions, title: 'Śledzenie Pomiarów' }}
         />
       </Stack>
     </AppProvider>

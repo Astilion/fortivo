@@ -15,9 +15,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { useApp } from '@/providers/AppProvider';
-import { AddEntryForm } from '@/components/ui/weight/AddEntryForm';
-import { WeightEntryRow } from '@/components/ui/weight/WeightEntryRow';
-import { SummaryCard } from '@/components/ui/weight/SummaryCard';
+import { AddEntryForm } from '@/components/weight/AddEntryForm';
+import { WeightEntryRow } from '@/components/weight/WeightEntryRow';
+import { SummaryCard } from '@/components/weight/SummaryCard';
 
 export default function WeightTrackingScreen() {
   const router = useRouter();

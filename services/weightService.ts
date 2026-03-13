@@ -16,9 +16,10 @@ export class WeightService {
     notes?: string,
   ): Promise<WeightEntry> {
     const id = generateId('weight-entry');
+    const createdAt = new Date().toISOString();
     await this.db.runAsync(
-      `INSERT INTO weight_entries (user_id, weight, date, notes, id) VALUES (?, ?, ?, ?, ?)`,
-      [userId, weight, date, notes || null, id],
+      `INSERT INTO weight_entries (id, user_id, weight, date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, userId, weight, date, notes || null, createdAt],
     );
 
     logger.db('added weight entry', { userId, weight, date, notes });
@@ -27,7 +28,7 @@ export class WeightService {
       weight,
       date,
       notes,
-      createdAt: new Date().toISOString(),
+      createdAt: createdAt,
       id,
     };
   }
