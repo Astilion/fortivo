@@ -208,6 +208,16 @@ export interface WeightEntry {
   createdAt: string;
 }
 
+export interface BodyMeasurement {
+  id: string;
+  userId: string;
+  date: string;
+  bodyPart: string;
+  value: number;
+  notes?: string;
+  createdAt: string;
+}
+
 // Row Types
 export interface ExerciseRow {
   id: string;
@@ -390,6 +400,16 @@ export interface WeightEntryRow {
   user_id: string;
   weight: number;
   date: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface BodyMeasurementRow {
+  id: string;
+  user_id: string;
+  date: string;
+  body_part: string;
+  value: number;
   notes: string | null;
   created_at: string;
 }

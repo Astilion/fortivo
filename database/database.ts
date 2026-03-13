@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-const DB_NAME = 'fortivo_v8.db';
+const DB_NAME = 'fortivo_v9.db';
 
 export const initDatabase = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
@@ -228,6 +228,17 @@ export const initDatabase = async () => {
       created_at TEXT NOT NULL,
       PRIMARY KEY (user_id, exercise_id),
       FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
+    );
+
+    -- ==================== BODY MEASUREMENTS====================
+    CREATE TABLE IF NOT EXISTS body_measurements (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      date TEXT NOT NULL,
+      body_part TEXT NOT NULL,
+      value REAL NOT NULL,
+      notes TEXT,
+      created_at TEXT NOT NULL
     );
 
     -- ==================== INDEXES ====================
