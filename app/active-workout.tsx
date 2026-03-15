@@ -24,6 +24,10 @@ export default function ActiveWorkoutScreen() {
   const router = useRouter();
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
+  const [restTimeRemaining, setRestTimeRemaining] = useState<number | null>(
+    null,
+  );
+  const [isResting, setIsResting] = useState(false);
   const [startTime] = useState<Date>(new Date());
   const { settings } = useProfileSettings();
 
@@ -32,6 +36,19 @@ export default function ActiveWorkoutScreen() {
       loadActiveWorkout();
     }, []),
   );
+
+  useEffect(() => {
+    if (!isResting || restTimeRemaining === null) return;
+    if (restTimeRemaining <= 0) {
+      setIsResting(false);
+      setRestTimeRemaining(null);
+      return;
+    }
+    const interval = setInterval(() => {
+      setRestTimeRemaining((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isResting, restTimeRemaining]);
 
   const loadActiveWorkout = async () => {
     const workout = await workoutService.getActiveWorkout();
@@ -63,10 +80,13 @@ export default function ActiveWorkoutScreen() {
             ...ex,
             sets: ex.sets.map((s) => {
               if (s.id === setId) {
-                return {
-                  ...s,
-                  completed: !s.completed,
-                };
+                const nowCompleted = !s.completed;
+                if (nowCompleted && settings?.trackRestTime) {
+                  const restTime = s.restTime ?? settings.defaultRestTime ?? 90;
+                  setRestTimeRemaining(restTime);
+                  setIsResting(true);
+                }
+                return { ...s, completed: nowCompleted };
               }
               return s;
             }),
@@ -81,7 +101,6 @@ export default function ActiveWorkoutScreen() {
     setExercises((prevExercises) => {
       return prevExercises.map((ex) => {
         if (ex.exercise.id === exerciseId) {
-          // Get last set as template (same pattern as workoutStore)
           const lastSet = ex.sets[ex.sets.length - 1];
 
           const newSet: WorkoutSet = {
@@ -199,7 +218,22 @@ export default function ActiveWorkoutScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>{workout?.name || 'Trening'}</Text>
       </View>
-
+      {isResting && restTimeRemaining !== null && (
+        <View style={styles.restBanner}>
+          <Ionicons name='timer-outline' size={18} color={colors.primary} />
+          <Text style={styles.restBannerText}>
+            Odpoczynek: {restTimeRemaining}s
+          </Text>
+          <Pressable
+            onPress={() => {
+              setIsResting(false);
+              setRestTimeRemaining(null);
+            }}
+          >
+            <Ionicons name='close' size={18} color={colors.primary} />
+          </Pressable>
+        </View>
+      )}
       {/* ====== PROGRESS BAR ====== */}
       <View style={styles.progressContainer}>
         {/* Progress bar track (background) */}
@@ -311,6 +345,7 @@ export default function ActiveWorkoutScreen() {
                       keyboardType='numeric'
                     />
                   </View>
+                  {/* RPE */}
                   {settings?.trackRPE && (
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>RPE</Text>
@@ -328,6 +363,18 @@ export default function ActiveWorkoutScreen() {
                         }}
                         keyboardType='decimal-pad'
                         placeholder='1-10'
+                        placeholderTextColor={colors.muted}
+                      />
+                    </View>
+                  )}
+                  {/* Tempo */}
+                  {settings?.trackTempo && (
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Tempo</Text>
+                      <TextInput
+                        style={styles.input}
+                        defaultValue={set.tempo || ''}
+                        placeholder='3-1-2'
                         placeholderTextColor={colors.muted}
                       />
                     </View>
@@ -490,5 +537,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.accent,
+  },
+  // Rest banner styles
+  restBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.accent,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  restBannerText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.primary,
   },
 });

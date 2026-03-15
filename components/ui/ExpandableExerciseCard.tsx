@@ -153,6 +153,9 @@ export const ExpandableExerciseCard = ({
             <Text style={[styles.tableHeaderText, styles.repsColumnHeader]}>
               {getLabel()}
             </Text>
+            <Text style={[styles.tableHeaderText, styles.restColumnHeader]}>
+              Odpoczynek
+            </Text>
             <View style={styles.actionColumnHeader} />
           </View>
 
@@ -166,14 +169,14 @@ export const ExpandableExerciseCard = ({
 
               <View style={styles.weightColumn}>
                 <TextInput
-                  key={`weight-${set.id}-${set.weight}`} 
+                  key={`weight-${set.id}-${set.weight}`}
                   style={styles.input}
-                  defaultValue={set.weight?.toString() || '0'} 
+                  defaultValue={set.weight?.toString() || '0'}
                   onEndEditing={(e) => {
                     const weight = parseDecimal(e.nativeEvent.text);
                     onUpdateSet(set.id, { weight });
                   }}
-                  keyboardType='decimal-pad' 
+                  keyboardType='decimal-pad'
                   placeholder='0'
                   placeholderTextColor={colors.text.secondary}
                 />
@@ -182,7 +185,7 @@ export const ExpandableExerciseCard = ({
 
               <View style={styles.repsColumn}>
                 <TextInput
-                  key={`value-${set.id}-${getCurrentValue(set)}`} 
+                  key={`value-${set.id}-${getCurrentValue(set)}`}
                   style={styles.input}
                   defaultValue={getCurrentValue(set)?.toString() || ''}
                   onEndEditing={(e) => {
@@ -201,11 +204,27 @@ export const ExpandableExerciseCard = ({
                     onUpdateSet(set.id, updates);
                   }}
                   keyboardType={
-                    measurementType === 'distance' ? 'decimal-pad' : 'numeric' 
+                    measurementType === 'distance' ? 'decimal-pad' : 'numeric'
                   }
                   placeholder={getPlaceholder()}
                   placeholderTextColor={colors.text.secondary}
                 />
+              </View>
+
+              <View style={styles.restColumn}>
+                <TextInput
+                  style={styles.input}
+                  defaultValue={set.restTime?.toString() || ''}
+                  onEndEditing={(e) => {
+                    const restTime =
+                      parseInteger(e.nativeEvent.text) || undefined;
+                    onUpdateSet(set.id, { restTime });
+                  }}
+                  keyboardType='numeric'
+                  placeholder='90'
+                  placeholderTextColor={colors.text.secondary}
+                />
+                <Text style={styles.unitText}>s</Text>
               </View>
 
               {/* Delete set */}
@@ -413,5 +432,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.accent,
+  },
+  restColumnHeader: {
+    flex: 1,
+    textAlign: 'center',
+  },
+  restColumn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 4,
   },
 });
