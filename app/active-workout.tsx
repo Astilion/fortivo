@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { parseDecimal, parseInteger } from '@/utils/numbers';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
+import { validateRPE, validateTempo } from '@/utils/validation';
 
 export default function ActiveWorkoutScreen() {
   const { workoutService } = useApp();
@@ -27,6 +28,7 @@ export default function ActiveWorkoutScreen() {
   const [restTimeRemaining, setRestTimeRemaining] = useState<number | null>(
     null,
   );
+  const [validationKey, setValidationKey] = useState(0);
   const [isResting, setIsResting] = useState(false);
   const [startTime] = useState<Date>(new Date());
   const { settings } = useProfileSettings();
@@ -149,23 +151,19 @@ export default function ActiveWorkoutScreen() {
     });
   };
 
-  const updateActualValue = (
+  const updateSetValue = (
     exerciseId: string,
     setId: string,
-    field: 'actualReps' | 'actualWeight' | 'actualRpe',
-    value: number,
+    updates: Partial<WorkoutSet>,
   ) => {
     setExercises((prevExercises) => {
-      const newExercises = prevExercises.map((ex) => {
+      return prevExercises.map((ex) => {
         if (ex.exercise.id === exerciseId) {
           return {
             ...ex,
             sets: ex.sets.map((s) => {
               if (s.id === setId) {
-                return {
-                  ...s,
-                  [field]: value,
-                };
+                return { ...s, ...updates };
               }
               return s;
             }),
@@ -173,10 +171,8 @@ export default function ActiveWorkoutScreen() {
         }
         return ex;
       });
-      return newExercises;
     });
   };
-
   const handleFinishWorkout = async () => {
     if (!workout) return;
 
@@ -315,12 +311,9 @@ export default function ActiveWorkoutScreen() {
                       defaultValue={set.actualWeight?.toString() || '0'}
                       onEndEditing={(e) => {
                         const val = parseDecimal(e.nativeEvent.text);
-                        updateActualValue(
-                          item.exercise.id,
-                          set.id,
-                          'actualWeight',
-                          val,
-                        );
+                        updateSetValue(item.exercise.id, set.id, {
+                          actualWeight: val,
+                        });
                       }}
                       keyboardType='decimal-pad'
                     />
@@ -335,12 +328,9 @@ export default function ActiveWorkoutScreen() {
                       defaultValue={set.actualReps?.toString() || '0'}
                       onEndEditing={(e) => {
                         const val = parseInteger(e.nativeEvent.text);
-                        updateActualValue(
-                          item.exercise.id,
-                          set.id,
-                          'actualReps',
-                          val,
-                        );
+                        updateSetValue(item.exercise.id, set.id, {
+                          actualReps: val,
+                        });
                       }}
                       keyboardType='numeric'
                     />
@@ -350,16 +340,17 @@ export default function ActiveWorkoutScreen() {
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>RPE</Text>
                       <TextInput
+                        key={`rpe-${set.id}-${set.actualRpe}-${validationKey}`}
                         style={styles.input}
                         defaultValue={set.actualRpe?.toString() || ''}
                         onEndEditing={(e) => {
-                          const val = parseDecimal(e.nativeEvent.text);
-                          updateActualValue(
-                            item.exercise.id,
-                            set.id,
-                            'actualRpe',
-                            val,
-                          );
+                          const validated = validateRPE(e.nativeEvent.text);
+                          if (validated === null && e.nativeEvent.text.trim()) {
+                            setValidationKey((prev) => prev + 1);
+                          }
+                          updateSetValue(item.exercise.id, set.id, {
+                            actualRpe: validated ?? undefined,
+                          });
                         }}
                         keyboardType='decimal-pad'
                         placeholder='1-10'
@@ -372,8 +363,18 @@ export default function ActiveWorkoutScreen() {
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>Tempo</Text>
                       <TextInput
+                        key={`tempo-${set.id}-${set.tempo}-${validationKey}`}
                         style={styles.input}
                         defaultValue={set.tempo || ''}
+                        onEndEditing={(e) => {
+                          const validated = validateTempo(e.nativeEvent.text);
+                          if (validated === null && e.nativeEvent.text.trim()) {
+                            setValidationKey((prev) => prev + 1);
+                          }
+                          updateSetValue(item.exercise.id, set.id, {
+                            tempo: validated ?? undefined,
+                          });
+                        }}
                         placeholder='3-1-2'
                         placeholderTextColor={colors.muted}
                       />
