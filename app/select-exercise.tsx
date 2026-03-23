@@ -28,6 +28,14 @@ export default function SelectExerciseScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
 
+  const addExercise = useWorkoutStore((state) => state.addExercise);
+  const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
+  const isFavorite = useExerciseStore((state) => state.isFavorite);
+
+  const favoriteExercises = useExerciseStore(
+    (state) => state.favoriteExercises,
+  );
+  
   const filteredExercises = exercises.filter((ex) => {
     const matchesSearch =
       searchQuery.trim() === '' ||
@@ -45,13 +53,6 @@ export default function SelectExerciseScreen() {
 
     return matchesSearch && matchesCategory && matchesFavorites;
   });
-  const addExercise = useWorkoutStore((state) => state.addExercise);
-  const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
-  const isFavorite = useExerciseStore((state) => state.isFavorite);
-
-  const favoriteExercises = useExerciseStore(
-    (state) => state.favoriteExercises,
-  );
 
   const handleSelectExercise = (exerciseId: string) => {
     const exercise = exercises.find((ex) => ex.id === exerciseId);
