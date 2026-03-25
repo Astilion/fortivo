@@ -146,7 +146,6 @@ export default function WorkoutDetailsScreen() {
                   )}
                 </View>
 
-                {/* Set data */}
                 <View style={styles.setData}>
                   <View style={styles.dataItem}>
                     <Text style={styles.dataLabel}>Ciężar</Text>
@@ -162,7 +161,20 @@ export default function WorkoutDetailsScreen() {
                     </Text>
                   </View>
 
-                  {/* Show planned vs actual if different */}
+                  {set.actualRpe && (
+                    <View style={styles.dataItem}>
+                      <Text style={styles.dataLabel}>RPE</Text>
+                      <Text style={styles.dataValue}>{set.actualRpe}</Text>
+                    </View>
+                  )}
+
+                  {set.tempo && (
+                    <View style={styles.dataItem}>
+                      <Text style={styles.dataLabel}>Tempo</Text>
+                      <Text style={styles.dataValue}>{set.tempo}</Text>
+                    </View>
+                  )}
+
                   {(set.actualWeight !== set.weight ||
                     set.actualReps !== set.reps) && (
                     <View style={styles.plannedData}>

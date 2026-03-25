@@ -13,11 +13,19 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   goalWeight,
   weightUnit,
 }) => {
-  const diff =
-    currentWeight && goalWeight
-      ? (currentWeight - goalWeight).toFixed(1)
-      : null;
-  const isAboveGoal = diff !== null && parseFloat(diff) > 0;
+  const getDiffDisplay = () => {
+    if (!currentWeight || !goalWeight) return null;
+    if (currentWeight === goalWeight)
+      return { text: 'Cel osiągnięty!', color: colors.success };
+
+    const absDiff = Math.abs(currentWeight - goalWeight).toFixed(1);
+    return {
+      text: `${absDiff} ${weightUnit}`,
+      color: colors.text.primary,
+    };
+  };
+
+  const diffDisplay = getDiffDisplay();
 
   return (
     <View style={styles.summaryCard}>
@@ -27,31 +35,23 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           {currentWeight ? `${currentWeight} ${weightUnit}` : '--'}
         </Text>
       </View>
-
       <View style={styles.summarySeparator} />
-
       <View style={styles.summaryItem}>
         <Text style={styles.summaryLabel}>Cel</Text>
         <Text style={styles.summaryValue}>
           {goalWeight ? `${goalWeight} ${weightUnit}` : '--'}
         </Text>
       </View>
-
       <View style={styles.summarySeparator} />
-
       <View style={styles.summaryItem}>
         <Text style={styles.summaryLabel}>Różnica</Text>
         <Text
           style={[
             styles.summaryValue,
-            diff !== null && {
-              color: isAboveGoal ? colors.warning : colors.success,
-            },
+            diffDisplay && { color: diffDisplay.color },
           ]}
         >
-          {diff !== null
-            ? `${isAboveGoal ? '+' : ''}${diff} ${weightUnit}`
-            : '--'}
+          {diffDisplay ? diffDisplay.text : '--'}
         </Text>
       </View>
     </View>
