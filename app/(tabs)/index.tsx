@@ -47,7 +47,7 @@ export default function HomeScreen() {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>{getGreeting()}! 👋</Text>
+        <Text style={styles.greeting}>{getGreeting()}!</Text>
         <Text style={styles.subtitle}>Twój postęp treningowy</Text>
       </View>
       {/* Stats Cards */}
