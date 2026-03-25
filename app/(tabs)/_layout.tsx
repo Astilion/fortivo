@@ -16,6 +16,9 @@ export default function TabLayout() {
           backgroundColor: colors.primary,
         },
         headerTintColor: colors.text.primary,
+        sceneStyle: {
+          backgroundColor: colors.primary,
+        },
       }}
     >
       <Tabs.Screen

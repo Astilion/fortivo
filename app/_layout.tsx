@@ -8,6 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -17,6 +18,18 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync();
 
+const FortivoDarkTheme = {
+  ...DefaultTheme,
+  dark: true,
+  colors: {
+    ...DefaultTheme.colors,
+    background: colors.primary,
+    card: colors.primary,
+    border: colors.secondary,
+    text: colors.text.primary,
+    primary: colors.accent,
+  },
+};
 const commonScreenOptions: NativeStackNavigationOptions = {
   headerShown: true,
   headerStyle: {
@@ -29,6 +42,7 @@ const commonScreenOptions: NativeStackNavigationOptions = {
   contentStyle: {
     backgroundColor: colors.primary,
   },
+  animation: 'fade',
 };
 
 export default function RootLayout() {
@@ -53,71 +67,74 @@ export default function RootLayout() {
 
   return (
     <AppProvider>
-      <StatusBar style='light' backgroundColor={colors.primary} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: {
-            backgroundColor: colors.primary,
-          },
-        }}
-      >
-        <Stack.Screen
-          name='(tabs)'
-          options={{
+      <ThemeProvider value={FortivoDarkTheme}>
+        <StatusBar style='light' backgroundColor={colors.primary} />
+        <Stack
+          screenOptions={{
             headerShown: false,
-            title: '',
+            contentStyle: {
+              backgroundColor: colors.primary,
+            },
+            animation: 'fade',
           }}
-        />
+        >
+          <Stack.Screen
+            name='(tabs)'
+            options={{
+              headerShown: false,
+              title: '',
+            }}
+          />
 
-        <Stack.Screen
-          name='exercise-details'
-          options={{ ...commonScreenOptions, title: 'Szczegóły Ćwiczenia' }}
-        />
+          <Stack.Screen
+            name='exercise-details'
+            options={{ ...commonScreenOptions, title: 'Szczegóły Ćwiczenia' }}
+          />
 
-        <Stack.Screen
-          name='create-workout'
-          options={{ ...commonScreenOptions, title: 'Utwórz Nowy Trening' }}
-        />
+          <Stack.Screen
+            name='create-workout'
+            options={{ ...commonScreenOptions, title: 'Utwórz Nowy Trening' }}
+          />
 
-        <Stack.Screen
-          name='edit-workout'
-          options={{ ...commonScreenOptions, title: 'Edytuj Trening' }}
-        />
+          <Stack.Screen
+            name='edit-workout'
+            options={{ ...commonScreenOptions, title: 'Edytuj Trening' }}
+          />
 
-        <Stack.Screen
-          name='select-exercise'
-          options={{ ...commonScreenOptions, title: 'Lista Ćwiczeń' }}
-        />
+          <Stack.Screen
+            name='select-exercise'
+            options={{ ...commonScreenOptions, title: 'Lista Ćwiczeń' }}
+          />
 
-        <Stack.Screen
-          name='active-workout'
-          options={{
-            ...commonScreenOptions,
-            presentation: 'fullScreenModal',
-            gestureEnabled: false,
-            title: 'Aktywny trening',
-          }}
-        />
+          <Stack.Screen
+            name='active-workout'
+            options={{
+              ...commonScreenOptions,
+              presentation: 'fullScreenModal',
+              gestureEnabled: false,
+              title: 'Aktywny trening',
+            }}
+          />
 
-        <Stack.Screen
-          name='workout-details'
-          options={{ ...commonScreenOptions, title: 'Szczegóły Treningu' }}
-        />
+          <Stack.Screen
+            name='workout-details'
+            options={{ ...commonScreenOptions, title: 'Szczegóły Treningu' }}
+          />
 
-        <Stack.Screen
-          name='exercise-progress'
-          options={{ ...commonScreenOptions, title: 'Historia Ćwiczenia' }}
-        />
-        <Stack.Screen
-          name='weight-tracking'
-          options={{ ...commonScreenOptions, title: 'Śledzenie Wagi' }}
-        />
-        <Stack.Screen
-          name='body-measurements'
-          options={{ ...commonScreenOptions, title: 'Śledzenie Pomiarów' }}
-        />
-      </Stack>
+          <Stack.Screen
+            name='exercise-progress'
+            options={{ ...commonScreenOptions, title: 'Historia Ćwiczenia' }}
+          />
+          <Stack.Screen
+            name='weight-tracking'
+            options={{ ...commonScreenOptions, title: 'Śledzenie Wagi' }}
+          />
+          <Stack.Screen
+            name='body-measurements'
+            options={{ ...commonScreenOptions, title: 'Śledzenie Pomiarów' }}
+          />
+        </Stack>
+      </ThemeProvider>
     </AppProvider>
   );
 }

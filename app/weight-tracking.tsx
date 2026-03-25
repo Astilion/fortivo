@@ -63,23 +63,6 @@ export default function WeightTrackingScreen() {
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* ── Header ── */}
-        <View style={styles.header}>
-          <Pressable
-            onPress={() => router.back()}
-            style={styles.backButton}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons
-              name='chevron-back'
-              size={24}
-              color={colors.text.primary}
-            />
-          </Pressable>
-          <Text style={styles.headerTitle}>Waga</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
         {/* ── Summary ── */}
         <SummaryCard
           currentWeight={currentWeight}
@@ -137,30 +120,6 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1,
-  },
-
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.secondary,
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text.primary,
-    letterSpacing: -0.3,
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 32,
   },
 
   // History

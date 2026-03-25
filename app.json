@@ -3,6 +3,7 @@
     "name": "Fortivo",
     "slug": "fortivo",
     "version": "1.0.0",
+    "backgroundColor": "#1C2227",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "fortivo",
