@@ -479,10 +479,13 @@ const styles = StyleSheet.create({
   },
   inputsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   inputGroup: {
-    flex: 1,
+    minWidth: 60,
+    flexGrow: 1,
+    flexBasis: '20%',
   },
   inputLabel: {
     fontSize: 12,

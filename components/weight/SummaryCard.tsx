@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colors.text.primary,
+    textAlign: 'center',
   },
   summarySeparator: {
     width: StyleSheet.hairlineWidth,

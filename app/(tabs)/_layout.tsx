@@ -12,6 +12,9 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.primary,
         },
+        tabBarLabelStyle: {
+          fontSize: 10,
+        },
         headerStyle: {
           backgroundColor: colors.primary,
         },

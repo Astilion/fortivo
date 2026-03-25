@@ -11,10 +11,11 @@ import { getGreeting } from '@/utils/date';
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const router = useRouter();
-
+  const insets = useSafeAreaInsets();
   const {
     stats,
     loading: statsLoading,
@@ -46,7 +47,7 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <Text style={styles.greeting}>{getGreeting()}!</Text>
         <Text style={styles.subtitle}>Twój postęp treningowy</Text>
       </View>
