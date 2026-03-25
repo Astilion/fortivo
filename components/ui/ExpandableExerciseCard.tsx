@@ -7,7 +7,6 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 interface ExpandableExerciseCardProps {
   exerciseName: string;
   exerciseCategories: string[];
-  exerciseId: string;
   measurementType?: 'reps' | 'time' | 'distance';
   sets: WorkoutSet[];
   isExpanded: boolean;
@@ -16,7 +15,6 @@ interface ExpandableExerciseCardProps {
   onAddSet: () => void;
   onRemoveSet: (setId: string) => void;
   onUpdateSet: (setId: string, updates: Partial<WorkoutSet>) => void;
-
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   isFirst?: boolean;
@@ -26,7 +24,6 @@ interface ExpandableExerciseCardProps {
 export const ExpandableExerciseCard = ({
   exerciseName,
   exerciseCategories,
-  exerciseId,
   measurementType = 'reps',
   sets,
   isExpanded,

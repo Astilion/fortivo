@@ -1,6 +1,7 @@
 import { useApp } from '@/providers/AppProvider';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { logger } from '@/utils/logger';
 
 interface DashboardStats {
   workoutsThisWeek: number;
@@ -22,7 +23,7 @@ export const useDashboardStats = () => {
   const loadStats = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null); 
+      setError(null);
 
       const [week, month, streak] = await Promise.all([
         workoutService.getWorkoutsThisWeek(),
@@ -36,8 +37,8 @@ export const useDashboardStats = () => {
         currentStreak: streak,
       });
     } catch (err) {
-      console.error('Failed to load dashboard stats:', err);
-      setError('Nie udało się załadować statystyk'); 
+      logger.error('Failed to load dashboard stats', err);
+      setError('Nie udało się załadować statystyk');
     } finally {
       setLoading(false);
     }

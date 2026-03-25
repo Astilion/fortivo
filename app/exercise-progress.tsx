@@ -13,6 +13,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { logger } from '@/utils/logger';
 
 export default function ExerciseProgressScreen() {
   const { exerciseId, exerciseName } = useLocalSearchParams<{
@@ -40,7 +41,7 @@ export default function ExerciseProgressScreen() {
         const data = await workoutService.getExerciseProgress(exerciseId!);
         setProgress(data);
       } catch (error) {
-        console.error('Error loading exercise progress:', error);
+        logger.error('Error loading exercise progress:', error);
         Alert.alert('Błąd', 'Nie udało się załadować historii ćwiczenia');
         router.back();
       } finally {
@@ -117,9 +118,7 @@ export default function ExerciseProgressScreen() {
                 {item.personalRecord && (
                   <View style={styles.prBadge}>
                     <Ionicons name='trophy' size={18} color={colors.primary} />{' '}
-                    {/* Większa ikona */}
                     <Text style={styles.prText}>REKORD!</Text>{' '}
-                    {/* Zmiana tekstu */}
                   </View>
                 )}
               </View>
@@ -163,16 +162,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.primary,
-  },
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.secondary,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text.primary,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -272,8 +261,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   cardPR: {
-    backgroundColor: colors.background, // Ciemniejsze tło
+    backgroundColor: colors.background,
     borderWidth: 2,
-    borderColor: colors.accent, // Żółta ramka
+    borderColor: colors.accent,
   },
 });

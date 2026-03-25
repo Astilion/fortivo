@@ -15,6 +15,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { logger } from '@/utils/logger';
 
 export default function WorkoutsScreen() {
   const { workoutService } = useApp();
@@ -46,7 +47,7 @@ export default function WorkoutsScreen() {
             await workoutService.deleteWorkout(id);
             loadWorkouts();
           } catch (error) {
-            console.error('Błąd usuwania:', error);
+            logger.error('Błąd usuwania:', error);
             Alert.alert('Błąd', 'Nie udało się usunąć');
           }
         },
@@ -124,7 +125,7 @@ export default function WorkoutsScreen() {
       >
         {selectedCategory === 'custom' ? (
           <>
-            <View style={{ marginBottom: 20 }}>
+            <View style={styles.createButtonWrapper}>
               <Button
                 title='+ Stwórz nowy trening'
                 variant='primary'
@@ -192,15 +193,12 @@ const styles = StyleSheet.create({
   rightOption: {
     alignItems: 'flex-end',
   },
-  text: {
-    fontSize: 18,
-    color: colors.text.primary,
-  },
   activeText: {
     color: colors.accent,
   },
   separator: {
     marginVertical: 20,
+    height: 1,
     width: '80%',
     alignSelf: 'center',
     backgroundColor: colors.text.primary,
@@ -216,19 +214,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text.primary,
     marginBottom: 15,
-  },
-  workoutItem: {
-    backgroundColor: colors.secondary,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  workoutItemText: {
-    color: colors.text.primary,
-    fontSize: 16,
   },
   categoryItem: {
     backgroundColor: colors.secondary,
@@ -248,11 +233,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text.primary,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  iconButton: {
-    padding: 8,
+  createButtonWrapper: {
+    marginBottom: 20,
   },
 });

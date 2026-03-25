@@ -110,7 +110,6 @@ export default function CreateWorkoutScreen() {
               key={item.exercise.id}
               exerciseName={item.exercise.name}
               exerciseCategories={item.exercise.categories}
-              exerciseId={item.exercise.id}
               measurementType={item.exercise.measurementType}
               sets={item.sets}
               isExpanded={item.isExpanded || false}

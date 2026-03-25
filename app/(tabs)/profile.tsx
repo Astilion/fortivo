@@ -10,13 +10,13 @@ import {
   Switch,
   Text,
   TextInput,
-  Pressable,
   View,
-  TouchableOpacity,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/providers/AppProvider';
 import { useState, useEffect } from 'react';
+import { logger } from '@/utils/logger';
 
 type WeightUnit = 'kg' | 'lbs';
 
@@ -102,7 +102,7 @@ export default function ProfileScreen() {
       try {
         await profileService.updateUserSettings(updatedSettings);
       } catch (error) {
-        console.error('Error updating goal weight:', error);
+        logger.error('Error updating goal weight:', error);
       }
     }
   };
@@ -123,7 +123,7 @@ export default function ProfileScreen() {
     try {
       await profileService.updateUserSettings(updatedSettings);
     } catch (error) {
-      console.error('Error updating rest time:', error);
+      logger.error('Error updating rest time:', error);
     }
   };
 
@@ -184,7 +184,7 @@ export default function ProfileScreen() {
           <SettingsRow label='Jednostka wagi' isLast>
             <View style={styles.segmentedControl}>
               {(['kg', 'lbs'] as WeightUnit[]).map((unit) => (
-                <TouchableOpacity
+                <Pressable
                   key={unit}
                   style={[
                     styles.segmentButton,
@@ -192,7 +192,6 @@ export default function ProfileScreen() {
                       styles.segmentButtonActive,
                   ]}
                   onPress={() => handleWeightUnitChange(unit)}
-                  activeOpacity={0.7}
                 >
                   <Text
                     style={[
@@ -203,7 +202,7 @@ export default function ProfileScreen() {
                   >
                     {unit}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               ))}
             </View>
           </SettingsRow>
@@ -361,21 +360,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
 
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text.primary,
-    letterSpacing: -0.5,
-    flex: 1,
-  },
   headerSpinner: {
     marginLeft: 8,
   },
@@ -466,7 +450,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   segmentTextActive: {
-    color: colors.primary, // ciemny tekst na żółtym tle
+    color: colors.primary,
     fontWeight: '700',
   },
 

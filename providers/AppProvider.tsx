@@ -8,7 +8,9 @@ import { WeightService } from '@/services/weightService';
 import { MeasurementService } from '@/services/measurementService';
 import * as SQLite from 'expo-sqlite';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
+import { logger } from '@/utils/logger';
+import colors from '@/constants/Colors';
 
 interface AppContextType {
   db: SQLite.SQLiteDatabase;
@@ -105,20 +107,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setIsReady(true);
     } catch (error) {
-      console.error('Failed to initialize app:', error);
+      logger.error('Failed to initialize app:', error);
     }
   };
 
   if (!isReady || !context) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size='large' color='#007AFF' />
-        <Text style={{ marginTop: 10, fontSize: 16, color: '#666' }}>
-          Inicjalizacja aplikacji...
-        </Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size='large' color={colors.accent} />
+        <Text style={styles.loadingText}>Inicjalizacja aplikacji...</Text>
       </View>
     );
   }
 
   return <AppContext.Provider value={context}>{children}</AppContext.Provider>;
 };
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: colors.text.secondary,
+  },
+});

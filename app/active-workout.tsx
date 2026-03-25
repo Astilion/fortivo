@@ -19,6 +19,7 @@ import {
 import { parseDecimal, parseInteger } from '@/utils/numbers';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { validateRPE, validateTempo } from '@/utils/validation';
+import { logger } from '@/utils/logger';
 
 export default function ActiveWorkoutScreen() {
   const { workoutService } = useApp();
@@ -66,6 +67,7 @@ export default function ActiveWorkoutScreen() {
       ...item,
       sets: item.sets.map((set) => ({
         ...set,
+        completed: false,
         actualReps: set.actualReps ?? set.reps,
         actualWeight: set.actualWeight ?? set.weight,
       })),
@@ -193,11 +195,11 @@ export default function ActiveWorkoutScreen() {
         Alert.alert('Sukces! 💪', 'Trening został zapisany');
       }, 300);
     } catch (error) {
-      console.error('Błąd zakończenia treningu', error);
+      logger.error('Błąd zakończenia treningu', error);
       Alert.alert('Błąd', 'Nie udało się zapisać treningu');
     }
   };
-  // ====== PROGRESS CALCULATION ======
+
   const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
 
   const completedSets = exercises.reduce(
@@ -210,7 +212,6 @@ export default function ActiveWorkoutScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{workout?.name || 'Trening'}</Text>
       </View>
@@ -230,38 +231,28 @@ export default function ActiveWorkoutScreen() {
           </Pressable>
         </View>
       )}
-      {/* ====== PROGRESS BAR ====== */}
+
       <View style={styles.progressContainer}>
-        {/* Progress bar track (background) */}
         <View style={styles.progressBar}>
-          {/* Progress bar fill (dynamic width based on %) */}
           <View
-            style={[
-              styles.progressFill,
-              { width: `${progressPercent}%` }, // Dynamic width!
-            ]}
+            style={[styles.progressFill, { width: `${progressPercent}%` }]}
           />
         </View>
 
-        {/* Progress text: "5/15 (33%)" */}
         <Text style={styles.progressText}>
           {completedSets}/{totalSets} ({progressPercent}%)
         </Text>
       </View>
 
-      {/* Exercises List */}
       <ScrollView style={styles.content}>
         {exercises.map((item, exIndex) => (
           <View key={item.exercise.id} style={styles.exerciseBlock}>
-            {/* Exercise name */}
             <Text style={styles.exerciseName}>
               {exIndex + 1}. {item.exercise.name}
             </Text>
 
-            {/* Sets */}
             {item.sets.map((set, setIndex) => (
               <View key={set.id} style={styles.setCard}>
-                {/* Set header: number + checkbox */}
                 <View style={styles.setHeader}>
                   <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
 
@@ -278,7 +269,6 @@ export default function ActiveWorkoutScreen() {
                         />
                       </Pressable>
                     )}
-                    {/* Checkbox */}
                     <Pressable
                       onPress={() =>
                         toggleSetCompleted(item.exercise.id, set.id)
@@ -298,9 +288,7 @@ export default function ActiveWorkoutScreen() {
                   </View>
                 </View>
 
-                {/* Inputs row */}
                 <View style={styles.inputsRow}>
-                  {/* Weight */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>
                       {`Ciężar (${settings?.preferredWeightUnit ?? 'kg'})`}
@@ -319,7 +307,6 @@ export default function ActiveWorkoutScreen() {
                     />
                   </View>
 
-                  {/* Reps */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Powtórzenia</Text>
                     <TextInput
@@ -335,7 +322,6 @@ export default function ActiveWorkoutScreen() {
                       keyboardType='numeric'
                     />
                   </View>
-                  {/* RPE */}
                   {settings?.trackRPE && (
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>RPE</Text>
@@ -358,7 +344,6 @@ export default function ActiveWorkoutScreen() {
                       />
                     </View>
                   )}
-                  {/* Tempo */}
                   {settings?.trackTempo && (
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>Tempo</Text>
@@ -397,7 +382,6 @@ export default function ActiveWorkoutScreen() {
           </View>
         ))}
       </ScrollView>
-      {/* Footer with Finish button */}
       <View style={styles.footer}>
         <Button
           title='Zakończ trening'
@@ -425,7 +409,6 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
 
-  // ====== PROGRESS BAR STYLES ======
   progressContainer: {
     paddingHorizontal: 20,
     paddingVertical: 8,
@@ -539,7 +522,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.accent,
   },
-  // Rest banner styles
   restBanner: {
     flexDirection: 'row',
     alignItems: 'center',

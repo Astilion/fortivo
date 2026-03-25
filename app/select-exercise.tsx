@@ -35,7 +35,7 @@ export default function SelectExerciseScreen() {
   const favoriteExercises = useExerciseStore(
     (state) => state.favoriteExercises,
   );
-  
+
   const filteredExercises = exercises.filter((ex) => {
     const matchesSearch =
       searchQuery.trim() === '' ||
@@ -151,9 +151,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: colors.text.primary,
-  },
-  exerciseCategory: {
-    color: colors.text.secondary,
   },
   filterContent: {
     gap: 8,

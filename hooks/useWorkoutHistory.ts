@@ -2,6 +2,7 @@ import { useApp } from '@/providers/AppProvider';
 import { WorkoutHistoryWithDetails } from '@/types/training';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { logger } from '@/utils/logger';
 
 export const useWorkoutHistory = () => {
   const { workoutService } = useApp();
@@ -17,7 +18,7 @@ export const useWorkoutHistory = () => {
       const data = await workoutService.getWorkoutHistory();
       setHistory(data);
     } catch (err) {
-      console.error('Error loading workout history:', err);
+      logger.error('Error loading workout history', err);
       setError('Nie udało się załadować historii treningów');
     } finally {
       setLoading(false);

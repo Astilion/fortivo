@@ -1,14 +1,12 @@
-// Workout categories - schemas for Planning workout
 export const WORKOUT_CATEGORIES = [
   'siła',
   'hipertrofia',
   'cardio',
   'mobilność',
   'kalistenika',
-  'core'
+  'core',
 ];
 
-// Casual style of muscle groups
 export const MUSCLE_GROUPS = [
   'Klatka Piersiowa',
   'Plecy',
@@ -22,8 +20,6 @@ export const MUSCLE_GROUPS = [
   'Łydki',
 ];
 
-
-// List of most muscles than user  want use
 export const MUSCLE = [
   'Najszerszy grzbietu',
   'Górna część czworobocznego grzbietu',
@@ -42,13 +38,13 @@ export const MUSCLE = [
   'Triceps 1',
   'Triceps 2',
   'Triceps 3',
-  'Biceps 1', 
+  'Biceps 1',
   'Biceps 2',
   'Przedramię',
   'Równoległoboczny',
 ];
 
-export const EQUIPMENT =[
+export const EQUIPMENT = [
   'sztanga',
   'hantle',
   'maszyna',
@@ -58,5 +54,5 @@ export const EQUIPMENT =[
   'masa ciała',
   'wyciąg',
   'brak',
-  'drążek'
-]
+  'drążek',
+];

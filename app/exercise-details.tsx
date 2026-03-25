@@ -66,14 +66,14 @@ export default function ExerciseDetailsScreen() {
           <Text style={styles.text}>{exercise.instructions}</Text>
         </>
       )}
-      <View style={{ marginTop: 24 }}>
+      <View style={styles.buttonSpacing}>
         <Button
           title=' Link YouTube'
           variant='danger'
           onPress={openYouTubeSearch}
         />
       </View>
-      <View style={{ marginTop: 12 }}>
+      <View style={styles.buttonSpacingSmall}>
         <Button
           title='📊 Zobacz historię'
           variant='primary'
@@ -130,5 +130,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text.secondary,
     lineHeight: 24,
+  },
+  buttonSpacing: {
+    marginTop: 24,
+  },
+  buttonSpacingSmall: {
+    marginTop: 12,
   },
 });

@@ -16,6 +16,7 @@ import {
   WorkoutSet,
   WorkoutSetRow,
 } from '@/types/training';
+import { LOCAL_USER_ID } from '@/constants/User';
 import * as SQLite from 'expo-sqlite';
 
 export class WorkoutService {
@@ -26,10 +27,9 @@ export class WorkoutService {
   }
 
   async getAllWorkouts(): Promise<WorkoutRow[]> {
-    const query =
-      'SELECT * FROM workouts ORDER BY display_order ASC, created_at DESC';
-    const rows = await this.db.getAllAsync<WorkoutRow>(query);
-    return rows;
+    return this.db.getAllAsync<WorkoutRow>(
+      'SELECT * FROM workouts ORDER BY display_order ASC, created_at DESC',
+    );
   }
 
   async createWorkout(
@@ -138,35 +138,7 @@ export class WorkoutService {
       );
 
       for (let j = 0; j < sets.length; j++) {
-        const set = sets[j];
-        const setId = generateId('ws'); // workout_set
-
-        await this.db.runAsync(
-          `INSERT INTO workout_sets (
-    id, workout_exercise_id, set_order, reps, weight, rpe, 
-    tempo, rest_time, completed, notes, actual_reps, actual_weight, actual_rpe,
-    duration, actual_duration, distance, actual_distance
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            setId,
-            workoutExerciseId,
-            j,
-            set.reps,
-            set.weight || null,
-            set.rpe || null,
-            set.tempo || null,
-            set.restTime || null,
-            set.completed ? 1 : 0,
-            set.notes || null,
-            set.actualReps || null,
-            set.actualWeight || null,
-            set.actualRpe || null,
-            set.duration || null,
-            set.actualDuration || null,
-            set.distance || null,
-            set.actualDistance || null,
-          ],
-        );
+        await this.insertSet(generateId('ws'), workoutExerciseId, j, sets[j]);
       }
     }
   }
@@ -233,10 +205,10 @@ export class WorkoutService {
         actualReps: setRow.actual_reps || undefined,
         actualWeight: setRow.actual_weight || undefined,
         actualRpe: setRow.actual_rpe || undefined,
-        duration: setRow.duration || undefined, // <-- NOWE
-        actualDuration: setRow.actual_duration || undefined, // <-- NOWE
-        distance: setRow.distance || undefined, // <-- NOWE
-        actualDistance: setRow.actual_distance || undefined, // <-- NOWE
+        duration: setRow.duration || undefined,
+        actualDuration: setRow.actual_duration || undefined,
+        distance: setRow.distance || undefined,
+        actualDistance: setRow.actual_distance || undefined,
       }));
 
       result.push({
@@ -260,9 +232,7 @@ export class WorkoutService {
 
   async setActiveWorkout(id: string): Promise<void> {
     await this.db.runAsync('UPDATE workouts SET is_active = 0');
-
-    await this.db.runAsync('UPDATE workouts SET is_active = ? WHERE id = ?', [
-      1,
+    await this.db.runAsync('UPDATE workouts SET is_active = 1 WHERE id = ?', [
       id,
     ]);
   }
@@ -275,7 +245,7 @@ export class WorkoutService {
   }
 
   async clearActiveWorkout(): Promise<void> {
-    await this.db.runAsync('UPDATE workouts SET is_active = ?');
+    await this.db.runAsync('UPDATE workouts SET is_active = 0');
   }
 
   async saveActualValues(
@@ -296,33 +266,11 @@ export class WorkoutService {
       );
 
       for (let i = 0; i < ex.sets.length; i++) {
-        const set = ex.sets[i];
-
-        await this.db.runAsync(
-          `INSERT INTO workout_sets (
-          id, workout_exercise_id, set_order, reps, weight, rpe, 
-          tempo, rest_time, completed, notes, actual_reps, actual_weight, actual_rpe,
-          duration, actual_duration, distance, actual_distance
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            set.id,
-            workoutExerciseRow.id,
-            i,
-            set.reps,
-            set.weight || null,
-            set.rpe || null,
-            set.tempo || null,
-            set.restTime || null,
-            set.completed ? 1 : 0,
-            set.notes || null,
-            set.actualReps || null,
-            set.actualWeight || null,
-            set.actualRpe || null,
-            set.duration || null,
-            set.actualDuration || null,
-            set.distance || null,
-            set.actualDistance || null,
-          ],
+        await this.insertSet(
+          ex.sets[i].id,
+          workoutExerciseRow.id,
+          i,
+          ex.sets[i],
         );
       }
     }
@@ -332,15 +280,14 @@ export class WorkoutService {
     workoutId: string,
     durationMinutes: number,
   ): Promise<void> {
-    const id = generateId('wh'); // workout_history
-    const completedAt = new Date().toISOString();
-    const userId = 'user_1'; // TODO: Replace with real user ID later
+    const id = generateId('wh');
+    const userId = LOCAL_USER_ID;
 
     await this.db.runAsync(
       `INSERT INTO workout_history (
-      id, workout_id, user_id, completed_at, actual_duration, performance_notes
-    ) VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, workoutId, userId, completedAt, durationMinutes, null],
+        id, workout_id, user_id, completed_at, actual_duration, performance_notes
+      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, workoutId, userId, new Date().toISOString(), durationMinutes, null],
     );
   }
 
@@ -348,40 +295,39 @@ export class WorkoutService {
     workoutId: string,
     exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
-    const userId = 'user_1';
+    const userId = LOCAL_USER_ID;
     const date = new Date().toISOString();
 
     for (const ex of exercises) {
       const completedSets = ex.sets.filter((s) => s.completed);
-
       if (completedSets.length === 0) continue;
 
       const maxWeight = Math.max(
         ...completedSets.map((s) => s.actualWeight || 0),
       );
 
-      const totalVolume = completedSets.reduce((sum, set) => {
-        return sum + (set.actualReps || 0) * (set.actualWeight || 0);
-      }, 0);
+      const totalVolume = completedSets.reduce(
+        (sum, set) => sum + (set.actualReps || 0) * (set.actualWeight || 0),
+        0,
+      );
 
       const previousRecord = await this.db.getFirstAsync<ExerciseProgressRow>(
         `SELECT * FROM exercise_progress 
-       WHERE exercise_id = ? AND user_id = ? 
-       ORDER BY max_weight DESC LIMIT 1`,
+         WHERE exercise_id = ? AND user_id = ? 
+         ORDER BY max_weight DESC LIMIT 1`,
         [ex.exercise.id, userId],
       );
 
       const isPersonalRecord =
         !previousRecord || maxWeight > previousRecord.max_weight;
-      const id = generateId('ep');
 
       await this.db.runAsync(
         `INSERT INTO exercise_progress (
-        id, exercise_id, user_id, date, max_weight, total_volume, 
-        estimated_one_rep_max, personal_record
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          id, exercise_id, user_id, date, max_weight, total_volume, 
+          estimated_one_rep_max, personal_record
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          id,
+          generateId('ep'),
           ex.exercise.id,
           userId,
           date,
@@ -395,19 +341,14 @@ export class WorkoutService {
   }
 
   async getWorkoutHistory(
-    userId: string = 'user_1',
+    userId: string = LOCAL_USER_ID,
   ): Promise<WorkoutHistoryWithDetails[]> {
     const rows = await this.db.getAllAsync<WorkoutHistoryQueryRow>(
-      `SELECT 
-      wh.id,
-      wh.workout_id,
-      wh.completed_at,
-      wh.actual_duration,
-      w.name as workout_name
-    FROM workout_history wh
-    JOIN workouts w ON wh.workout_id = w.id
-    WHERE wh.user_id = ?
-    ORDER BY wh.completed_at DESC`,
+      `SELECT wh.id, wh.workout_id, wh.completed_at, wh.actual_duration, w.name as workout_name
+       FROM workout_history wh
+       JOIN workouts w ON wh.workout_id = w.id
+       WHERE wh.user_id = ?
+       ORDER BY wh.completed_at DESC`,
       [userId],
     );
 
@@ -425,9 +366,9 @@ export class WorkoutService {
   ): Promise<WorkoutHistoryDetails> {
     const historyRow = await this.db.getFirstAsync<WorkoutHistoryRow>(
       `SELECT wh.*, w.name as workout_name
-     FROM workout_history wh
-     JOIN workouts w ON wh.workout_id = w.id
-     WHERE wh.id = ?`,
+       FROM workout_history wh
+       JOIN workouts w ON wh.workout_id = w.id
+       WHERE wh.id = ?`,
       [historyId],
     );
 
@@ -464,7 +405,7 @@ export class WorkoutService {
       stats,
     };
   }
-  
+
   async countWorkouts(): Promise<number> {
     const result = await this.db.getFirstAsync<{ count: number }>(
       'SELECT COUNT(*) as count FROM workouts',
@@ -474,20 +415,16 @@ export class WorkoutService {
 
   async getExerciseProgress(
     exerciseId: string,
-    userId: string = 'user_1',
+    userId: string = LOCAL_USER_ID,
   ): Promise<ExerciseProgressWithWorkout[]> {
     const rows = await this.db.getAllAsync<ExerciseProgressQueryRow>(
-      `SELECT 
-    ep.*, 
-    w.name as workout_name 
-  FROM exercise_progress ep 
-  LEFT JOIN workout_history wh 
-    ON DATE(ep.date) = DATE(wh.completed_at) 
-    AND wh.user_id = ep.user_id 
-  LEFT JOIN workouts w 
-    ON wh.workout_id = w.id
-  WHERE ep.exercise_id = ? AND ep.user_id = ? 
-  ORDER BY ep.date DESC`,
+      `SELECT ep.*, w.name as workout_name 
+       FROM exercise_progress ep 
+       LEFT JOIN workout_history wh 
+         ON DATE(ep.date) = DATE(wh.completed_at) AND wh.user_id = ep.user_id 
+       LEFT JOIN workouts w ON wh.workout_id = w.id
+       WHERE ep.exercise_id = ? AND ep.user_id = ? 
+       ORDER BY ep.date DESC`,
       [exerciseId, userId],
     );
 
@@ -502,51 +439,45 @@ export class WorkoutService {
     }));
   }
 
-  async getWorkoutsThisWeek(userId: string = 'user_1'): Promise<number> {
+  async getWorkoutsThisWeek(userId: string = LOCAL_USER_ID): Promise<number> {
     const now = new Date();
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday start
+    startOfWeek.setDate(now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
 
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 7);
 
     const result = await this.db.getFirstAsync<{ count: number }>(
-      `SELECT COUNT(*) as count 
-     FROM workout_history 
-     WHERE user_id = ? 
-     AND completed_at >= ? 
-     AND completed_at < ?`,
+      `SELECT COUNT(*) as count FROM workout_history 
+       WHERE user_id = ? AND completed_at >= ? AND completed_at < ?`,
       [userId, startOfWeek.toISOString(), endOfWeek.toISOString()],
     );
 
     return result?.count || 0;
   }
 
-  async getWorkoutsThisMonth(userId: string = 'user_1'): Promise<number> {
+  async getWorkoutsThisMonth(userId: string = LOCAL_USER_ID): Promise<number> {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
     const result = await this.db.getFirstAsync<{ count: number }>(
-      `SELECT COUNT(*) as count 
-     FROM workout_history 
-     WHERE user_id = ? 
-     AND completed_at >= ? 
-     AND completed_at < ?`,
+      `SELECT COUNT(*) as count FROM workout_history 
+       WHERE user_id = ? AND completed_at >= ? AND completed_at < ?`,
       [userId, startOfMonth.toISOString(), endOfMonth.toISOString()],
     );
 
     return result?.count || 0;
   }
 
-  async getCurrentStreak(userId: string = 'user_1'): Promise<number> {
+  async getCurrentStreak(userId: string = LOCAL_USER_ID): Promise<number> {
     const rows = await this.db.getAllAsync<{ completed_at: string }>(
       `SELECT DATE(completed_at) as completed_at 
-     FROM workout_history 
-     WHERE user_id = ? 
-     GROUP BY DATE(completed_at)
-     ORDER BY completed_at DESC`,
+       FROM workout_history 
+       WHERE user_id = ? 
+       GROUP BY DATE(completed_at)
+       ORDER BY completed_at DESC`,
       [userId],
     );
 
@@ -563,7 +494,6 @@ export class WorkoutService {
       const expectedDate = new Date(today);
       expectedDate.setDate(today.getDate() - streak);
 
-      // Check if workout is on expected date
       if (workoutDate.getTime() === expectedDate.getTime()) {
         streak++;
       } else if (workoutDate.getTime() < expectedDate.getTime()) {
@@ -572,5 +502,40 @@ export class WorkoutService {
     }
 
     return streak;
+  }
+
+  /** Reusable INSERT for workout_sets — used by saveWorkoutExercises and saveActualValues */
+  private async insertSet(
+    setId: string,
+    workoutExerciseId: string,
+    order: number,
+    set: WorkoutSet,
+  ): Promise<void> {
+    await this.db.runAsync(
+      `INSERT INTO workout_sets (
+        id, workout_exercise_id, set_order, reps, weight, rpe, 
+        tempo, rest_time, completed, notes, actual_reps, actual_weight, actual_rpe,
+        duration, actual_duration, distance, actual_distance
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        setId,
+        workoutExerciseId,
+        order,
+        set.reps,
+        set.weight || null,
+        set.rpe || null,
+        set.tempo || null,
+        set.restTime || null,
+        set.completed ? 1 : 0,
+        set.notes || null,
+        set.actualReps || null,
+        set.actualWeight || null,
+        set.actualRpe || null,
+        set.duration || null,
+        set.actualDuration || null,
+        set.distance || null,
+        set.actualDistance || null,
+      ],
+    );
   }
 }

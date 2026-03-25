@@ -16,14 +16,7 @@ export const Input = ({
 }: InputProps) => {
   return (
     <View style={styles.container}>
-      {icon && (
-        <Ionicons
-          name={icon}
-          size={20}
-          color={colors.text.secondary}
-          style={styles.icon}
-        />
-      )}
+      {icon && <Ionicons name={icon} size={20} color={colors.text.secondary} />}
       <TextInput
         placeholder={placeholder}
         placeholderTextColor={colors.text.secondary}
@@ -46,7 +39,6 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 16,
   },
-  icon: {},
   input: {
     flex: 1,
     color: colors.text.primary,

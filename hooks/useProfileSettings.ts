@@ -2,6 +2,8 @@ import { useApp } from '@/providers/AppProvider';
 import { useCallback, useState } from 'react';
 import { UserSettings } from '@/types/training';
 import { useFocusEffect } from 'expo-router';
+import { logger } from '@/utils/logger';
+import { LOCAL_USER_ID } from '@/constants/User';
 
 export const useProfileSettings = () => {
   const { profileService } = useApp();
@@ -13,10 +15,10 @@ export const useProfileSettings = () => {
     try {
       setLoading(true);
       setError(null);
-      const userSettings = await profileService.getUserSettings('local_user');
+      const userSettings = await profileService.getUserSettings(LOCAL_USER_ID);
       setSettings(userSettings);
     } catch (err) {
-      console.error('Failed to load user settings:', err);
+      logger.error('Failed to load user settings', err);
       setError('Nie udało się załadować ustawień');
     } finally {
       setLoading(false);
@@ -36,7 +38,7 @@ export const useProfileSettings = () => {
       setError(null);
       await profileService.updateUserSettings(settings);
     } catch (err) {
-      console.error('Failed to update user settings:', err);
+      logger.error('Failed to update user settings', err);
       setError('Nie udało się zaktualizować ustawień');
     } finally {
       setLoading(false);

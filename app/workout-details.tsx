@@ -14,6 +14,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { logger } from '@/utils/logger';
 
 export default function WorkoutDetailsScreen() {
   const { historyId } = useLocalSearchParams<{ historyId: string }>();
@@ -35,7 +36,7 @@ export default function WorkoutDetailsScreen() {
         const data = await workoutService.getWorkoutHistoryDetails(historyId);
         setDetails(data);
       } catch (error) {
-        console.error('Error loading workout details:', error);
+        logger.error('Error loading workout details:', error);
         Alert.alert('Błąd', 'Nie udało się załadować szczegółów treningu');
         router.back();
       } finally {

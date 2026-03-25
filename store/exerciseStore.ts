@@ -1,19 +1,18 @@
 import { create } from 'zustand';
 import { Exercise, ExerciseService } from '../services/exerciseService';
+import { LOCAL_USER_ID } from '@/constants/User';
+import { logger } from '@/utils/logger';
 
 interface ExerciseState {
-  // State
   exercises: Exercise[];
   categories: string[];
   favoriteExercises: string[];
   loading: boolean;
   error: string | null;
-  userId: string; // Add userId to state
+  userId: string;
 
-  // Service instance
   exerciseService: ExerciseService | null;
 
-  // Actions
   setUserId: (userId: string) => void;
   initializeService: (service: ExerciseService) => void;
   loadExercises: () => Promise<void>;
@@ -37,26 +36,22 @@ interface ExerciseState {
 }
 
 export const useExerciseStore = create<ExerciseState>((set, get) => ({
-  // Initial state
   exercises: [],
   categories: [],
   favoriteExercises: [],
   loading: false,
   error: null,
-  userId: 'default-user', // Default userId
+  userId: LOCAL_USER_ID,
   exerciseService: null,
 
-  // Set userId
   setUserId: (userId: string) => {
     set({ userId });
   },
 
-  // Initialize service
   initializeService: (service: ExerciseService) => {
     set({ exerciseService: service });
   },
 
-  // Load all exercises
   loadExercises: async () => {
     const { exerciseService, userId } = get();
     if (!exerciseService) return;
@@ -74,7 +69,6 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     }
   },
 
-  // Load categories
   loadCategories: async () => {
     const { exerciseService, userId } = get();
     if (!exerciseService) return;
@@ -83,11 +77,10 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       const categories = await exerciseService.getCategories(userId);
       set({ categories });
     } catch (error) {
-      console.error('Failed to load categories:', error);
+      logger.error('Failed to load categories:', error);
     }
   },
 
-  // Search exercises
   searchExercises: async (query: string) => {
     const { exerciseService, userId } = get();
     if (!exerciseService) return;
@@ -108,7 +101,6 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     }
   },
 
-  // Filter by category
   filterByCategory: async (category: string) => {
     const { exerciseService, userId } = get();
     if (!exerciseService) return;
@@ -132,14 +124,12 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     }
   },
 
-  // Create exercise
   createExercise: async (exerciseData) => {
     const { exerciseService, userId } = get();
     if (!exerciseService) throw new Error('Service not initialized');
 
     set({ loading: true, error: null });
     try {
-      // Pass exerciseData first, userId second
       const newExercise = await exerciseService.createExercise(
         exerciseData,
         userId,
@@ -159,17 +149,14 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     }
   },
 
-  // Update exercise
   updateExercise: async (id, updates) => {
     const { exerciseService, userId } = get();
     if (!exerciseService) throw new Error('Service not initialized');
 
     set({ loading: true, error: null });
     try {
-      // Pass id first, updates second, userId third
       await exerciseService.updateExercise(id, updates, userId);
 
-      // Reload exercises to get updated data
       await get().loadExercises();
     } catch (error) {
       set({
@@ -181,14 +168,12 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     }
   },
 
-  // Delete exercise
   deleteExercise: async (id) => {
     const { exerciseService, userId } = get();
     if (!exerciseService) throw new Error('Service not initialized');
 
     set({ loading: true, error: null });
     try {
-      // Pass id first, userId second
       await exerciseService.deleteExercise(id, userId);
       const currentExercises = get().exercises;
       set({
@@ -214,7 +199,7 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       const favoriteExercises = await exerciseService.getFavorites(userId);
       set({ favoriteExercises });
     } catch (error) {
-      console.error('Failed to load favorites:', error);
+      logger.error('Failed to load favorites:', error);
     }
   },
 
@@ -226,7 +211,6 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       const isFav = favoriteExercises.includes(exerciseId);
 
       if (isFav) {
-        // Remove from favorites
         await exerciseService.removeFavorite(exerciseId, userId);
         set({
           favoriteExercises: favoriteExercises.filter(
@@ -234,14 +218,13 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
           ),
         });
       } else {
-        // Add to favorites
         await exerciseService.addFavorite(exerciseId, userId);
         set({
           favoriteExercises: [...favoriteExercises, exerciseId],
         });
       }
     } catch (error) {
-      console.error('Failed to toggle favorite:', error);
+      logger.error('Failed to toggle favorite:', error);
     }
   },
 
@@ -249,7 +232,6 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     const { favoriteExercises } = get();
     return favoriteExercises.includes(exerciseId);
   },
-  // Reset state
   reset: () => {
     set({
       exercises: [],

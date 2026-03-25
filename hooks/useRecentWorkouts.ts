@@ -2,6 +2,7 @@ import { useApp } from '@/providers/AppProvider';
 import { WorkoutHistoryWithDetails } from '@/types/training';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { logger } from '@/utils/logger';
 
 export const useRecentWorkouts = (limit: number = 5) => {
   const { workoutService } = useApp();
@@ -17,7 +18,7 @@ export const useRecentWorkouts = (limit: number = 5) => {
       const history = await workoutService.getWorkoutHistory();
       setWorkouts(history.slice(0, limit));
     } catch (err) {
-      console.error('Failed to load recent workouts:', err);
+      logger.error('Failed to load recent workouts', err);
       setError('Nie udało się załadować ostatnich treningów');
     } finally {
       setLoading(false);

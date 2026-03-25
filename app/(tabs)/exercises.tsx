@@ -32,11 +32,11 @@ export default function ExercisesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
 
-    useEffect(() => {
+  useEffect(() => {
     if (selectedCategory !== 'wszystkie') {
       setSearchQuery('');
     }
-  }, [selectedCategory]); 
+  }, [selectedCategory]);
 
   const filteredExercises = exercises.filter((ex) => {
     const matchesSearch =
@@ -89,7 +89,7 @@ export default function ExercisesScreen() {
           .map((cat) => (
             <Button
               key={cat}
-              title={capitalize(cat)} // <-- KAPITALIZUJ
+              title={capitalize(cat)}
               variant={selectedCategory === cat ? 'primary' : 'secondary'}
               onPress={() => setSelectedCategory(cat)}
             />
@@ -144,24 +144,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     padding: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text.primary,
-    marginBottom: 20,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.text.secondary,
-    marginBottom: 20,
-  },
   exerciseName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: colors.text.primary,
-  },
-  exerciseCategory: {
-    color: colors.text.secondary,
   },
   categoriesRow: {
     flexDirection: 'row',

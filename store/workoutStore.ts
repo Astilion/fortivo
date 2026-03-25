@@ -100,7 +100,6 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
       },
     })),
 
-  // Add new set to exercise
   addSet: (exerciseId: string) =>
     set((state) => ({
       draft: {
@@ -127,7 +126,6 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
       },
     })),
 
-  // Remove set from exercise
   removeSet: (exerciseId: string, setId: string) =>
     set((state) => ({
       draft: {
@@ -144,7 +142,6 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
       },
     })),
 
-  // Update set properties (reps, weight, etc.)
   updateSet: (
     exerciseId: string,
     setId: string,

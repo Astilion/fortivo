@@ -18,6 +18,7 @@ import { useApp } from '@/providers/AppProvider';
 import { AddEntryForm } from '@/components/weight/AddEntryForm';
 import { WeightEntryRow } from '@/components/weight/WeightEntryRow';
 import { SummaryCard } from '@/components/weight/SummaryCard';
+import { LOCAL_USER_ID } from '@/constants/User';
 
 export default function WeightTrackingScreen() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function WeightTrackingScreen() {
 
   const loadEntries = useCallback(async () => {
     if (!weightService) return;
-    const fetchedEntries = await weightService.getWeightEntries('local_user');
+    const fetchedEntries = await weightService.getWeightEntries(LOCAL_USER_ID);
     setEntries(fetchedEntries);
   }, [weightService]);
 
@@ -43,7 +44,7 @@ export default function WeightTrackingScreen() {
   const handleAddEntry = async (weight: number, notes?: string) => {
     if (!weightService) return;
     const newEntry = await weightService.addWeightEntry(
-      'local_user',
+      LOCAL_USER_ID,
       weight,
       new Date().toISOString().split('T')[0],
       notes,

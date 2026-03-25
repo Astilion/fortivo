@@ -24,12 +24,12 @@ export class WeightService {
 
     logger.db('added weight entry', { userId, weight, date, notes });
     return {
-      userId: userId,
+      id,
+      userId,
       weight,
       date,
       notes,
-      createdAt: createdAt,
-      id,
+      createdAt,
     };
   }
 

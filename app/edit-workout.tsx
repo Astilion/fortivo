@@ -13,7 +13,7 @@ export default function EditWorkoutScreen() {
   const router = useRouter();
   const [showNameError, setShowNameError] = useState(false);
   const [showExercisesError, setShowExercisesError] = useState(false);
-  
+
   const {
     draft,
     setWorkoutName,
@@ -57,7 +57,7 @@ export default function EditWorkoutScreen() {
       setShowNameError(true);
       return;
     }
-    
+
     if (draft.exercises.length === 0) {
       setShowExercisesError(true);
       return;
@@ -89,12 +89,14 @@ export default function EditWorkoutScreen() {
           placeholder='Nazwa treningu...'
         />
         {showNameError && (
-          <Text style={{ 
-            color: colors.danger, 
-            fontSize: 12, 
-            marginTop: 4,
-            marginLeft: 4,
-          }}>
+          <Text
+            style={{
+              color: colors.danger,
+              fontSize: 12,
+              marginTop: 4,
+              marginLeft: 4,
+            }}
+          >
             Podaj nazwę treningu aby kontynuować
           </Text>
         )}
@@ -110,7 +112,6 @@ export default function EditWorkoutScreen() {
               key={item.exercise.id}
               exerciseName={item.exercise.name}
               exerciseCategories={item.exercise.categories}
-              exerciseId={item.exercise.id}
               measurementType={item.exercise.measurementType}
               sets={item.sets}
               isExpanded={item.isExpanded || false}
@@ -138,14 +139,16 @@ export default function EditWorkoutScreen() {
         }}
         variant='primary'
       />
-      
+
       {showExercisesError && (
-        <Text style={{ 
-          color: colors.danger, 
-          fontSize: 12, 
-          marginTop: -8,
-          marginLeft: 4,
-        }}>
+        <Text
+          style={{
+            color: colors.danger,
+            fontSize: 12,
+            marginTop: -8,
+            marginLeft: 4,
+          }}
+        >
           Dodaj przynajmniej jedno ćwiczenie
         </Text>
       )}

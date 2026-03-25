@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, TextInput, Pressable, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '@/constants/Colors';
 import { BodyMeasurement } from '@/types/training';
@@ -49,13 +43,9 @@ export const MeasurementRow: React.FC<MeasurementRowProps> = ({
         />
         <Text style={styles.inputUnit}>cm</Text>
       </View>
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={onAdd}
-        activeOpacity={0.8}
-      >
+      <Pressable style={styles.addButton} onPress={onAdd}>
         <Ionicons name='add' size={20} color={colors.primary} />
-      </TouchableOpacity>
+      </Pressable>
     </View>
   </View>
 );

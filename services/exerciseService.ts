@@ -1,6 +1,8 @@
 import * as SQLite from 'expo-sqlite';
 import { generateId } from '../database/database';
 import { Exercise, ExerciseRow, FavoriteExerciseRow } from '../types/training';
+import { logger } from '@/utils/logger';
+import { LOCAL_USER_ID } from '@/constants/User';
 
 export class ExerciseService {
   private db: SQLite.SQLiteDatabase;
@@ -9,31 +11,26 @@ export class ExerciseService {
     this.db = database;
   }
 
-  // Seed initial exercises from JSON
   async seedExercises(exercises: Exercise[]) {
     const existingCount = await this.db.getFirstAsync<{ count: number }>(
       'SELECT COUNT(*) as count FROM exercises WHERE is_custom = 0',
     );
 
-    // Only skip if we already have exactly this many exercises
     if (existingCount && existingCount.count === exercises.length) {
-      console.log(
-        `✅ Already seeded ${exercises.length} exercises, skipping...`,
-      );
+      logger.db(`Already seeded ${exercises.length} exercises, skipping`);
       return;
     }
 
-    // Clear old built-in exercises and reseed
-    console.log(
-      `🔄 Reseeding exercises (old: ${existingCount?.count || 0}, new: ${exercises.length})...`,
+    logger.db(
+      `Reseeding exercises (old: ${existingCount?.count || 0}, new: ${exercises.length})`,
     );
     await this.db.runAsync('DELETE FROM exercises WHERE is_custom = 0');
 
     const stmt = await this.db.prepareAsync(
       `INSERT INTO exercises (
-      id, name, name_en, categories, muscle_groups, instructions, equipment, 
-      difficulty, measurement_type, is_custom, user_id, photo, video, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        id, name, name_en, categories, muscle_groups, instructions, equipment,
+        difficulty, measurement_type, is_custom, user_id, photo, video, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
 
     try {
@@ -60,7 +57,6 @@ export class ExerciseService {
     }
   }
 
-  // Get all exercises
   async getAllExercises(userId?: string): Promise<Exercise[]> {
     let query = 'SELECT * FROM exercises WHERE is_custom = 0';
     const params: any[] = [];
@@ -76,7 +72,6 @@ export class ExerciseService {
     return rows.map(this.mapRowToExercise);
   }
 
-  // Get exercises by category
   async getExercisesByCategory(
     category: string,
     userId?: string,
@@ -98,14 +93,12 @@ export class ExerciseService {
     return rows.map(this.mapRowToExercise);
   }
 
-  // Get exercises by muscle group
   async getExercisesByMuscleGroup(
     muscleGroup: string,
     userId?: string,
   ): Promise<Exercise[]> {
-    let query = `SELECT * FROM exercises 
-                 WHERE muscle_groups LIKE ? 
-                 AND (is_custom = 0`;
+    let query =
+      'SELECT * FROM exercises WHERE muscle_groups LIKE ? AND (is_custom = 0';
     const params: any[] = [`%"${muscleGroup}"%`];
 
     if (userId) {
@@ -121,7 +114,6 @@ export class ExerciseService {
     return rows.map(this.mapRowToExercise);
   }
 
-  // Get exercise by ID
   async getExerciseById(id: string): Promise<Exercise | null> {
     const row = await this.db.getFirstAsync<ExerciseRow>(
       'SELECT * FROM exercises WHERE id = ?',
@@ -131,12 +123,10 @@ export class ExerciseService {
     return row ? this.mapRowToExercise(row) : null;
   }
 
-  // Search exercises
   async searchExercises(query: string, userId?: string): Promise<Exercise[]> {
     const searchTerm = `%${query}%`;
-    let sql = `SELECT * FROM exercises 
-             WHERE (name LIKE ? OR categories LIKE ?) 
-             AND (is_custom = 0`;
+    let sql =
+      'SELECT * FROM exercises WHERE (name LIKE ? OR categories LIKE ?) AND (is_custom = 0';
     const params: any[] = [searchTerm, searchTerm];
 
     if (userId) {
@@ -152,7 +142,6 @@ export class ExerciseService {
     return rows.map(this.mapRowToExercise);
   }
 
-  // Create custom exercise
   async createExercise(
     exercise: Omit<Exercise, 'id' | 'isCustom' | 'createdAt'>,
     userId: string,
@@ -162,12 +151,13 @@ export class ExerciseService {
 
     await this.db.runAsync(
       `INSERT INTO exercises (
-        id, name, category, muscle_groups, instructions, equipment, 
-        difficulty, is_custom, user_id, photo, video, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        id, name, name_en, categories, muscle_groups, instructions, equipment,
+        difficulty, measurement_type, is_custom, user_id, photo, video, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         exercise.name,
+        exercise.nameEN || null,
         JSON.stringify(exercise.categories),
         JSON.stringify(exercise.muscleGroups),
         exercise.instructions || null,
@@ -191,7 +181,7 @@ export class ExerciseService {
     };
   }
 
-  // Update exercise (only custom exercises)
+  /** Only custom exercises can be updated */
   async updateExercise(
     id: string,
     updates: Partial<
@@ -251,7 +241,7 @@ export class ExerciseService {
     );
   }
 
-  // Delete exercise (only custom exercises)
+  /** Only custom exercises can be deleted */
   async deleteExercise(id: string, userId: string): Promise<void> {
     const exercise = await this.getExerciseById(id);
 
@@ -262,7 +252,6 @@ export class ExerciseService {
     await this.db.runAsync('DELETE FROM exercises WHERE id = ?', [id]);
   }
 
-  // Get all categories
   async getCategories(userId?: string): Promise<string[]> {
     const exercises = await this.getAllExercises(userId);
     const categoriesSet = new Set<string>();
@@ -274,7 +263,6 @@ export class ExerciseService {
     return Array.from(categoriesSet).sort();
   }
 
-  // Get all muscle groups
   async getMuscleGroups(userId?: string): Promise<string[]> {
     const exercises = await this.getAllExercises(userId);
     const muscleGroupsSet = new Set<string>();
@@ -286,7 +274,6 @@ export class ExerciseService {
     return Array.from(muscleGroupsSet).sort();
   }
 
-  // Helper to map database row to Exercise object
   private mapRowToExercise(row: ExerciseRow): Exercise {
     return {
       id: row.id,
@@ -302,7 +289,7 @@ export class ExerciseService {
         | 'Zaawansowany'
         | undefined,
       measurementType:
-        (row.measurement_type as 'reps' | 'time' | 'distance') || 'reps', // <-- NOWE
+        (row.measurement_type as 'reps' | 'time' | 'distance') || 'reps',
       isCustom: row.is_custom === 1,
       userId: row.user_id || undefined,
       photo: row.photo || undefined,
@@ -315,28 +302,25 @@ export class ExerciseService {
 
   async addFavorite(
     exerciseId: string,
-    userId: string = 'user_1',
+    userId: string = LOCAL_USER_ID,
   ): Promise<void> {
-    const createdAt = new Date().toISOString();
-
     await this.db.runAsync(
-      `INSERT OR IGNORE INTO favorite_exercises (user_id, exercise_id, created_at) 
-     VALUES (?, ?, ?)`,
-      [userId, exerciseId, createdAt],
+      'INSERT OR IGNORE INTO favorite_exercises (user_id, exercise_id, created_at) VALUES (?, ?, ?)',
+      [userId, exerciseId, new Date().toISOString()],
     );
   }
 
   async removeFavorite(
     exerciseId: string,
-    userId: string = 'user_1',
+    userId: string = LOCAL_USER_ID,
   ): Promise<void> {
     await this.db.runAsync(
-      `DELETE FROM favorite_exercises WHERE user_id = ? AND exercise_id = ?`,
+      'DELETE FROM favorite_exercises WHERE user_id = ? AND exercise_id = ?',
       [userId, exerciseId],
     );
   }
 
-  async getFavorites(userId: string = 'user_1'): Promise<string[]> {
+  async getFavorites(userId: string = LOCAL_USER_ID): Promise<string[]> {
     const rows = await this.db.getAllAsync<FavoriteExerciseRow>(
       'SELECT exercise_id FROM favorite_exercises WHERE user_id = ?',
       [userId],
@@ -347,7 +331,7 @@ export class ExerciseService {
 
   async isFavorite(
     exerciseId: string,
-    userId: string = 'user_1',
+    userId: string = LOCAL_USER_ID,
   ): Promise<boolean> {
     const row = await this.db.getFirstAsync<{ count: number }>(
       'SELECT COUNT(*) as count FROM favorite_exercises WHERE user_id = ? AND exercise_id = ?',

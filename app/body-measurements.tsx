@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BODY_PARTS } from '@/constants/bodyParts';
 import { MeasurementRow } from '@/components/measurements/MeasurementRow';
 import { HistoryRow } from '@/components/measurements/HistoryRow';
+import { LOCAL_USER_ID } from '@/constants/User';
 
 type TabType = 'measurements' | 'history';
 
@@ -34,7 +35,7 @@ export default function BodyMeasurementsScreen() {
   const loadMeasurements = useCallback(async () => {
     if (!measurementService) return;
     const fetchedMeasurements =
-      await measurementService.getMeasurements('local_user');
+      await measurementService.getMeasurements(LOCAL_USER_ID);
     setMeasurements(fetchedMeasurements);
   }, [measurementService]);
 
@@ -52,7 +53,7 @@ export default function BodyMeasurementsScreen() {
     }
     setError(null);
     const newEntry = await measurementService.addMeasurement(
-      'local_user',
+      LOCAL_USER_ID,
       bodyPartKey,
       value,
       new Date().toISOString().split('T')[0],

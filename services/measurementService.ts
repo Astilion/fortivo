@@ -32,19 +32,19 @@ export class MeasurementService {
       notes,
     });
     return {
-      userId: userId,
-      bodyPart: bodyPart,
-      value: value,
-      date: date,
-      notes: notes || undefined,
-      createdAt: createdAt,
       id,
+      userId,
+      bodyPart,
+      value,
+      date,
+      notes: notes || undefined,
+      createdAt,
     };
   }
 
   async getMeasurements(userId: string): Promise<BodyMeasurement[]> {
     const rows = await this.db.getAllAsync<BodyMeasurementRow>(
-      'SELECT * FROM body_measurements WHERE user_id = ? Order BY date DESC',
+      'SELECT * FROM body_measurements WHERE user_id = ? ORDER BY date DESC',
       [userId],
     );
     logger.db('fetched body measurements', [userId, rows]);

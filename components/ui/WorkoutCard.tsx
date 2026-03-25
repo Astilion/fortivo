@@ -42,7 +42,8 @@ export const WorkoutCard = ({
         <View style={styles.leftSection}>
           <Text style={styles.workoutName}>{workoutName}</Text>
           <Text style={styles.metadata}>
-            {formatDate(workoutDate)} • {getExerciseLabel(exerciseCount)}
+            {formatDate(workoutDate)} • {exerciseCount}{' '}
+            {getExerciseLabel(exerciseCount)}
           </Text>
         </View>
 
@@ -62,7 +63,6 @@ export const WorkoutCard = ({
             />
           </Pressable>
 
-          {/* Move Down button */}
           <Pressable
             onPress={onMoveDown}
             disabled={isLast}
@@ -87,7 +87,7 @@ export const WorkoutCard = ({
               ]}
             >
               <Ionicons
-                name={isActive ? 'star' : 'star-outline'} // Wypełniona jeśli aktywny
+                name={isActive ? 'star' : 'star-outline'}
                 size={20}
                 color={isActive ? colors.accent : colors.text.secondary}
               />
