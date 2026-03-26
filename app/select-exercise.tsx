@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import colors from '@/constants/Colors';
 import { commonStyles } from '@/constants/Styles';
-import { WORKOUT_CATEGORIES } from '@/constants/Training';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter } from 'expo-router';
@@ -32,6 +31,7 @@ export default function SelectExerciseScreen() {
   const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
   const isFavorite = useExerciseStore((state) => state.isFavorite);
 
+  const categories = useExerciseStore((state) => state.categories);
   const favoriteExercises = useExerciseStore(
     (state) => state.favoriteExercises,
   );
@@ -87,14 +87,16 @@ export default function SelectExerciseScreen() {
           variant={selectedCategory === 'ulubione' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('ulubione')}
         />
-        {WORKOUT_CATEGORIES.map((cat) => (
-          <Button
-            key={cat}
-            title={capitalize(cat)}
-            variant={selectedCategory === cat ? 'primary' : 'secondary'}
-            onPress={() => setSelectedCategory(cat)}
-          />
-        ))}
+        {categories
+          .filter((cat) => cat !== 'wszystkie')
+          .map((cat) => (
+            <Button
+              key={cat}
+              title={capitalize(cat)}
+              variant={selectedCategory === cat ? 'primary' : 'secondary'}
+              onPress={() => setSelectedCategory(cat)}
+            />
+          ))}
       </ScrollView>
 
       {loading ? (
