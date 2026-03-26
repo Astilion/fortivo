@@ -324,7 +324,7 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <View style={[styles.row, styles.rowBorder]}>
             <Text style={styles.rowLabelText}>Wersja</Text>
-            <Text style={styles.metaText}>0.1.0-beta</Text>
+            <Text style={styles.metaText}>0.2.1-beta</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabelText}>Autor</Text>
