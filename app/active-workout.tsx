@@ -339,7 +339,7 @@ export default function ActiveWorkoutScreen() {
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Powtórzenia</Text>
+                    <Text style={styles.inputLabel}>Powt.</Text>
                     <TextInput
                       key={`reps-${set.id}-${set.actualReps}`}
                       style={styles.input}
