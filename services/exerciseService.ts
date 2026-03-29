@@ -12,25 +12,11 @@ export class ExerciseService {
   }
 
   async seedExercises(exercises: Exercise[]) {
-    const existingCount = await this.db.getFirstAsync<{ count: number }>(
-      'SELECT COUNT(*) as count FROM exercises WHERE is_custom = 0',
-    );
-
-    if (existingCount && existingCount.count === exercises.length) {
-      logger.db(`Already seeded ${exercises.length} exercises, skipping`);
-      return;
-    }
-
-    logger.db(
-      `Reseeding exercises (old: ${existingCount?.count || 0}, new: ${exercises.length})`,
-    );
-    await this.db.runAsync('DELETE FROM exercises WHERE is_custom = 0');
-
     const stmt = await this.db.prepareAsync(
-      `INSERT INTO exercises (
-        id, name, name_en, categories, muscle_groups, instructions, equipment,
-        difficulty, measurement_type, is_custom, user_id, photo, video, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO exercises (
+      id, name, name_en, categories, muscle_groups, instructions, equipment,
+      difficulty, measurement_type, is_custom, user_id, photo, video, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
 
     try {
@@ -55,6 +41,8 @@ export class ExerciseService {
     } finally {
       await stmt.finalizeAsync();
     }
+
+    logger.db(`Seeded/updated ${exercises.length} exercises`);
   }
 
   async getAllExercises(userId?: string): Promise<Exercise[]> {
