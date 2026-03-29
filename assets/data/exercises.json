@@ -3202,5 +3202,29 @@
     "measurementType": "reps",
     "isCustom": false,
     "createdAt": "2025-01-18T12:00:00.000Z"
-  }
+  },
+  {
+  "id": "exercise_100",
+  "name": "Wiosłowanie na wyciągu dolnym oburącz szeroko",
+  "nameEN": "Wide Grip Seated Cable Row",
+  "categories": ["pull", "góra", "plecy"],
+  "muscleGroups": ["Plecy"],
+  "equipment": ["wyciąg"],
+  "difficulty": "Początkujący",
+  "measurementType": "reps",
+  "isCustom": false,
+  "createdAt": "2025-01-18T12:00:00.000Z"
+},
+{
+  "id": "exercise_101",
+  "name": "Wiosłowanie na wyciągu dolnym oburącz",
+  "nameEN": "Seated Cable Row",
+  "categories": ["pull", "góra", "plecy"],
+  "muscleGroups": ["Plecy"],
+  "equipment": ["wyciąg"],
+  "difficulty": "Początkujący",
+  "measurementType": "reps",
+  "isCustom": false,
+  "createdAt": "2025-01-18T12:00:00.000Z"
+}
 ]

@@ -16,6 +16,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { matchesSearch } from '@/utils/search';
 
 export default function ExercisesScreen() {
   const router = useRouter();
@@ -37,13 +38,15 @@ export default function ExercisesScreen() {
       setSearchQuery('');
     }
   }, [selectedCategory]);
-
+  
   const filteredExercises = exercises.filter((ex) => {
-    const matchesSearch =
-      searchQuery.trim() === '' ||
-      ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (ex.nameEN &&
-        ex.nameEN.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matches = matchesSearch(
+      searchQuery,
+      ex.name,
+      ex.nameEN,
+      ex.muscleGroups?.join(' '),
+      ex.equipment?.join(' '),
+    );
 
     const matchesCategory =
       selectedCategory === 'wszystkie' ||
@@ -53,9 +56,8 @@ export default function ExercisesScreen() {
     const matchesFavorites =
       selectedCategory !== 'ulubione' || favoriteExercises.includes(ex.id);
 
-    return matchesSearch && matchesCategory && matchesFavorites;
+    return matches && matchesCategory && matchesFavorites;
   });
-
   if (loading) {
     return <LoadingView />;
   }

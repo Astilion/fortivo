@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { capitalize } from '@/utils/capitalize';
+import { matchesSearch } from '@/utils/search';
 
 export default function SelectExerciseScreen() {
   const router = useRouter();
@@ -37,11 +38,13 @@ export default function SelectExerciseScreen() {
   );
 
   const filteredExercises = exercises.filter((ex) => {
-    const matchesSearch =
-      searchQuery.trim() === '' ||
-      ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (ex.nameEN &&
-        ex.nameEN.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matches = matchesSearch(
+      searchQuery,
+      ex.name,
+      ex.nameEN,
+      ex.muscleGroups?.join(' '),
+      ex.equipment?.join(' '),
+    );
 
     const matchesCategory =
       selectedCategory === 'wszystkie' ||
@@ -51,7 +54,7 @@ export default function SelectExerciseScreen() {
     const matchesFavorites =
       selectedCategory !== 'ulubione' || favoriteExercises.includes(ex.id);
 
-    return matchesSearch && matchesCategory && matchesFavorites;
+    return matches && matchesCategory && matchesFavorites;
   });
 
   const handleSelectExercise = (exerciseId: string) => {
