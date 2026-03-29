@@ -5,7 +5,7 @@ import { WorkoutExerciseWithSets } from '@/store/workoutStore';
 import { WorkoutRow, WorkoutSet } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { generateId } from '@/database/database';
 import {
   Alert,
@@ -26,32 +26,41 @@ export default function ActiveWorkoutScreen() {
   const router = useRouter();
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
-  const [restTimeRemaining, setRestTimeRemaining] = useState<number | null>(
-    null,
-  );
+  const [restTargetTime, setRestTargetTime] = useState<number | null>(null);
   const [validationKey, setValidationKey] = useState(0);
   const [isResting, setIsResting] = useState(false);
   const [startTime] = useState<Date>(new Date());
   const { settings } = useProfileSettings();
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [tick, setTick] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
-      loadActiveWorkout();
-    }, []),
+      if (!isLoaded) {
+        loadActiveWorkout();
+        setIsLoaded(true);
+      }
+    }, [isLoaded]),
   );
-
+  const exercisesRef = useRef<WorkoutExerciseWithSets[]>([]);
   useEffect(() => {
-    if (!isResting || restTimeRemaining === null) return;
-    if (restTimeRemaining <= 0) {
-      setIsResting(false);
-      setRestTimeRemaining(null);
-      return;
-    }
+    if (!isResting || restTargetTime === null) return;
+
     const interval = setInterval(() => {
-      setRestTimeRemaining((prev) => (prev !== null ? prev - 1 : null));
-    }, 1000);
+      const remaining = Math.ceil((restTargetTime - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setIsResting(false);
+        setRestTargetTime(null);
+      } else {
+        setTick((prev) => prev + 1);
+      }
+    }, 500);
+
     return () => clearInterval(interval);
-  }, [isResting, restTimeRemaining]);
+  }, [isResting, restTargetTime]);
+  useEffect(() => {
+    exercisesRef.current = exercises;
+  }, [exercises]);
 
   const loadActiveWorkout = async () => {
     const workout = await workoutService.getActiveWorkout();
@@ -87,7 +96,7 @@ export default function ActiveWorkoutScreen() {
                 const nowCompleted = !s.completed;
                 if (nowCompleted && settings?.trackRestTime) {
                   const restTime = s.restTime ?? settings.defaultRestTime ?? 90;
-                  setRestTimeRemaining(restTime);
+                  setRestTargetTime(Date.now() + restTime * 1000);
                   setIsResting(true);
                 }
                 return { ...s, completed: nowCompleted };
@@ -109,16 +118,16 @@ export default function ActiveWorkoutScreen() {
 
           const newSet: WorkoutSet = {
             id: generateId('ws'),
-            reps: lastSet?.reps || 10,
-            weight: lastSet?.weight || 0,
-            rpe: lastSet?.rpe || undefined,
+            reps: lastSet?.actualReps || lastSet?.reps || 10,
+            weight: lastSet?.actualWeight || lastSet?.weight || 0,
+            rpe: lastSet?.actualRpe || lastSet?.rpe || undefined,
             tempo: lastSet?.tempo || undefined,
             restTime: lastSet?.restTime || undefined,
             completed: false,
             notes: undefined,
-            actualReps: lastSet?.reps || 8,
-            actualWeight: lastSet?.weight || 0,
-            actualRpe: undefined,
+            actualReps: lastSet?.actualReps || lastSet?.reps || 8,
+            actualWeight: lastSet?.actualWeight || lastSet?.weight || 0,
+            actualRpe: lastSet?.actualRpe || undefined,
             duration: undefined,
             actualDuration: undefined,
             distance: undefined,
@@ -175,29 +184,47 @@ export default function ActiveWorkoutScreen() {
       });
     });
   };
-  const handleFinishWorkout = async () => {
-    if (!workout) return;
+  const handleFinishWorkout = () => {
+    Alert.alert('Zakończ trening', 'Czy na pewno chcesz zakończyć trening?', [
+      { text: 'Anuluj', style: 'cancel' },
+      {
+        text: 'Zakończ',
+        style: 'destructive',
+        onPress: async () => {
+          if (!workout) return;
 
-    try {
-      const endTime = new Date();
-      const durationMinutes = Math.round(
-        (endTime.getTime() - startTime.getTime()) / 60000,
-      );
-      await workoutService.saveActualValues(workout.id, exercises);
-      await workoutService.saveWorkoutHistory(workout.id, durationMinutes);
-      await workoutService.saveExerciseProgress(workout.id, exercises);
-      await workoutService.clearActiveWorkout();
+          try {
+            const endTime = new Date();
+            const durationMinutes = Math.round(
+              (endTime.getTime() - startTime.getTime()) / 60000,
+            );
+            await workoutService.saveActualValues(
+              workout.id,
+              exercisesRef.current,
+            );
+            await workoutService.saveWorkoutHistory(
+              workout.id,
+              durationMinutes,
+            );
+            await workoutService.saveExerciseProgress(
+              workout.id,
+              exercisesRef.current,
+            );
+            await workoutService.clearActiveWorkout();
 
-      router.back();
+            router.back();
 
-      setTimeout(() => {
-        router.push('/(tabs)/workout-history');
-        Alert.alert('Sukces! 💪', 'Trening został zapisany');
-      }, 300);
-    } catch (error) {
-      logger.error('Błąd zakończenia treningu', error);
-      Alert.alert('Błąd', 'Nie udało się zapisać treningu');
-    }
+            setTimeout(() => {
+              router.push('/(tabs)/workout-history');
+              Alert.alert('Trening został zapisany');
+            }, 300);
+          } catch (error) {
+            logger.error('Błąd zakończenia treningu', error);
+            Alert.alert('Błąd', 'Nie udało się zapisać treningu');
+          }
+        },
+      },
+    ]);
   };
 
   const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
@@ -210,12 +237,16 @@ export default function ActiveWorkoutScreen() {
   const progressPercent =
     totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
 
+  const restTimeRemaining = restTargetTime
+    ? Math.max(0, Math.ceil((restTargetTime - Date.now()) / 1000))
+    : null;
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{workout?.name || 'Trening'}</Text>
       </View>
-      {isResting && restTimeRemaining !== null && (
+      {isResting && restTargetTime !== null && (
         <View style={styles.restBanner}>
           <Ionicons name='timer-outline' size={18} color={colors.primary} />
           <Text style={styles.restBannerText}>
@@ -224,7 +255,7 @@ export default function ActiveWorkoutScreen() {
           <Pressable
             onPress={() => {
               setIsResting(false);
-              setRestTimeRemaining(null);
+              setRestTargetTime(null);
             }}
           >
             <Ionicons name='close' size={18} color={colors.primary} />
@@ -491,6 +522,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.text.secondary,
     marginBottom: 6,
+    textAlign: 'center',
   },
   input: {
     backgroundColor: colors.background,

@@ -28,10 +28,9 @@ export class WorkoutService {
 
   async getAllWorkouts(): Promise<WorkoutRow[]> {
     return this.db.getAllAsync<WorkoutRow>(
-      'SELECT * FROM workouts ORDER BY display_order ASC, created_at DESC',
+      'SELECT * FROM workouts ORDER BY is_favorite DESC, display_order ASC, created_at DESC',
     );
   }
-
   async createWorkout(
     workout: Omit<Workout, 'id' | 'createdAt' | 'exercises'>,
   ): Promise<Workout> {
@@ -537,5 +536,16 @@ export class WorkoutService {
         set.actualDistance || null,
       ],
     );
+  }
+  async toggleFavoriteWorkout(id: string): Promise<boolean> {
+    const workout = await this.getWorkoutById(id);
+    if (!workout) return false;
+
+    const newValue = workout.is_favorite === 1 ? 0 : 1;
+    await this.db.runAsync('UPDATE workouts SET is_favorite = ? WHERE id = ?', [
+      newValue,
+      id,
+    ]);
+    return newValue === 1;
   }
 }

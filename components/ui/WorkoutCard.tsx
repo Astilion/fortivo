@@ -8,13 +8,14 @@ interface WorkoutCardProps {
   workoutDate: string;
   exerciseCount: number;
   onPress: () => void;
+  onEdit: () => void;
   onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onToggleFavorite: () => void;
   isFirst: boolean;
   isLast: boolean;
-  onSetActive?: () => void;
-  isActive?: boolean;
+  isFavorite: boolean;
 }
 
 const getExerciseLabel = (count: number) => {
@@ -28,32 +29,40 @@ export const WorkoutCard = ({
   workoutDate,
   exerciseCount,
   onPress,
+  onEdit,
   onDelete,
   onMoveUp,
   onMoveDown,
+  onToggleFavorite,
   isFirst,
   isLast,
-  isActive,
-  onSetActive,
+  isFavorite,
 }: WorkoutCardProps) => {
   return (
     <Pressable onPress={onPress} style={styles.card}>
       <View style={styles.content}>
         <View style={styles.leftSection}>
-          <Text style={styles.workoutName}>{workoutName}</Text>
+          <View style={styles.nameRow}>
+            {isFavorite && (
+              <Ionicons name='star' size={14} color={colors.accent} />
+            )}
+            <Text style={styles.workoutName}>{workoutName}</Text>
+          </View>
           <Text style={styles.metadata}>
             {formatDate(workoutDate)} • {exerciseCount}{' '}
             {getExerciseLabel(exerciseCount)}
           </Text>
         </View>
-
         <View style={styles.actions}>
           <Pressable
-            onPress={onMoveUp}
+            onPress={(e) => {
+              e.stopPropagation();
+              onMoveUp();
+            }}
             disabled={isFirst}
             style={[
-              styles.reorderButton,
-              isFirst && styles.reorderButtonDisabled,
+              styles.actionButton,
+              isFirst && styles.actionButtonDisabled,
             ]}
           >
             <Ionicons
@@ -62,14 +71,13 @@ export const WorkoutCard = ({
               color={isFirst ? colors.text.secondary : colors.accent}
             />
           </Pressable>
-
           <Pressable
-            onPress={onMoveDown}
+            onPress={(e) => {
+              e.stopPropagation();
+              onMoveDown();
+            }}
             disabled={isLast}
-            style={[
-              styles.reorderButton,
-              isLast && styles.reorderButtonDisabled,
-            ]}
+            style={[styles.actionButton, isLast && styles.actionButtonDisabled]}
           >
             <Ionicons
               name='arrow-down'
@@ -77,24 +85,35 @@ export const WorkoutCard = ({
               color={isLast ? colors.text.secondary : colors.accent}
             />
           </Pressable>
-          {onSetActive && (
-            <Pressable
-              onPress={onSetActive}
-              disabled={isActive}
-              style={[
-                styles.activeButton,
-                isActive && styles.activeButtonDisabled,
-              ]}
-            >
-              <Ionicons
-                name={isActive ? 'star' : 'star-outline'}
-                size={20}
-                color={isActive ? colors.accent : colors.text.secondary}
-              />
-            </Pressable>
-          )}
-
-          <Pressable onPress={onDelete} style={styles.deleteButton}>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              onToggleFavorite();
+            }}
+            style={styles.actionButton}
+          >
+            <Ionicons
+              name={isFavorite ? 'star' : 'star-outline'}
+              size={20}
+              color={isFavorite ? colors.accent : colors.text.secondary}
+            />
+          </Pressable>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            style={styles.actionButton}
+          >
+            <Ionicons name='create-outline' size={20} color={colors.accent} />
+          </Pressable>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            style={styles.actionButton}
+          >
             <Ionicons name='trash-outline' size={20} color={colors.danger} />
           </Pressable>
         </View>
@@ -119,11 +138,16 @@ const styles = StyleSheet.create({
   leftSection: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
   workoutName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: colors.text.primary,
-    marginBottom: 4,
   },
   metadata: {
     fontSize: 14,
@@ -132,24 +156,13 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
-  reorderButton: {
-    padding: 8,
+  actionButton: {
+    padding: 6,
     borderRadius: 6,
   },
-  reorderButtonDisabled: {
+  actionButtonDisabled: {
     opacity: 0.3,
-  },
-  activeButton: {
-    padding: 8,
-    borderRadius: 6,
-  },
-  activeButtonDisabled: {
-    opacity: 0.5,
-  },
-
-  deleteButton: {
-    padding: 8,
   },
 });

@@ -64,12 +64,14 @@ export default function CurrentWorkoutScreen() {
               workoutDate={activeWorkout.date}
               exerciseCount={exercises.length}
               onPress={() => {}}
+              onEdit={() => {}}
               onDelete={handleClearActive}
               onMoveUp={() => {}}
               onMoveDown={() => {}}
+              onToggleFavorite={() => {}}
               isFirst={true}
               isLast={true}
-              isActive={true}
+              isFavorite={activeWorkout.is_favorite === 1}
             />
             <ScrollView style={styles.exercisesList}>
               <Text style={styles.exercisesTitle}>Ćwiczenia:</Text>

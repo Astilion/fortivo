@@ -276,6 +276,7 @@ export interface WorkoutRow {
   template_id: string | null;
   display_order: number;
   is_active: number;
+  is_favorite: number;
   created_at: string;
 }
 

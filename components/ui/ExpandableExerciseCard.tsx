@@ -42,9 +42,9 @@ export const ExpandableExerciseCard = ({
       case 'time':
         return 'Czas (s)';
       case 'distance':
-        return 'Dystans (m)';
+        return 'Dyst. (m)';
       default:
-        return 'Powtórzenia';
+        return 'Powt.';
     }
   };
 
@@ -142,16 +142,16 @@ export const ExpandableExerciseCard = ({
         <View style={styles.expandedContent}>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderText, styles.setColumnHeader]}>
-              Seria
+              #
             </Text>
             <Text style={[styles.tableHeaderText, styles.weightColumnHeader]}>
-              Obciążenie
+              Ciężar (kg)
             </Text>
             <Text style={[styles.tableHeaderText, styles.repsColumnHeader]}>
               {getLabel()}
             </Text>
             <Text style={[styles.tableHeaderText, styles.restColumnHeader]}>
-              Odpoczynek
+              Przerwa (s)
             </Text>
             <View style={styles.actionColumnHeader} />
           </View>
@@ -177,7 +177,6 @@ export const ExpandableExerciseCard = ({
                   placeholder='0'
                   placeholderTextColor={colors.text.secondary}
                 />
-                <Text style={styles.unitText}>kg</Text>
               </View>
 
               <View style={styles.repsColumn}>
@@ -221,7 +220,6 @@ export const ExpandableExerciseCard = ({
                   placeholder='90'
                   placeholderTextColor={colors.text.secondary}
                 />
-                <Text style={styles.unitText}>s</Text>
               </View>
 
               {/* Delete set */}
@@ -335,7 +333,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   tableHeaderText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: colors.text.secondary,
     textTransform: 'uppercase',
@@ -348,7 +346,6 @@ const styles = StyleSheet.create({
   weightColumnHeader: {
     flex: 1,
     textAlign: 'center',
-    paddingLeft: 8,
   },
   repsColumnHeader: {
     flex: 1,
@@ -374,12 +371,13 @@ const styles = StyleSheet.create({
   },
   weightColumn: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
     paddingHorizontal: 4,
   },
   repsColumn: {
+    flex: 1,
+    paddingHorizontal: 4,
+  },
+  restColumn: {
     flex: 1,
     paddingHorizontal: 4,
   },
@@ -406,11 +404,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     minWidth: 50,
   },
-  unitText: {
-    fontSize: 13,
-    color: colors.text.secondary,
-    marginLeft: 2,
-  },
 
   addSetButton: {
     flexDirection: 'row',
@@ -433,12 +426,5 @@ const styles = StyleSheet.create({
   restColumnHeader: {
     flex: 1,
     textAlign: 'center',
-  },
-  restColumn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 4,
   },
 });

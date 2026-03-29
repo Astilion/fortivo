@@ -58,32 +58,43 @@ export default function WorkoutsScreen() {
   const moveWorkoutUp = async (index: number) => {
     if (index === 0) return;
 
+    const current = workouts[index];
+    const above = workouts[index - 1];
+
+    if (!current.is_favorite && above.is_favorite) return;
+
     const newWorkouts = [...workouts];
     const [item] = newWorkouts.splice(index, 1);
     newWorkouts.splice(index - 1, 0, item);
 
     setWorkouts(newWorkouts);
-
-    const workoutIds = newWorkouts.map((w) => w.id);
-    await workoutService.reorderWorkouts(workoutIds);
+    await workoutService.reorderWorkouts(newWorkouts.map((w) => w.id));
   };
 
   const moveWorkoutDown = async (index: number) => {
     if (index === workouts.length - 1) return;
+
+    const current = workouts[index];
+    const below = workouts[index + 1];
+
+    if (current.is_favorite && !below.is_favorite) return;
 
     const newWorkouts = [...workouts];
     const [item] = newWorkouts.splice(index, 1);
     newWorkouts.splice(index + 1, 0, item);
 
     setWorkouts(newWorkouts);
+    await workoutService.reorderWorkouts(newWorkouts.map((w) => w.id));
+  };
 
-    const workoutIds = newWorkouts.map((w) => w.id);
-    await workoutService.reorderWorkouts(workoutIds);
+  const handleToggleFavorite = async (workoutId: string) => {
+    await workoutService.toggleFavoriteWorkout(workoutId);
+    await loadWorkouts();
   };
 
   const setAsActive = async (workoutId: string) => {
     await workoutService.setActiveWorkout(workoutId);
-    router.push('/current-workout');
+    router.push('/(tabs)/current-workout');
   };
 
   return (
@@ -144,22 +155,37 @@ export default function WorkoutsScreen() {
                 subtitle='Stwórz swój pierwszy plan treningowy'
               />
             ) : (
-              workouts.map((workout, index) => (
-                <WorkoutCard
-                  key={workout.id}
-                  workoutName={workout.name}
-                  workoutDate={workout.date}
-                  exerciseCount={0}
-                  onPress={() => router.push(`/edit-workout?id=${workout.id}`)}
-                  onDelete={() => handleDeleteWorkout(workout.id, workout.name)}
-                  onMoveUp={() => moveWorkoutUp(index)}
-                  onMoveDown={() => moveWorkoutDown(index)}
-                  isFirst={index === 0}
-                  isLast={index === workouts.length - 1}
-                  onSetActive={() => setAsActive(workout.id)}
-                  isActive={workout.is_active === 1}
-                />
-              ))
+              workouts.map((workout, index) => {
+                const above = workouts[index - 1];
+                const below = workouts[index + 1];
+
+                const canMoveUp =
+                  index > 0 &&
+                  !(workout.is_favorite === 0 && above?.is_favorite === 1);
+                const canMoveDown =
+                  index < workouts.length - 1 &&
+                  !(workout.is_favorite === 1 && below?.is_favorite === 0);
+
+                return (
+                  <WorkoutCard
+                    key={workout.id}
+                    workoutName={workout.name}
+                    workoutDate={workout.date}
+                    exerciseCount={0}
+                    onPress={() => setAsActive(workout.id)}
+                    onEdit={() => router.push(`/edit-workout?id=${workout.id}`)}
+                    onDelete={() =>
+                      handleDeleteWorkout(workout.id, workout.name)
+                    }
+                    onMoveUp={() => moveWorkoutUp(index)}
+                    onMoveDown={() => moveWorkoutDown(index)}
+                    onToggleFavorite={() => handleToggleFavorite(workout.id)}
+                    isFirst={!canMoveUp}
+                    isLast={!canMoveDown}
+                    isFavorite={workout.is_favorite === 1}
+                  />
+                );
+              })
             )}
           </>
         ) : (

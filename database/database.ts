@@ -2,7 +2,6 @@ import * as SQLite from 'expo-sqlite';
 import { logger } from '@/utils/logger';
 const DB_NAME = 'fortivo.db';
 
-
 const migrations: string[] = [
   // ─── v1: Full Schema ──────────────────────────────────────────────
   `
@@ -259,7 +258,11 @@ const migrations: string[] = [
   CREATE INDEX IF NOT EXISTS idx_body_measurements_user_date ON body_measurements(user_id, date);
   `,
 
-  // ─── v5: (przyszłe migracje tutaj) ───────────────────────────────────────
+  // ─── v5: Workout favourites ───────────────────────────────────────
+  `
+ALTER TABLE workouts ADD COLUMN is_favorite INTEGER DEFAULT 0;
+CREATE INDEX IF NOT EXISTS idx_workouts_favorite ON workouts(is_favorite);
+`,
 ];
 
 // ─── Migration runner ─────────────────────────────────────────────────────────
