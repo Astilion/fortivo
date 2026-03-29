@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/Button';
-import { WorkoutCard } from '@/components/ui/WorkoutCard';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutExerciseWithSets } from '@/store/workoutStore';
@@ -59,20 +58,9 @@ export default function CurrentWorkoutScreen() {
       <View style={styles.content}>
         {activeWorkout ? (
           <>
-            <WorkoutCard
-              workoutName={activeWorkout.name}
-              workoutDate={activeWorkout.date}
-              exerciseCount={exercises.length}
-              onPress={() => {}}
-              onEdit={() => {}}
-              onDelete={handleClearActive}
-              onMoveUp={() => {}}
-              onMoveDown={() => {}}
-              onToggleFavorite={() => {}}
-              isFirst={true}
-              isLast={true}
-              isFavorite={activeWorkout.is_favorite === 1}
-            />
+            <View style={styles.activeWorkoutHeader}>
+              <Text style={styles.activeWorkoutName}>{activeWorkout.name}</Text>
+            </View>
             <ScrollView style={styles.exercisesList}>
               <Text style={styles.exercisesTitle}>Ćwiczenia:</Text>
               {exercises.map((item, index) => (
@@ -197,5 +185,16 @@ const styles = StyleSheet.create({
   emptyActions: {
     width: '100%',
     gap: 12,
+  },
+  activeWorkoutHeader: {
+    backgroundColor: colors.secondary,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  activeWorkoutName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text.primary,
   },
 });
