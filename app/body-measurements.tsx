@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     gap: 8,
+    paddingBottom: 80,
   },
 
   // Empty state

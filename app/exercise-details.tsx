@@ -3,7 +3,15 @@ import colors from '@/constants/Colors';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { capitalize } from '@/utils/capitalize';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 export default function ExerciseDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,7 +34,6 @@ export default function ExerciseDetailsScreen() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>{exercise.name}</Text>
-
       <View style={styles.categoriesRow}>
         {exercise.categories.map((cat, idx) => (
           <Text key={idx} style={styles.categoryChip}>
@@ -34,14 +41,12 @@ export default function ExerciseDetailsScreen() {
           </Text>
         ))}
       </View>
-
       <Text style={styles.sectionTitle}>Partie mięśniowe:</Text>
       {exercise.muscleGroups.map((muscle, index) => (
         <Text key={index} style={styles.listItem}>
           • {capitalize(muscle)}
         </Text>
       ))}
-
       {exercise.equipment && exercise.equipment.length > 0 && (
         <>
           <Text style={styles.sectionTitle}>Sprzęt:</Text>
@@ -52,38 +57,35 @@ export default function ExerciseDetailsScreen() {
           ))}
         </>
       )}
-
       {exercise.difficulty && (
         <>
           <Text style={styles.sectionTitle}>Poziom trudności:</Text>
           <Text style={styles.text}>{capitalize(exercise.difficulty)}</Text>
         </>
       )}
-
       {exercise.instructions && (
         <>
           <Text style={styles.sectionTitle}>Instrukcje:</Text>
           <Text style={styles.text}>{exercise.instructions}</Text>
         </>
       )}
-      <View style={styles.buttonSpacing}>
-        <Button
-          title=' Link YouTube'
-          variant='danger'
-          onPress={openYouTubeSearch}
-        />
-      </View>
-      <View style={styles.buttonSpacingSmall}>
-        <Button
-          title='📊 Zobacz historię'
-          variant='primary'
+      <View style={styles.actionRow}>
+        <Pressable style={styles.actionCard} onPress={openYouTubeSearch}>
+          <Ionicons name='logo-youtube' size={28} color='#FF0000' />
+          <Text style={styles.actionLabel}>YouTube</Text>
+        </Pressable>
+        <Pressable
+          style={styles.actionCard}
           onPress={() =>
             router.push({
               pathname: '/exercise-progress',
               params: { exerciseId: exercise.id, exerciseName: exercise.name },
             })
           }
-        />
+        >
+          <Ionicons name='stats-chart' size={28} color={colors.accent} />
+          <Text style={styles.actionLabel}>Historia</Text>
+        </Pressable>
       </View>
     </ScrollView>
   );
@@ -131,10 +133,23 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     lineHeight: 24,
   },
-  buttonSpacing: {
+  actionRow: {
+    flexDirection: 'row',
+    gap: 12,
     marginTop: 24,
+    marginBottom: 24,
   },
-  buttonSpacingSmall: {
-    marginTop: 12,
+  actionCard: {
+    flex: 1,
+    backgroundColor: colors.secondary,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text.secondary,
   },
 });
