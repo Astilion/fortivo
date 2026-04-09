@@ -49,12 +49,15 @@ export default function SelectExerciseScreen() {
     const matchesCategory =
       selectedCategory === 'wszystkie' ||
       selectedCategory === 'ulubione' ||
+      selectedCategory === 'wlasne' ||
       ex.categories.includes(selectedCategory);
 
     const matchesFavorites =
       selectedCategory !== 'ulubione' || favoriteExercises.includes(ex.id);
 
-    return matches && matchesCategory && matchesFavorites;
+    const matchesCustom = selectedCategory !== 'wlasne' || ex.isCustom;
+
+    return matches && matchesCategory && matchesFavorites && matchesCustom;
   });
 
   const handleSelectExercise = (exerciseId: string) => {
@@ -90,6 +93,11 @@ export default function SelectExerciseScreen() {
           variant={selectedCategory === 'ulubione' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('ulubione')}
         />
+        <Button
+          title='Własne'
+          variant={selectedCategory === 'wlasne' ? 'primary' : 'secondary'}
+          onPress={() => setSelectedCategory('wlasne')}
+        />
         {categories
           .filter((cat) => cat !== 'wszystkie')
           .map((cat) => (
@@ -108,7 +116,7 @@ export default function SelectExerciseScreen() {
         <FlatList
           data={filteredExercises}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ gap: 12 }}
+          contentContainerStyle={{ gap: 12, paddingBottom: 80 }}
           removeClippedSubviews={true}
           maxToRenderPerBatch={10}
           windowSize={5}
@@ -147,6 +155,12 @@ export default function SelectExerciseScreen() {
           )}
         />
       )}
+      <Pressable
+        onPress={() => router.push('/create-exercise')}
+        style={styles.fab}
+      >
+        <Ionicons name='add' size={28} color='#1C2227' />
+      </Pressable>
     </View>
   );
 }
@@ -185,5 +199,16 @@ const styles = StyleSheet.create({
   favoriteButton: {
     padding: 4,
     marginLeft: 8,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 34,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

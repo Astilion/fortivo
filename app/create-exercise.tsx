@@ -92,7 +92,7 @@ export default function CreateExerciseScreen() {
     } finally {
       setIsInitializing(false);
     }
-  }, [id, isEditMode]);
+  }, [id, isEditMode, exerciseService, router]);
 
   useEffect(() => {
     initialize();
