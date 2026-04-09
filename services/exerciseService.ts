@@ -114,7 +114,7 @@ export class ExerciseService {
   async searchExercises(query: string, userId?: string): Promise<Exercise[]> {
     const searchTerm = `%${query}%`;
     let sql =
-      'SELECT * FROM exercises WHERE (name LIKE ? OR categories LIKE ?) AND (is_custom = 0';
+      'SELECT * FROM exercises WHERE (name LIKE ? OR categories LIKE ?) AND (is_custom = 0)';
     const params: any[] = [searchTerm, searchTerm];
 
     if (userId) {
@@ -218,6 +218,14 @@ export class ExerciseService {
       fields.push('video = ?');
       values.push(updates.video);
     }
+    if (updates.nameEN !== undefined) {
+      fields.push('name_en = ?');
+      values.push(updates.nameEN);
+    }
+    if (updates.measurementType !== undefined) {
+      fields.push('measurement_type = ?');
+      values.push(updates.measurementType);
+    }
 
     if (fields.length === 0) return;
 
@@ -241,25 +249,17 @@ export class ExerciseService {
   }
 
   async getCategories(userId?: string): Promise<string[]> {
-    const exercises = await this.getAllExercises(userId);
-    const categoriesSet = new Set<string>();
-
-    exercises.forEach((exercise) => {
-      exercise.categories.forEach((cat) => categoriesSet.add(cat));
-    });
-
-    return Array.from(categoriesSet).sort();
+    const query = 'SELECT DISTINCT value FROM exercises, json_each(categories)';
+    const rows = await this.db.getAllAsync<{ value: string }>(query);
+    return rows.map((row) => row.value).sort();
   }
 
-  async getMuscleGroups(userId?: string): Promise<string[]> {
-    const exercises = await this.getAllExercises(userId);
-    const muscleGroupsSet = new Set<string>();
+  async getMuscleGroups(): Promise<string[]> {
+    const query =
+      'SELECT DISTINCT value FROM exercises, json_each(muscle_groups)';
+    const rows = await this.db.getAllAsync<{ value: string }>(query);
 
-    exercises.forEach((exercise) => {
-      exercise.muscleGroups.forEach((muscle) => muscleGroupsSet.add(muscle));
-    });
-
-    return Array.from(muscleGroupsSet).sort();
+    return rows.map((row) => row.value).sort();
   }
 
   private mapRowToExercise(row: ExerciseRow): Exercise {

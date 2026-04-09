@@ -133,6 +133,10 @@ export default function RootLayout() {
             name='body-measurements'
             options={{ ...commonScreenOptions, title: 'Śledzenie Pomiarów' }}
           />
+          <Stack.Screen
+            name='create-exercise'
+            options={{ ...commonScreenOptions, title: 'Nowe Ćwiczenie' }}
+          />
         </Stack>
       </ThemeProvider>
     </AppProvider>

@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/Input';
 import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useExerciseStore } from '@/store/exerciseStore';
-import { useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useState, useEffect, useCallback } from 'react';
 import { capitalize } from '@/utils/capitalize';
 import {
+  Alert,
   FlatList,
   Pressable,
   ScrollView,
@@ -24,6 +25,8 @@ export default function ExercisesScreen() {
   const loading = useExerciseStore((state) => state.loading);
   const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
   const isFavorite = useExerciseStore((state) => state.isFavorite);
+  const loadExercises = useExerciseStore((state) => state.loadExercises);
+  const deleteExercise = useExerciseStore((state) => state.deleteExercise);
 
   const favoriteExercises = useExerciseStore(
     (state) => state.favoriteExercises,
@@ -38,7 +41,12 @@ export default function ExercisesScreen() {
       setSearchQuery('');
     }
   }, [selectedCategory]);
-  
+
+  useFocusEffect(
+    useCallback(() => {
+      loadExercises();
+    }, [loadExercises]),
+  );
   const filteredExercises = exercises.filter((ex) => {
     const matches = matchesSearch(
       searchQuery,
@@ -51,12 +59,15 @@ export default function ExercisesScreen() {
     const matchesCategory =
       selectedCategory === 'wszystkie' ||
       selectedCategory === 'ulubione' ||
+      selectedCategory === 'wlasne' ||
       ex.categories.includes(selectedCategory);
 
     const matchesFavorites =
       selectedCategory !== 'ulubione' || favoriteExercises.includes(ex.id);
 
-    return matches && matchesCategory && matchesFavorites;
+    const matchesCustom = selectedCategory !== 'wlasne' || ex.isCustom;
+
+    return matches && matchesCategory && matchesFavorites && matchesCustom;
   });
   if (loading) {
     return <LoadingView />;
@@ -86,6 +97,11 @@ export default function ExercisesScreen() {
           variant={selectedCategory === 'ulubione' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('ulubione')}
         />
+        <Button
+          title='Własne'
+          variant={selectedCategory === 'wlasne' ? 'primary' : 'secondary'}
+          onPress={() => setSelectedCategory('wlasne')}
+        />
         {categories
           .filter((cat) => cat !== 'wszystkie')
           .map((cat) => (
@@ -100,7 +116,7 @@ export default function ExercisesScreen() {
       <FlatList
         data={filteredExercises}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ gap: 12 }}
+        contentContainerStyle={{ gap: 12, paddingBottom: 80 }}
         removeClippedSubviews={true}
         maxToRenderPerBatch={10}
         windowSize={5}
@@ -108,6 +124,11 @@ export default function ExercisesScreen() {
           <Card onPress={() => router.push(`/exercise-details?id=${item.id}`)}>
             <View style={styles.cardHeader}>
               <View style={styles.cardContent}>
+                {item.isCustom && (
+                  <View style={styles.customBadge}>
+                    <Text style={styles.customBadgeText}>Własne</Text>
+                  </View>
+                )}
                 <Text style={styles.exerciseName}>{item.name}</Text>
                 <View style={styles.categoriesRow}>
                   {item.categories.map((cat, idx) => (
@@ -117,6 +138,47 @@ export default function ExercisesScreen() {
                   ))}
                 </View>
               </View>
+              {item.isCustom && (
+                <>
+                  <Pressable
+                    style={styles.favoriteButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      Alert.alert(
+                        'Usuń ćwiczenie',
+                        'Czy na pewno chcesz usunąć to ćwiczenie?',
+                        [
+                          { text: 'Anuluj', style: 'cancel' },
+                          {
+                            text: 'Usuń',
+                            style: 'destructive',
+                            onPress: () => deleteExercise(item.id),
+                          },
+                        ],
+                      );
+                    }}
+                  >
+                    <Ionicons
+                      name='trash-outline'
+                      size={24}
+                      color={colors.text.secondary}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      router.push(`/create-exercise?id=${item.id}`);
+                    }}
+                    style={styles.favoriteButton}
+                  >
+                    <Ionicons
+                      name='pencil-outline'
+                      size={24}
+                      color={colors.text.secondary}
+                    />
+                  </Pressable>
+                </>
+              )}
               <Pressable
                 onPress={(e) => {
                   e.stopPropagation();
@@ -136,6 +198,12 @@ export default function ExercisesScreen() {
           </Card>
         )}
       />
+      <Pressable
+        onPress={() => router.push('/create-exercise')}
+        style={styles.fab}
+      >
+        <Ionicons name='add' size={28} color='#1C2227' />
+      </Pressable>
     </View>
   );
 }
@@ -179,5 +247,29 @@ const styles = StyleSheet.create({
     height: 44,
     flexGrow: 0,
     flexShrink: 0,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 34,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.accent,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  customBadgeText: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: 'bold',
   },
 });
