@@ -20,6 +20,7 @@ import { parseDecimal, parseInteger } from '@/utils/numbers';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { validateRPE, validateTempo } from '@/utils/validation';
 import { logger } from '@/utils/logger';
+import { useWorkoutStore } from '@/store/workoutStore';
 
 export default function ActiveWorkoutScreen() {
   const { workoutService } = useApp();
@@ -29,10 +30,20 @@ export default function ActiveWorkoutScreen() {
   const [restTargetTime, setRestTargetTime] = useState<number | null>(null);
   const [validationKey, setValidationKey] = useState(0);
   const [isResting, setIsResting] = useState(false);
-  const [startTime] = useState<Date>(new Date());
   const { settings } = useProfileSettings();
   const [isLoaded, setIsLoaded] = useState(false);
   const [tick, setTick] = useState(0);
+  const workoutStartTime = useWorkoutStore((state) => state.workoutStartTime);
+  const startActiveWorkout = useWorkoutStore(
+    (state) => state.startActiveWorkout,
+  );
+  const finishActiveWorkout = useWorkoutStore(
+    (state) => state.finishActiveWorkout,
+  );
+  const pendingExercise = useWorkoutStore((state) => state.pendingExercise);
+  const clearPendingExercise = useWorkoutStore(
+    (state) => state.clearPendingExercise,
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -42,6 +53,23 @@ export default function ActiveWorkoutScreen() {
       }
     }, [isLoaded]),
   );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (pendingExercise) {
+        const newExercise: WorkoutExerciseWithSets = {
+          id: generateId('we'),
+          exercise: pendingExercise,
+          sets: [
+            { id: generateId('ws'), reps: 8, weight: 0, completed: false },
+          ],
+        };
+        setExercises((prev) => [...prev, newExercise]);
+        clearPendingExercise();
+      }
+    }, [pendingExercise]),
+  );
+
   const exercisesRef = useRef<WorkoutExerciseWithSets[]>([]);
   useEffect(() => {
     if (!isResting || restTargetTime === null) return;
@@ -74,6 +102,7 @@ export default function ActiveWorkoutScreen() {
 
     const exercisesWithDefaults = ex.map((item) => ({
       ...item,
+      id: generateId('we'),
       sets: item.sets.map((set) => ({
         ...set,
         completed: false,
@@ -81,14 +110,16 @@ export default function ActiveWorkoutScreen() {
         actualWeight: set.actualWeight ?? set.weight,
       })),
     }));
-
+    if (workoutStartTime === null) {
+      startActiveWorkout(workout.id);
+    }
     setExercises(exercisesWithDefaults);
   };
 
   const toggleSetCompleted = (exerciseId: string, setId: string) => {
     setExercises((prevExercises) => {
       const newExercises = prevExercises.map((ex) => {
-        if (ex.exercise.id === exerciseId) {
+        if (ex.id === exerciseId) {
           return {
             ...ex,
             sets: ex.sets.map((s) => {
@@ -113,7 +144,7 @@ export default function ActiveWorkoutScreen() {
   const addSet = (exerciseId: string) => {
     setExercises((prevExercises) => {
       return prevExercises.map((ex) => {
-        if (ex.exercise.id === exerciseId) {
+        if (ex.id === exerciseId) {
           const lastSet = ex.sets[ex.sets.length - 1];
 
           const newSet: WorkoutSet = {
@@ -146,7 +177,7 @@ export default function ActiveWorkoutScreen() {
   const removeSet = (exerciseId: string, setId: string) => {
     setExercises((prevExercises) => {
       return prevExercises.map((ex) => {
-        if (ex.exercise.id === exerciseId) {
+        if (ex.id === exerciseId) {
           if (ex.sets.length <= 1) {
             Alert.alert('Uwaga', 'Nie możesz usunąć ostatniej serii');
             return ex;
@@ -169,7 +200,7 @@ export default function ActiveWorkoutScreen() {
   ) => {
     setExercises((prevExercises) => {
       return prevExercises.map((ex) => {
-        if (ex.exercise.id === exerciseId) {
+        if (ex.id === exerciseId) {
           return {
             ...ex,
             sets: ex.sets.map((s) => {
@@ -191,36 +222,39 @@ export default function ActiveWorkoutScreen() {
         text: 'Zakończ',
         style: 'destructive',
         onPress: async () => {
-          if (!workout) return;
+          if (!workout || workoutStartTime === null) return;
+
+          const endTime = Date.now();
+          const durationMinutes = Math.max(
+            0,
+            Math.round((endTime - workoutStartTime) / 60000),
+          );
 
           try {
-            const endTime = new Date();
-            const durationMinutes = Math.round(
-              (endTime.getTime() - startTime.getTime()) / 60000,
-            );
             await workoutService.saveActualValues(
               workout.id,
               exercisesRef.current,
             );
+
             await workoutService.saveWorkoutHistory(
               workout.id,
               durationMinutes,
             );
+
             await workoutService.saveExerciseProgress(
               workout.id,
               exercisesRef.current,
             );
-            await workoutService.clearActiveWorkout();
 
-            router.back();
+            Alert.alert('Sukces', 'Trening został zapisany');
 
-            setTimeout(() => {
-              router.push('/(tabs)/workout-history');
-              Alert.alert('Trening został zapisany');
-            }, 300);
+            router.replace('/(tabs)/workout-history');
           } catch (error) {
             logger.error('Błąd zakończenia treningu', error);
             Alert.alert('Błąd', 'Nie udało się zapisać treningu');
+          } finally {
+            await workoutService.clearActiveWorkout();
+            finishActiveWorkout();
           }
         },
       },
@@ -240,6 +274,26 @@ export default function ActiveWorkoutScreen() {
   const restTimeRemaining = restTargetTime
     ? Math.max(0, Math.ceil((restTargetTime - Date.now()) / 1000))
     : null;
+
+  const removeExercise = (exerciseId: string, exerciseName: string) => {
+    if (exercises.length <= 1) {
+      Alert.alert('Uwaga', 'Nie możesz usunąć ostatniego ćwiczenia');
+      return;
+    }
+    Alert.alert(
+      'Usuń ćwiczenie',
+      `Czy na pewno chcesz usunąć "${exerciseName}" z treningu?`,
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Usuń',
+          style: 'destructive',
+          onPress: () =>
+            setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId)),
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -275,12 +329,27 @@ export default function ActiveWorkoutScreen() {
         </Text>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={{ paddingBottom: 22 }}
+      >
         {exercises.map((item, exIndex) => (
-          <View key={item.exercise.id} style={styles.exerciseBlock}>
-            <Text style={styles.exerciseName}>
-              {exIndex + 1}. {item.exercise.name}
-            </Text>
+          <View key={item.id} style={styles.exerciseBlock}>
+            <View style={styles.exerciseHeader}>
+              <Text style={styles.exerciseName}>
+                {exIndex + 1}. {item.exercise.name}
+              </Text>
+              <Pressable
+                onPress={() => removeExercise(item.id, item.exercise.name)}
+                style={styles.removeExerciseButton}
+              >
+                <Ionicons
+                  name='trash-outline'
+                  size={20}
+                  color={colors.danger}
+                />
+              </Pressable>
+            </View>
 
             {item.sets.map((set, setIndex) => (
               <View key={set.id} style={styles.setCard}>
@@ -290,7 +359,7 @@ export default function ActiveWorkoutScreen() {
                   <View style={styles.setActions}>
                     {item.sets.length > 1 && (
                       <Pressable
-                        onPress={() => removeSet(item.exercise.id, set.id)}
+                        onPress={() => removeSet(item.id, set.id)}
                         style={styles.deleteButton}
                       >
                         <Ionicons
@@ -301,9 +370,7 @@ export default function ActiveWorkoutScreen() {
                       </Pressable>
                     )}
                     <Pressable
-                      onPress={() =>
-                        toggleSetCompleted(item.exercise.id, set.id)
-                      }
+                      onPress={() => toggleSetCompleted(item.id, set.id)}
                       style={styles.checkboxButton}
                     >
                       <Ionicons
@@ -330,7 +397,7 @@ export default function ActiveWorkoutScreen() {
                       defaultValue={set.actualWeight?.toString() || '0'}
                       onEndEditing={(e) => {
                         const val = parseDecimal(e.nativeEvent.text);
-                        updateSetValue(item.exercise.id, set.id, {
+                        updateSetValue(item.id, set.id, {
                           actualWeight: val,
                         });
                       }}
@@ -346,7 +413,7 @@ export default function ActiveWorkoutScreen() {
                       defaultValue={set.actualReps?.toString() || '0'}
                       onEndEditing={(e) => {
                         const val = parseInteger(e.nativeEvent.text);
-                        updateSetValue(item.exercise.id, set.id, {
+                        updateSetValue(item.id, set.id, {
                           actualReps: val,
                         });
                       }}
@@ -365,7 +432,7 @@ export default function ActiveWorkoutScreen() {
                           if (validated === null && e.nativeEvent.text.trim()) {
                             setValidationKey((prev) => prev + 1);
                           }
-                          updateSetValue(item.exercise.id, set.id, {
+                          updateSetValue(item.id, set.id, {
                             actualRpe: validated ?? undefined,
                           });
                         }}
@@ -387,7 +454,7 @@ export default function ActiveWorkoutScreen() {
                           if (validated === null && e.nativeEvent.text.trim()) {
                             setValidationKey((prev) => prev + 1);
                           }
-                          updateSetValue(item.exercise.id, set.id, {
+                          updateSetValue(item.id, set.id, {
                             tempo: validated ?? undefined,
                           });
                         }}
@@ -401,7 +468,7 @@ export default function ActiveWorkoutScreen() {
             ))}
             <Pressable
               style={styles.addSetButton}
-              onPress={() => addSet(item.exercise.id)}
+              onPress={() => addSet(item.id)}
             >
               <Ionicons
                 name='add-circle-outline'
@@ -412,6 +479,11 @@ export default function ActiveWorkoutScreen() {
             </Pressable>
           </View>
         ))}
+        <Button
+          title='Dodaj ćwiczenie'
+          variant='primary'
+          onPress={() => router.push('/select-exercise?source=active-workout')}
+        />
       </ScrollView>
       <View style={styles.footer}>
         <Button
@@ -479,6 +551,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text.primary,
     marginBottom: 12,
+    flex: 1,
   },
   setCard: {
     backgroundColor: colors.secondary,
@@ -570,5 +643,30 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: colors.primary,
+  },
+  addExerciseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.accent,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+  },
+  addExerciseText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  exerciseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  removeExerciseButton: {
+    padding: 6,
+    flexShrink: 0,
   },
 });

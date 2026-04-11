@@ -1,7 +1,9 @@
 import { Exercise, WorkoutSet } from '@/types/training';
 import { create } from 'zustand';
+import { generateId } from '@/database/database';
 
 export interface WorkoutExerciseWithSets {
+  id: string;
   exercise: Exercise;
   sets: WorkoutSet[];
   isExpanded?: boolean;
@@ -14,6 +16,9 @@ interface WorkoutDraft {
 
 interface WorkoutStore {
   draft: WorkoutDraft;
+  activeWorkoutId: string | null;
+  workoutStartTime: number | null;
+  pendingExercise: Exercise | null;
 
   setWorkoutName: (name: string) => void;
   addExercise: (exercise: Exercise) => void;
@@ -33,6 +38,10 @@ interface WorkoutStore {
 
   moveExerciseUp: (exerciseId: string) => void;
   moveExerciseDown: (exerciseId: string) => void;
+  startActiveWorkout: (workoutId: string) => void;
+  finishActiveWorkout: () => void;
+  setPendingExercise: (exercise: Exercise | null) => void;
+  clearPendingExercise: () => void;
 }
 
 const createDefaultSet = (order: number): WorkoutSet => ({
@@ -47,7 +56,9 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
     name: '',
     exercises: [],
   },
-
+  activeWorkoutId: null,
+  workoutStartTime: null,
+  pendingExercise: null,
   setWorkoutName: (name: string) =>
     set((state) => ({
       draft: { ...state.draft, name },
@@ -60,6 +71,7 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
         exercises: [
           ...state.draft.exercises.map((ex) => ({ ...ex, isExpanded: false })),
           {
+            id: generateId('we'),
             exercise,
             sets: [createDefaultSet(0)],
             isExpanded: false,
@@ -67,14 +79,11 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
         ],
       },
     })),
-
   removeExercise: (exerciseId: string) =>
     set((state) => ({
       draft: {
         ...state.draft,
-        exercises: state.draft.exercises.filter(
-          (ex) => ex.exercise.id !== exerciseId,
-        ),
+        exercises: state.draft.exercises.filter((ex) => ex.id !== exerciseId),
       },
     })),
 
@@ -93,7 +102,7 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
       draft: {
         ...state.draft,
         exercises: state.draft.exercises.map((ex) =>
-          ex.exercise.id === exerciseId
+          ex.id === exerciseId
             ? { ...ex, isExpanded: !ex.isExpanded }
             : { ...ex, isExpanded: false },
         ),
@@ -105,7 +114,7 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
       draft: {
         ...state.draft,
         exercises: state.draft.exercises.map((ex) => {
-          if (ex.exercise.id === exerciseId) {
+          if (ex.id === exerciseId) {
             const lastSet = ex.sets[ex.sets.length - 1];
             const newSetOrder = ex.sets.length;
 
@@ -132,7 +141,7 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
       draft: {
         ...state.draft,
         exercises: state.draft.exercises.map((ex) => {
-          if (ex.exercise.id === exerciseId) {
+          if (ex.id === exerciseId) {
             return {
               ...ex,
               sets: ex.sets.filter((s) => s.id !== setId),
@@ -152,7 +161,7 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
       draft: {
         ...state.draft,
         exercises: state.draft.exercises.map((ex) => {
-          if (ex.exercise.id === exerciseId) {
+          if (ex.id === exerciseId) {
             return {
               ...ex,
               sets: ex.sets.map((s) =>
@@ -168,7 +177,7 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
   moveExerciseUp: (exerciseId: string) =>
     set((state) => {
       const currentIndex = state.draft.exercises.findIndex(
-        (ex) => ex.exercise.id === exerciseId,
+        (ex) => ex.id === exerciseId,
       );
 
       // If already first, do nothing
@@ -186,7 +195,7 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
   moveExerciseDown: (exerciseId: string) =>
     set((state) => {
       const currentIndex = state.draft.exercises.findIndex(
-        (ex) => ex.exercise.id === exerciseId,
+        (ex) => ex.id === exerciseId,
       );
 
       // If already last, do nothing
@@ -205,4 +214,13 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
         draft: { ...state.draft, exercises: newExercises },
       };
     }),
+  startActiveWorkout: (workoutId: string) =>
+    set({ activeWorkoutId: workoutId, workoutStartTime: Date.now() }),
+
+  finishActiveWorkout: () =>
+    set({ activeWorkoutId: null, workoutStartTime: null }),
+
+  setPendingExercise: (exercise: Exercise | null) =>
+    set({ pendingExercise: exercise }),
+  clearPendingExercise: () => set({ pendingExercise: null }),
 }));

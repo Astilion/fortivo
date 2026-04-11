@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input';
 import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useExerciseStore } from '@/store/exerciseStore';
+import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
 import { capitalize } from '@/utils/capitalize';
@@ -21,6 +22,7 @@ import { matchesSearch } from '@/utils/search';
 
 export default function ExercisesScreen() {
   const router = useRouter();
+  const activeWorkoutId = useWorkoutStore((state) => state.activeWorkoutId);
   const exercises = useExerciseStore((state) => state.exercises);
   const loading = useExerciseStore((state) => state.loading);
   const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
@@ -200,7 +202,7 @@ export default function ExercisesScreen() {
       />
       <Pressable
         onPress={() => router.push('/create-exercise')}
-        style={styles.fab}
+        style={[styles.fab, { bottom: activeWorkoutId ? 100 : 34 }]}
       >
         <Ionicons name='add' size={28} color='#1C2227' />
       </Pressable>

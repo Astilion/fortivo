@@ -1,16 +1,18 @@
 import colors from '@/constants/Colors';
+import { ActiveWorkoutFAB } from '@/components/ui/ActiveWorkoutFAB';
+import { useWorkoutStore } from '@/store/workoutStore';
 import { AppProvider } from '@/providers/AppProvider';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
 
-export { ErrorBoundary } from 'expo-router';
+export { ErrorBoundary, usePathname } from 'expo-router';
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -46,6 +48,9 @@ const commonScreenOptions: NativeStackNavigationOptions = {
 };
 
 export default function RootLayout() {
+  const activeWorkoutId = useWorkoutStore((state) => state.activeWorkoutId);
+  const workoutStartTime = useWorkoutStore((state) => state.workoutStartTime);
+  const pathname = usePathname();
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
@@ -138,6 +143,11 @@ export default function RootLayout() {
             options={{ ...commonScreenOptions, title: 'Nowe Ćwiczenie' }}
           />
         </Stack>
+        {activeWorkoutId &&
+          workoutStartTime &&
+          pathname !== '/active-workout' && (
+            <ActiveWorkoutFAB workoutStartTime={workoutStartTime} />
+          )}
       </ThemeProvider>
     </AppProvider>
   );

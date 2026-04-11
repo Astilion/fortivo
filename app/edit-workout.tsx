@@ -8,6 +8,7 @@ import { useWorkoutStore } from '@/store/workoutStore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
+import { generateId } from '@/database/database';
 
 export default function EditWorkoutScreen() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function EditWorkoutScreen() {
       if (workout) {
         setWorkoutName(workout.name);
         const exercises = await workoutService.getWorkoutExercises(id);
-        setExercises(exercises);
+        setExercises(exercises.map((ex) => ({ ...ex, id: generateId('we') })));
       }
     } catch (error) {
       console.error('Error loading workout:', error);

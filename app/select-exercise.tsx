@@ -19,16 +19,22 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { capitalize } from '@/utils/capitalize';
 import { matchesSearch } from '@/utils/search';
+import { useLocalSearchParams } from 'expo-router';
 
 export default function SelectExerciseScreen() {
   const router = useRouter();
   const exercises = useExerciseStore((state) => state.exercises);
   const loading = useExerciseStore((state) => state.loading);
+  const source = useLocalSearchParams().source as string | undefined;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
 
   const addExercise = useWorkoutStore((state) => state.addExercise);
+  const setPendingExercise = useWorkoutStore(
+    (state) => state.setPendingExercise,
+  );
+  const activeWorkoutId = useWorkoutStore((state) => state.activeWorkoutId);
   const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
   const isFavorite = useExerciseStore((state) => state.isFavorite);
 
@@ -62,7 +68,11 @@ export default function SelectExerciseScreen() {
 
   const handleSelectExercise = (exerciseId: string) => {
     const exercise = exercises.find((ex) => ex.id === exerciseId);
-    if (exercise) {
+    if (!exercise) return;
+    if (source === 'active-workout') {
+      setPendingExercise(exercise);
+      router.back();
+    } else {
       addExercise(exercise);
       router.back();
     }
@@ -157,7 +167,7 @@ export default function SelectExerciseScreen() {
       )}
       <Pressable
         onPress={() => router.push('/create-exercise')}
-        style={styles.fab}
+        style={[styles.fab, { bottom: activeWorkoutId ? 100 : 34 }]}
       >
         <Ionicons name='add' size={28} color='#1C2227' />
       </Pressable>

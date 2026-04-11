@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { generateId } from '@/database/database';
 
 export default function CurrentWorkoutScreen() {
   const { workoutService } = useApp();
@@ -30,7 +31,7 @@ export default function CurrentWorkoutScreen() {
 
     if (workout) {
       const ex = await workoutService.getWorkoutExercises(workout.id);
-      setExercises(ex);
+      setExercises(ex.map((item) => ({ ...item, id: generateId('we') })));
     }
   };
 
