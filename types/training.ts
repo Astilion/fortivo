@@ -171,6 +171,7 @@ export interface WorkoutHistoryWithDetails {
   totalVolume?: number;
 }
 export interface WorkoutExerciseWithSets {
+  id: string;
   exercise: Exercise;
   sets: WorkoutSet[];
   isExpanded?: boolean;

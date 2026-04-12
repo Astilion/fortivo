@@ -5,8 +5,8 @@ import colors from '@/constants/Colors';
 import { commonStyles } from '@/constants/Styles';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useWorkoutStore } from '@/store/workoutStore';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -42,6 +42,7 @@ export default function SelectExerciseScreen() {
   const favoriteExercises = useExerciseStore(
     (state) => state.favoriteExercises,
   );
+
 
   const filteredExercises = exercises.filter((ex) => {
     const matches = matchesSearch(
@@ -134,6 +135,11 @@ export default function SelectExerciseScreen() {
             <Card onPress={() => handleSelectExercise(item.id)}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardContent}>
+                  {item.isCustom && (
+                    <View style={styles.customBadge}>
+                      <Text style={styles.customBadgeText}>Własne</Text>
+                    </View>
+                  )}
                   <Text style={styles.exerciseName}>{item.name}</Text>
                   <View style={styles.categoriesRow}>
                     {item.categories.map((cat, idx) => (
@@ -167,7 +173,7 @@ export default function SelectExerciseScreen() {
       )}
       <Pressable
         onPress={() => router.push('/create-exercise')}
-        style={[styles.fab, { bottom: activeWorkoutId ? 100 : 34 }]}
+        style={[styles.fab, { bottom: activeWorkoutId ? 170 : 34 }]}
       >
         <Ionicons name='add' size={28} color='#1C2227' />
       </Pressable>
@@ -220,5 +226,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  customBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.accent,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  customBadgeText: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: 'bold',
   },
 });

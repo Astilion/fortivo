@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/Button';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
-import { WorkoutExerciseWithSets } from '@/store/workoutStore';
+import { WorkoutExerciseWithSets } from '@/types/training';
 import { WorkoutRow, WorkoutSet } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -231,7 +231,7 @@ export default function ActiveWorkoutScreen() {
           );
 
           try {
-            await workoutService.saveActualValues(
+            await workoutService.saveWorkoutExercises(
               workout.id,
               exercisesRef.current,
             );

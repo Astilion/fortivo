@@ -115,13 +115,13 @@ export default function WorkoutDetailsScreen() {
       {/* Exercises List */}
       <ScrollView style={styles.content}>
         {details.exercises.map((item, exIndex) => (
-          <View key={item.exercise.id} style={styles.exerciseBlock}>
+          <View key={item.id} style={styles.exerciseBlock}>
             {/* Exercise name */}
             <Pressable
               onPress={() =>
                 router.push({
                   pathname: '/exercise-progress',
-                  params: { exerciseId: item.exercise.id },
+                  params: { exerciseId: item.id },
                 })
               }
             >

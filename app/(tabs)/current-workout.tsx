@@ -1,8 +1,7 @@
 import { Button } from '@/components/ui/Button';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
-import { WorkoutExerciseWithSets } from '@/store/workoutStore';
-import { WorkoutRow } from '@/types/training';
+import { WorkoutRow, WorkoutExerciseWithSets } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -65,7 +64,7 @@ export default function CurrentWorkoutScreen() {
             <ScrollView style={styles.exercisesList}>
               <Text style={styles.exercisesTitle}>Ćwiczenia:</Text>
               {exercises.map((item, index) => (
-                <View key={item.exercise.id} style={styles.exerciseItem}>
+                <View key={item.id} style={styles.exerciseItem}>
                   <Text style={styles.exerciseName}>
                     {index + 1}. {item.exercise.name}
                   </Text>

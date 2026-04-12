@@ -1,13 +1,7 @@
-import { Exercise, WorkoutSet } from '@/types/training';
+import { Exercise, WorkoutSet, WorkoutExerciseWithSets } from '@/types/training';
 import { create } from 'zustand';
 import { generateId } from '@/database/database';
 
-export interface WorkoutExerciseWithSets {
-  id: string;
-  exercise: Exercise;
-  sets: WorkoutSet[];
-  isExpanded?: boolean;
-}
 
 interface WorkoutDraft {
   name: string;

@@ -110,21 +110,21 @@ export default function EditWorkoutScreen() {
           </Text>
           {draft.exercises.map((item, index) => (
             <ExpandableExerciseCard
-              key={item.exercise.id}
+              key={item.id}
               exerciseName={item.exercise.name}
               exerciseCategories={item.exercise.categories}
               measurementType={item.exercise.measurementType}
               sets={item.sets}
               isExpanded={item.isExpanded || false}
-              onToggleExpand={() => toggleExpanded(item.exercise.id)}
-              onRemoveExercise={() => removeExercise(item.exercise.id)}
-              onAddSet={() => addSet(item.exercise.id)}
-              onRemoveSet={(setId) => removeSet(item.exercise.id, setId)}
+              onToggleExpand={() => toggleExpanded(item.id)}
+              onRemoveExercise={() => removeExercise(item.id)}
+              onAddSet={() => addSet(item.id)}
+              onRemoveSet={(setId) => removeSet(item.id, setId)}
               onUpdateSet={(setId, updates) =>
-                updateSet(item.exercise.id, setId, updates)
+                updateSet(item.id, setId, updates)
               }
-              onMoveDown={() => moveExerciseDown(item.exercise.id)}
-              onMoveUp={() => moveExerciseUp(item.exercise.id)}
+              onMoveDown={() => moveExerciseDown(item.id)}
+              onMoveUp={() => moveExerciseUp(item.id)}
               isFirst={index === 0}
               isLast={index === draft.exercises.length - 1}
             />

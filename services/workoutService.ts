@@ -211,6 +211,7 @@ export class WorkoutService {
       }));
 
       result.push({
+        id: we.id,
         exercise,
         sets,
         isExpanded: false,
