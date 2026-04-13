@@ -73,6 +73,7 @@ export interface WeeklyPlan {
   id: string;
   name: string;
   days: WeeklyPlanDay[];
+  isActive: boolean;
   weekNumber?: number; // For periodization tracking
   createdAt: Date;
   notes?: string;
@@ -296,6 +297,7 @@ export interface WeeklyPlanRow {
   week_number: number | null;
   notes: string | null;
   created_at: string;
+  is_active: number;
 }
 
 export interface TrainingPlanWeekRow {

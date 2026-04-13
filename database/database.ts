@@ -263,6 +263,11 @@ const migrations: string[] = [
 ALTER TABLE workouts ADD COLUMN is_favorite INTEGER DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_workouts_favorite ON workouts(is_favorite);
 `,
+
+  // ---- v6: Weekly plans ---------------------------------
+  `ALTER TABLE weekly_plans ADD COLUMN is_active INTEGER DEFAULT 0;
+ CREATE INDEX IF NOT EXISTS idx_weekly_plans_active ON weekly_plans(is_active);
+`,
 ];
 
 // ─── Migration runner ─────────────────────────────────────────────────────────
