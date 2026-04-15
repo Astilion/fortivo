@@ -3,9 +3,11 @@ import initDatabase from '@/database/database';
 import { Exercise, ExerciseService } from '@/services/exerciseService';
 import { WorkoutService } from '@/services/workoutService';
 import { useExerciseStore } from '@/store/exerciseStore';
+import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 import { ProfileService } from '@/services/profileService';
 import { WeightService } from '@/services/weightService';
 import { MeasurementService } from '@/services/measurementService';
+import { WeeklyPlanService } from '@/services/weeklyPlanService';
 import * as SQLite from 'expo-sqlite';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
@@ -19,6 +21,7 @@ interface AppContextType {
   profileService: ProfileService;
   weightService: WeightService;
   measurementService: MeasurementService;
+  weeklyPlanService: WeeklyPlanService;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -69,6 +72,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const loadExercises = useExerciseStore((state) => state.loadExercises);
   const loadCategories = useExerciseStore((state) => state.loadCategories);
   const loadFavorites = useExerciseStore((state) => state.loadFavorites);
+  const setActivePlan = useWeeklyPlanStore((state) => state.setActivePlan);
 
   useEffect(() => {
     initializeApp();
@@ -85,6 +89,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       const profileService = new ProfileService(database);
       const weightService = new WeightService(database);
       const measurementService = new MeasurementService(database);
+      const weeklyPlanService = new WeeklyPlanService(database);
 
       // Validate and seed exercises
       const validatedExercises = validateExerciseData(exercisesData);
@@ -94,7 +99,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       initializeService(exerciseService);
 
       // Load initial data
-      await Promise.all([loadExercises(), loadCategories(), loadFavorites()]);
+      const [activePlan] = await Promise.all([
+        weeklyPlanService.getActivePlan(),
+        loadExercises(),
+        loadCategories(),
+        loadFavorites(),
+      ]);
+      setActivePlan(activePlan);
 
       setContext({
         db: database,
@@ -103,6 +114,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         profileService,
         weightService,
         measurementService,
+        weeklyPlanService,
       });
 
       setIsReady(true);
