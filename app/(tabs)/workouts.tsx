@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { WorkoutCard } from '@/components/ui/WorkoutCard';
 import colors from '@/constants/Colors';
-import { WORKOUT_CATEGORIES } from '@/constants/Training';
+import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutRow } from '@/types/training';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -17,13 +17,14 @@ import {
 } from 'react-native';
 import { logger } from '@/utils/logger';
 
+type WorkoutsTab = 'workouts' | 'plans' | 'ready';
+
 export default function WorkoutsScreen() {
   const { workoutService } = useApp();
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<'custom' | 'plans'>(
-    'custom',
-  );
+  const { weeklyPlans } = useWeeklyPlanStore();
+  const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
 
   useFocusEffect(
     useCallback(() => {
@@ -102,26 +103,33 @@ export default function WorkoutsScreen() {
       <View style={styles.optionsContainer}>
         <Pressable
           style={styles.optionButton}
-          onPress={() => setSelectedCategory('custom')}
+          onPress={() => setSelectedTab('workouts')}
         >
           <Text
             style={[
               styles.title,
-              selectedCategory === 'custom' && styles.activeText,
+              selectedTab === 'workouts' && styles.activeText,
             ]}
           >
-            Własne
+            Treningi
+          </Text>
+        </Pressable>
+        <Pressable
+          style={styles.optionButton}
+          onPress={() => setSelectedTab('plans')}
+        >
+          <Text
+            style={[styles.title, selectedTab === 'plans' && styles.activeText]}
+          >
+            Plany Tygodniowe
           </Text>
         </Pressable>
         <Pressable
           style={[styles.optionButton, styles.rightOption]}
-          onPress={() => setSelectedCategory('plans')}
+          onPress={() => setSelectedTab('ready')}
         >
           <Text
-            style={[
-              styles.title,
-              selectedCategory === 'plans' && styles.activeText,
-            ]}
+            style={[styles.title, selectedTab === 'ready' && styles.activeText]}
           >
             Gotowe
           </Text>
@@ -134,11 +142,11 @@ export default function WorkoutsScreen() {
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
       >
-        {selectedCategory === 'custom' ? (
+        {selectedTab === 'workouts' && (
           <>
             <View style={styles.createButtonWrapper}>
               <Button
-                title='+ Stwórz nowy trening'
+                title='Stwórz nowy trening'
                 variant='primary'
                 onPress={() => router.push('/create-workout')}
               />
@@ -188,15 +196,35 @@ export default function WorkoutsScreen() {
               })
             )}
           </>
-        ) : (
+        )}
+        {selectedTab === 'plans' && (
           <>
-            {WORKOUT_CATEGORIES.map((category) => (
-              <Pressable key={category} style={styles.categoryItem}>
-                <Text style={styles.categoryItemText}>{category}</Text>
-              </Pressable>
-            ))}
+            <View style={styles.createButtonWrapper}>
+              <Button
+                title='Stwórz nowy plan'
+                variant='primary'
+                onPress={() => router.push('/create-weekly-plan')}
+              />
+            </View>
+            <Text style={styles.sectionTitle}>Twoje Plany Tygodniowe:</Text>
+
+            {weeklyPlans.length === 0 ? (
+              <EmptyState
+                icon='calendar-outline'
+                title='Nie masz planów tygodniowych'
+                subtitle='Stwórz swój pierwszy plan'
+              />
+            ) : (
+              weeklyPlans.map((plan) => (
+                <Pressable key={plan.id} style={styles.categoryItem}>
+                  <Text style={styles.categoryItemText}>{plan.name}</Text>
+                </Pressable>
+              ))
+            )}
           </>
         )}
+        {selectedTab === 'ready' && <EmptyState icon='hourglass-outline' title='Wkrótce dostępne' />}
+        
       </ScrollView>
     </View>
   );
@@ -215,6 +243,7 @@ const styles = StyleSheet.create({
   },
   optionButton: {
     flex: 1,
+    justifyContent: 'space-between',
   },
   rightOption: {
     alignItems: 'flex-end',
