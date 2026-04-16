@@ -247,14 +247,15 @@ export default function ActiveWorkoutScreen() {
             );
 
             Alert.alert('Sukces', 'Trening został zapisany');
+            await workoutService.clearActiveWorkout();
+            finishActiveWorkout();
 
             router.replace('/(tabs)/workout-history');
           } catch (error) {
+            const message =
+              error instanceof Error ? error.message : String(error);
             logger.error('Błąd zakończenia treningu', error);
-            Alert.alert('Błąd', 'Nie udało się zapisać treningu');
-          } finally {
-            await workoutService.clearActiveWorkout();
-            finishActiveWorkout();
+            Alert.alert('Błąd', `Nie udało się zapisać treningu:\n${message}`);
           }
         },
       },
