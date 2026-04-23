@@ -142,6 +142,14 @@ export default function RootLayout() {
             name='create-exercise'
             options={{ ...commonScreenOptions, title: 'Nowe Ćwiczenie' }}
           />
+          <Stack.Screen
+            name='create-weekly-plan'
+            options={{ ...commonScreenOptions, title: 'Nowy Plan Tygodniowy' }}
+          />
+          <Stack.Screen
+            name='select-workout'
+            options={{ ...commonScreenOptions, title: 'Wybierz trening' }}
+          />
         </Stack>
         {activeWorkoutId &&
           workoutStartTime &&

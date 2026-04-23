@@ -20,18 +20,22 @@ import { logger } from '@/utils/logger';
 type WorkoutsTab = 'workouts' | 'plans' | 'ready';
 
 export default function WorkoutsScreen() {
-  const { workoutService } = useApp();
+  const { weeklyPlans, setWeeklyPlans } = useWeeklyPlanStore();
+  const { workoutService, weeklyPlanService } = useApp();
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
   const router = useRouter();
-  const { weeklyPlans } = useWeeklyPlanStore();
   const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
 
   useFocusEffect(
     useCallback(() => {
+      const loadWeeklyPlans = async () => {
+        const plans = await weeklyPlanService.getWeeklyPlans();
+        setWeeklyPlans(plans);
+      };
       loadWorkouts();
+      loadWeeklyPlans();
     }, []),
   );
-
   const loadWorkouts = async () => {
     const allWorkouts = await workoutService.getAllWorkouts();
     setWorkouts(allWorkouts);
@@ -223,8 +227,9 @@ export default function WorkoutsScreen() {
             )}
           </>
         )}
-        {selectedTab === 'ready' && <EmptyState icon='hourglass-outline' title='Wkrótce dostępne' />}
-        
+        {selectedTab === 'ready' && (
+          <EmptyState icon='hourglass-outline' title='Wkrótce dostępne' />
+        )}
       </ScrollView>
     </View>
   );
