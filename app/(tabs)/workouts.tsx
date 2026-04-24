@@ -20,7 +20,7 @@ import { logger } from '@/utils/logger';
 type WorkoutsTab = 'workouts' | 'plans' | 'ready';
 
 export default function WorkoutsScreen() {
-  const { weeklyPlans, setWeeklyPlans } = useWeeklyPlanStore();
+  const { weeklyPlans, setWeeklyPlans, setActivePlan } = useWeeklyPlanStore();
   const { workoutService, weeklyPlanService } = useApp();
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
   const router = useRouter();
@@ -58,6 +58,34 @@ export default function WorkoutsScreen() {
         },
       },
     ]);
+  };
+
+  const handleDeleteWeeklyPlan = async (id: string, name: string) => {
+    Alert.alert(
+      'Usuń plan tygodniowy',
+      `Czy na pewno chcesz usunąć plan "${name}"?`,
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Usuń',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await weeklyPlanService.deleteWeeklyPlan(id);
+              const [plans, activePlan] = await Promise.all([
+                weeklyPlanService.getWeeklyPlans(),
+                weeklyPlanService.getActivePlan(),
+              ]);
+              setWeeklyPlans(plans);
+              setActivePlan(activePlan);
+            } catch (error) {
+              logger.error('Błąd usuwania planu', error);
+              Alert.alert('Błąd', 'Nie udało się usunąć planu');
+            }
+          },
+        },
+      ],
+    );
   };
 
   const moveWorkoutUp = async (index: number) => {
@@ -100,6 +128,17 @@ export default function WorkoutsScreen() {
   const setAsActive = async (workoutId: string) => {
     await workoutService.setActiveWorkout(workoutId);
     router.push('/(tabs)/current-workout');
+  };
+
+  const handleSetActivePlan = async (planId: string) => {
+    await weeklyPlanService.setWeeklyPlanActive(planId);
+
+    const [plans, activePlan] = await Promise.all([
+      weeklyPlanService.getWeeklyPlans(),
+      weeklyPlanService.getActivePlan(),
+    ]);
+    setWeeklyPlans(plans);
+    setActivePlan(activePlan);
   };
 
   return (
@@ -220,8 +259,25 @@ export default function WorkoutsScreen() {
               />
             ) : (
               weeklyPlans.map((plan) => (
-                <Pressable key={plan.id} style={styles.categoryItem}>
-                  <Text style={styles.categoryItemText}>{plan.name}</Text>
+                <Pressable
+                  key={plan.id}
+                  style={({ pressed }) => [
+                    styles.planCard,
+                    pressed && styles.planCardPressed,
+                  ]}
+                  onLongPress={() => handleDeleteWeeklyPlan(plan.id, plan.name)}
+                  delayLongPress={500}
+                >
+                  <Text style={styles.planName}>{plan.name}</Text>
+                  {plan.is_active === 1 ? (
+                    <Text style={styles.activeBadge}>Aktywny</Text>
+                  ) : (
+                    <Button
+                      title='Ustaw jako aktywny'
+                      variant='secondary'
+                      onPress={() => handleSetActivePlan(plan.id)}
+                    />
+                  )}
                 </Pressable>
               ))
             )}
@@ -295,5 +351,33 @@ const styles = StyleSheet.create({
   },
   createButtonWrapper: {
     marginBottom: 20,
+  },
+  planCard: {
+    backgroundColor: colors.secondary,
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  planName: {
+    color: colors.text.primary,
+    fontSize: 18,
+    fontWeight: '600',
+    flex: 1,
+  },
+  activeBadge: {
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: 'bold',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+  },
+  planCardPressed: {
+    opacity: 0.6,
+    transform: [{ scale: 0.98 }],
   },
 });
