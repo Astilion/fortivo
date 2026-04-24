@@ -229,22 +229,25 @@ const styles = StyleSheet.create({
   },
   dayCard: {
     backgroundColor: colors.secondary,
-    padding: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     borderRadius: 8,
     marginBottom: 12,
   },
   dayName: {
     color: colors.text.primary,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'center',
+    alignContent: 'center',
   },
   buttonFlex: {
     flex: 1,
+    transform: [{ scale: 0.85 }],
   },
   saveButton: {
     marginTop: 20,
