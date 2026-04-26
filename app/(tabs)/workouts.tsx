@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { logger } from '@/utils/logger';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 
 type WorkoutsTab = 'workouts' | 'plans' | 'ready';
 
@@ -140,7 +141,24 @@ export default function WorkoutsScreen() {
     setWeeklyPlans(plans);
     setActivePlan(activePlan);
   };
-
+  const handleClearActivePlan = async () => {
+    Alert.alert(
+      'Wyłącz aktywny plan',
+      'Plan pozostanie zapisany, ale nie będzie aktywny.',
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Wyłącz',
+          onPress: async () => {
+            await weeklyPlanService.clearActivePlan();
+            const plans = await weeklyPlanService.getWeeklyPlans();
+            setWeeklyPlans(plans);
+            setActivePlan(null);
+          },
+        },
+      ],
+    );
+  };
   return (
     <View style={styles.container}>
       <View style={styles.optionsContainer}>
@@ -269,14 +287,35 @@ export default function WorkoutsScreen() {
                   delayLongPress={500}
                 >
                   <Text style={styles.planName}>{plan.name}</Text>
-                  {plan.is_active === 1 ? (
-                    <Text style={styles.activeBadge}>Aktywny</Text>
-                  ) : (
-                    <Button
-                      title='Ustaw jako aktywny'
-                      variant='secondary'
-                      onPress={() => handleSetActivePlan(plan.id)}
+
+                  <Pressable
+                    onPress={() =>
+                      router.push(`/create-weekly-plan?id=${plan.id}`)
+                    }
+                    style={styles.editIcon}
+                  >
+                    <Ionicons
+                      name='create-outline'
+                      size={20}
+                      color={colors.accent}
                     />
+                  </Pressable>
+
+                  {plan.is_active === 1 ? (
+                    <Pressable
+                      style={styles.activeBadge}
+                      onLongPress={() => handleClearActivePlan()}
+                      delayLongPress={500}
+                    >
+                      <Text style={styles.activeBadgeText}>Aktywny</Text>
+                    </Pressable>
+                  ) : (
+                    <Pressable
+                      style={styles.setActiveBtn}
+                      onPress={() => handleSetActivePlan(plan.id)}
+                    >
+                      <Text style={styles.setActiveBtnText}>Ustaw aktywny</Text>
+                    </Pressable>
                   )}
                 </Pressable>
               ))
@@ -367,17 +406,36 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
-  activeBadge: {
+
+  planCardPressed: {
+    opacity: 0.6,
+    transform: [{ scale: 0.98 }],
+  },
+  editIcon: {
+    padding: 8,
+    marginRight: 8,
+  },
+  setActiveBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  setActiveBtnText: {
     color: colors.accent,
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  activeBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: colors.primary,
     borderRadius: 12,
   },
-  planCardPressed: {
-    opacity: 0.6,
-    transform: [{ scale: 0.98 }],
+  activeBadgeText: {
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });

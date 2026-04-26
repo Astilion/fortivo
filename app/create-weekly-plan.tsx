@@ -1,6 +1,11 @@
 import { useApp } from '@/providers/AppProvider';
-import { useState, useCallback } from 'react';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useState, useCallback, useEffect } from 'react';
+import {
+  useRouter,
+  useFocusEffect,
+  useLocalSearchParams,
+  Stack,
+} from 'expo-router';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 import colors from '@/constants/Colors';
 import {
@@ -25,7 +30,8 @@ export default function CreateWeeklyPlanScreen() {
   const { weeklyPlanService } = useApp();
   const router = useRouter();
   const { pendingWorkout, clearPendingWorkout } = useWeeklyPlanStore();
-
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const isEditMode = !!id;
   const [planName, setPlanName] = useState('');
 
   const [pendingDayIndex, setPendingDayIndex] = useState<number | null>(null);
@@ -80,6 +86,34 @@ export default function CreateWeeklyPlanScreen() {
       isRestDay: false,
     },
   ]);
+
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    const load = async () => {
+      const plan = await weeklyPlanService.getWeeklyPlan(id);
+      if (!plan) return;
+
+      setPlanName(plan.name);
+      setDays((prev) =>
+        prev.map((day) => {
+          const matchingDay = plan.days.find(
+            (d) => d.dayOfWeek === day.dayOfWeek,
+          );
+          return matchingDay
+            ? {
+                ...day,
+                workoutId: matchingDay.workout?.id ?? null,
+                workoutName: matchingDay.workout?.name ?? null,
+                isRestDay: matchingDay.isRestDay,
+              }
+            : day;
+        }),
+      );
+    };
+    load();
+  }, [id]);
+
   const handleAddWorkout = (dayIndex: number) => {
     setPendingDayIndex(dayIndex);
     router.push('/select-workout');
@@ -136,82 +170,121 @@ export default function CreateWeeklyPlanScreen() {
       Alert.alert('Błąd', 'Podaj nazwę planu');
       return;
     }
-    try {
-      const planRow = await weeklyPlanService.createWeeklyPlan(planName);
+    if (isEditMode) {
+      try {
+        await weeklyPlanService.updateWeeklyPlan(id, planName);
+        await weeklyPlanService.deleteAllPlanDays(id);
 
-      const daysToAdd = days.filter(
-        (day) => day.workoutId !== null || day.isRestDay,
-      );
-      await Promise.all(
-        daysToAdd.map((day) =>
-          weeklyPlanService.addWeeklyPlanDay(
-            planRow.id,
-            day.dayOfWeek,
-            day.dayName,
-            day.workoutId ?? undefined,
-            day.isRestDay,
+        const daysToUpdate = days.filter(
+          (day) => day.workoutId !== null || day.isRestDay,
+        );
+        await Promise.all(
+          daysToUpdate.map((day) =>
+            weeklyPlanService.addWeeklyPlanDay(
+              id,
+              day.dayOfWeek,
+              day.dayName,
+              day.workoutId ?? undefined,
+              day.isRestDay,
+            ),
           ),
-        ),
-      );
-      router.back();
-    } catch (error) {
-      logger.error('Błąd zapisu planu', error);
-      Alert.alert('Błąd', 'Nie udało się zapisać planu');
+        );
+        router.back();
+      } catch (error) {
+        logger.error('Błąd aktualizacji planu', error);
+        Alert.alert('Błąd', 'Nie udało się zaktualizować planu');
+        return;
+      }
+    } else {
+      try {
+        const planRow = await weeklyPlanService.createWeeklyPlan(planName);
+
+        const daysToAdd = days.filter(
+          (day) => day.workoutId !== null || day.isRestDay,
+        );
+        await Promise.all(
+          daysToAdd.map((day) =>
+            weeklyPlanService.addWeeklyPlanDay(
+              planRow.id,
+              day.dayOfWeek,
+              day.dayName,
+              day.workoutId ?? undefined,
+              day.isRestDay,
+            ),
+          ),
+        );
+        router.back();
+      } catch (error) {
+        logger.error('Błąd zapisu planu', error);
+        Alert.alert('Błąd', 'Nie udało się zapisać planu');
+      }
     }
   };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <TextInput
-        style={styles.nameInput}
-        placeholderTextColor={colors.text.secondary}
-        value={planName}
-        onChangeText={setPlanName}
-        placeholder='Nazwa planu'
+    <>
+      <Stack.Screen
+        options={{
+          title: isEditMode ? 'Edytuj Plan Tygodniowy' : 'Nowy Plan Tygodniowy',
+        }}
       />
+      <ScrollView contentContainerStyle={styles.container}>
+        <TextInput
+          style={styles.nameInput}
+          placeholderTextColor={colors.text.secondary}
+          value={planName}
+          onChangeText={setPlanName}
+          placeholder='Nazwa planu'
+        />
 
-      {days.map((day, index) => (
-        <View key={day.dayOfWeek} style={styles.dayCard}>
-          <Text style={styles.dayName}>{day.dayName}</Text>
+        {days.map((day, index) => (
+          <View key={day.dayOfWeek} style={styles.dayCard}>
+            <Text style={styles.dayName}>{day.dayName}</Text>
 
-          {day.workoutId === null && !day.isRestDay && (
-            <View style={styles.buttonRow}>
-              <View style={styles.buttonFlex}>
-                <Button
-                  title='Dodaj trening'
-                  onPress={() => handleAddWorkout(index)}
-                />
+            {day.workoutId === null && !day.isRestDay && (
+              <View style={styles.buttonRow}>
+                <View style={styles.buttonFlex}>
+                  <Button
+                    title='Dodaj trening'
+                    onPress={() => handleAddWorkout(index)}
+                  />
+                </View>
+                <View style={styles.buttonFlex}>
+                  <Button
+                    title='Odpoczynek'
+                    onPress={() => handleToggleRestDay(index)}
+                  />
+                </View>
               </View>
-              <View style={styles.buttonFlex}>
-                <Button
-                  title='Odpoczynek'
-                  onPress={() => handleToggleRestDay(index)}
-                />
-              </View>
-            </View>
-          )}
+            )}
 
-          {day.workoutId !== null && (
-            <Button
-              title={`Usuń: ${day.workoutName}`}
-              variant='secondary'
-              onPress={() => handleDeleteWorkout(index)}
-            />
-          )}
+            {day.workoutId !== null && (
+              <Button
+                title={`Usuń: ${day.workoutName}`}
+                variant='secondary'
+                onPress={() => handleDeleteWorkout(index)}
+              />
+            )}
 
-          {day.isRestDay && (
-            <Button
-              title='Usuń odpoczynek'
-              variant='secondary'
-              onPress={() => handleToggleRestDay(index)}
-            />
-          )}
+            {day.isRestDay && (
+              <Button
+                title='Usuń odpoczynek'
+                variant='secondary'
+                onPress={() => handleToggleRestDay(index)}
+              />
+            )}
+          </View>
+        ))}
+
+        <View style={styles.saveButton}>
+          <Button
+            title={isEditMode ? 'Zapisz zmiany' : 'Zapisz plan'}
+            variant='primary'
+            onPress={handleSave}
+          />
         </View>
-      ))}
-
-      <View style={styles.saveButton}>
-        <Button title='Zapisz plan' variant='primary' onPress={handleSave} />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 

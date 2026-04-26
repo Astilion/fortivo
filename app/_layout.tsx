@@ -11,7 +11,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
-
 export { ErrorBoundary, usePathname } from 'expo-router';
 
 export const unstable_settings = {

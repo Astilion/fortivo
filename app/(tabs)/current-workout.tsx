@@ -27,17 +27,25 @@ const DAYS_OF_WEEK = [
 ];
 
 export default function CurrentWorkoutScreen() {
-  const { workoutService } = useApp();
-  const { activePlan } = useWeeklyPlanStore();
+  const { workoutService, weeklyPlanService } = useApp();
+  const { activePlan, setActivePlan } = useWeeklyPlanStore();
   const today = new Date().getDay();
   const [activeWorkout, setActiveWorkout] = useState<WorkoutRow | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
   const [workoutsCount, setWorkoutsCount] = useState(0);
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<number | null>(
+    null,
+  );
   const router = useRouter();
 
   useFocusEffect(
     useCallback(() => {
-      loadActiveWorkout();
+      const loadAll = async () => {
+        await loadActiveWorkout();
+        const activePlan = await weeklyPlanService.getActivePlan();
+        setActivePlan(activePlan);
+      };
+      loadAll();
     }, []),
   );
 
@@ -66,6 +74,7 @@ export default function CurrentWorkoutScreen() {
           onPress: async () => {
             await workoutService.clearActiveWorkout();
             setActiveWorkout(null);
+            setSelectedDayOfWeek(null);
             setExercises([]);
           },
         },
@@ -73,7 +82,8 @@ export default function CurrentWorkoutScreen() {
     );
   };
 
-  const handleStartFromPlan = async (workoutId: string) => {
+  const handleStartFromPlan = async (workoutId: string, dayOfWeek: number) => {
+    setSelectedDayOfWeek(dayOfWeek);
     await workoutService.setActiveWorkout(workoutId);
     await loadActiveWorkout();
   };
@@ -92,19 +102,32 @@ export default function CurrentWorkoutScreen() {
                   (d) => d.dayOfWeek === day.dayOfWeek,
                 );
                 const isToday = today === day.dayOfWeek;
+                const isSelected = selectedDayOfWeek === day.dayOfWeek;
 
                 return (
                   <Pressable
                     key={day.dayOfWeek}
-                    style={[styles.planDay, isToday && styles.planDayToday]}
+                    style={[
+                      styles.planDay,
+                      isToday && styles.planDayToday,
+                      isSelected && styles.planDaySelected,
+                    ]}
                     onPress={() => {
                       if (configured?.workout) {
-                        handleStartFromPlan(configured.workout.id);
+                        handleStartFromPlan(
+                          configured.workout.id,
+                          day.dayOfWeek,
+                        );
                       }
                     }}
                     disabled={!configured?.workout}
                   >
-                    <Text style={styles.planDayName}>
+                    <Text
+                      style={[
+                        styles.planDayName,
+                        isSelected && styles.planDayNameSelected,
+                      ]}
+                    >
                       {day.dayName.slice(0, 3)}
                     </Text>
                     <Text style={styles.planDayContent} numberOfLines={2}>
@@ -151,7 +174,7 @@ export default function CurrentWorkoutScreen() {
               />
             </View>
           </>
-        ) : (
+        ) : !activePlan ? (
           <View style={styles.emptyState}>
             <Ionicons
               name='barbell-outline'
@@ -179,7 +202,7 @@ export default function CurrentWorkoutScreen() {
               )}
             </View>
           </View>
-        )}
+        ) : null}
       </View>
     </View>
   );
@@ -298,5 +321,11 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: 10,
     textAlign: 'center',
+  },
+  planDaySelected: {
+    backgroundColor: colors.accent,
+  },
+  planDayNameSelected: {
+    color: colors.primary,
   },
 });

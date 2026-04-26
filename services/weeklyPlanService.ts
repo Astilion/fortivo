@@ -167,4 +167,15 @@ export class WeeklyPlanService {
       })),
     } as WeeklyPlan;
   }
+
+  async deleteAllPlanDays(weeklyPlanId: string): Promise<void> {
+    await this.db.runAsync(
+      `DELETE FROM weekly_plan_days WHERE weekly_plan_id = ?`,
+      [weeklyPlanId],
+    );
+  }
+
+  async clearActivePlan(): Promise<void> {
+  await this.db.runAsync(`UPDATE weekly_plans SET is_active = 0`);
+}
 }
