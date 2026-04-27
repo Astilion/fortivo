@@ -2,7 +2,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
-import { Workout, WorkoutRow } from '@/types/training';
+import { Workout, WorkoutRow, WorkoutWithCountRow } from '@/types/training';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -10,7 +10,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 export default function SelectWorkoutScreen() {
   const { workoutService } = useApp();
   const { setPendingWorkout } = useWeeklyPlanStore();
-  const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
+  const [workouts, setWorkouts] = useState<WorkoutWithCountRow[]>([]);
   const router = useRouter();
 
   useFocusEffect(

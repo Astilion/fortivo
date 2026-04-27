@@ -4,7 +4,7 @@ import { WorkoutCard } from '@/components/ui/WorkoutCard';
 import colors from '@/constants/Colors';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 import { useApp } from '@/providers/AppProvider';
-import { WorkoutRow } from '@/types/training';
+import { WorkoutWithCountRow } from '@/types/training';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
@@ -23,7 +23,7 @@ type WorkoutsTab = 'workouts' | 'plans' | 'ready';
 export default function WorkoutsScreen() {
   const { weeklyPlans, setWeeklyPlans, setActivePlan } = useWeeklyPlanStore();
   const { workoutService, weeklyPlanService } = useApp();
-  const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
+  const [workouts, setWorkouts] = useState<WorkoutWithCountRow[]>([]);
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
 
@@ -240,7 +240,7 @@ export default function WorkoutsScreen() {
                     key={workout.id}
                     workoutName={workout.name}
                     workoutDate={workout.date}
-                    exerciseCount={0}
+                    exerciseCount={workout.exercise_count}
                     onPress={() => setAsActive(workout.id)}
                     onEdit={() => router.push(`/edit-workout?id=${workout.id}`)}
                     onDelete={() =>

@@ -15,6 +15,7 @@ import {
   WorkoutRow,
   WorkoutSet,
   WorkoutSetRow,
+  WorkoutWithCountRow,
 } from '@/types/training';
 import { LOCAL_USER_ID } from '@/constants/User';
 import * as SQLite from 'expo-sqlite';
@@ -26,10 +27,16 @@ export class WorkoutService {
     this.db = database;
   }
 
-  async getAllWorkouts(): Promise<WorkoutRow[]> {
-    return this.db.getAllAsync<WorkoutRow>(
-      'SELECT * FROM workouts ORDER BY is_favorite DESC, display_order ASC, created_at DESC',
-    );
+  async getAllWorkouts(): Promise<WorkoutWithCountRow[]> {
+    return this.db.getAllAsync<WorkoutWithCountRow>(`
+    SELECT 
+      workouts.*,
+      COUNT (workout_exercises.id) as exercise_count
+    FROM workouts
+    LEFT JOIN workout_exercises ON workouts.id = workout_exercises.workout_id
+    GROUP BY workouts.id
+    ORDER BY is_favorite DESC, display_order ASC, created_at DESC
+  `);
   }
   async createWorkout(
     workout: Omit<Workout, 'id' | 'createdAt' | 'exercises'>,

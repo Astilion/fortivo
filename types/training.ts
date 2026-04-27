@@ -417,3 +417,7 @@ export interface BodyMeasurementRow {
   notes: string | null;
   created_at: string;
 }
+
+export interface WorkoutWithCountRow extends WorkoutRow {
+  exercise_count: number;
+}
