@@ -478,37 +478,12 @@ export class WorkoutService {
     return result?.count || 0;
   }
 
-  async getCurrentStreak(userId: string = LOCAL_USER_ID): Promise<number> {
-    const rows = await this.db.getAllAsync<{ completed_at: string }>(
-      `SELECT DATE(completed_at) as completed_at 
-       FROM workout_history 
-       WHERE user_id = ? 
-       GROUP BY DATE(completed_at)
-       ORDER BY completed_at DESC`,
+  async getTotalWorkouts(userId: string = LOCAL_USER_ID): Promise<number> {
+    const result = await this.db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) as count FROM workout_history WHERE user_id = ?`,
       [userId],
     );
-
-    if (rows.length === 0) return 0;
-
-    let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < rows.length; i++) {
-      const workoutDate = new Date(rows[i].completed_at);
-      workoutDate.setHours(0, 0, 0, 0);
-
-      const expectedDate = new Date(today);
-      expectedDate.setDate(today.getDate() - streak);
-
-      if (workoutDate.getTime() === expectedDate.getTime()) {
-        streak++;
-      } else if (workoutDate.getTime() < expectedDate.getTime()) {
-        break;
-      }
-    }
-
-    return streak;
+    return result?.count || 0;
   }
 
   /** Reusable INSERT for workout_sets — used by saveWorkoutExercises and saveActualValues */

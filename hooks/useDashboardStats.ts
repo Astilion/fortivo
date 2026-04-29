@@ -6,7 +6,7 @@ import { logger } from '@/utils/logger';
 interface DashboardStats {
   workoutsThisWeek: number;
   workoutsThisMonth: number;
-  currentStreak: number;
+  totalWorkouts: number;
 }
 
 export const useDashboardStats = () => {
@@ -15,7 +15,7 @@ export const useDashboardStats = () => {
   const [stats, setStats] = useState<DashboardStats>({
     workoutsThisWeek: 0,
     workoutsThisMonth: 0,
-    currentStreak: 0,
+    totalWorkouts: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,16 +25,16 @@ export const useDashboardStats = () => {
       setLoading(true);
       setError(null);
 
-      const [week, month, streak] = await Promise.all([
+      const [week, month, total] = await Promise.all([
         workoutService.getWorkoutsThisWeek(),
         workoutService.getWorkoutsThisMonth(),
-        workoutService.getCurrentStreak(),
+        workoutService.getTotalWorkouts(),
       ]);
 
       setStats({
         workoutsThisWeek: week,
         workoutsThisMonth: month,
-        currentStreak: streak,
+        totalWorkouts: total,
       });
     } catch (err) {
       logger.error('Failed to load dashboard stats', err);

@@ -64,9 +64,9 @@ export default function HomeScreen() {
           label='Ten miesiąc'
         />
         <StatCard
-          icon='flame-outline'
-          value={stats.currentStreak}
-          label='Dni z rzędu'
+          icon='trophy-outline'
+          value={stats.totalWorkouts}
+          label='Razem'
         />
       </View>
 
