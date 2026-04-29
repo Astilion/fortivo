@@ -277,15 +277,7 @@ export default function WorkoutsScreen() {
               />
             ) : (
               weeklyPlans.map((plan) => (
-                <Pressable
-                  key={plan.id}
-                  style={({ pressed }) => [
-                    styles.planCard,
-                    pressed && styles.planCardPressed,
-                  ]}
-                  onLongPress={() => handleDeleteWeeklyPlan(plan.id, plan.name)}
-                  delayLongPress={500}
-                >
+                <View key={plan.id} style={styles.planCard}>
                   <Text style={styles.planName}>{plan.name}</Text>
 
                   <Pressable
@@ -302,13 +294,20 @@ export default function WorkoutsScreen() {
                   </Pressable>
 
                   {plan.is_active === 1 ? (
-                    <Pressable
-                      style={styles.activeBadge}
-                      onLongPress={() => handleClearActivePlan()}
-                      delayLongPress={500}
-                    >
+                    <View style={styles.activeBadge}>
                       <Text style={styles.activeBadgeText}>Aktywny</Text>
-                    </Pressable>
+                      <Pressable
+                        onPress={handleClearActivePlan}
+                        style={styles.clearActiveBtn}
+                        hitSlop={8}
+                      >
+                        <Ionicons
+                          name='close-circle-outline'
+                          size={18}
+                          color={colors.accent}
+                        />
+                      </Pressable>
+                    </View>
                   ) : (
                     <Pressable
                       style={styles.setActiveBtn}
@@ -317,7 +316,17 @@ export default function WorkoutsScreen() {
                       <Text style={styles.setActiveBtnText}>Ustaw aktywny</Text>
                     </Pressable>
                   )}
-                </Pressable>
+                  <Pressable
+                    style={styles.deleteIcon}
+                    onPress={() => handleDeleteWeeklyPlan(plan.id, plan.name)}
+                  >
+                    <Ionicons
+                      name='trash-outline'
+                      size={20}
+                      color={colors.danger}
+                    />
+                  </Pressable>
+                </View>
               ))
             )}
           </>
@@ -406,11 +415,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
-
-  planCardPressed: {
-    opacity: 0.6,
-    transform: [{ scale: 0.98 }],
-  },
   editIcon: {
     padding: 8,
     marginRight: 8,
@@ -432,10 +436,20 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     backgroundColor: colors.primary,
     borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   activeBadgeText: {
     color: colors.accent,
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  deleteIcon: {
+    padding: 6,
+    borderRadius: 6,
+  },
+  clearActiveBtn: {
+    marginLeft: 6,
+    padding: 2,
   },
 });
