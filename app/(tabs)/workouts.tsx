@@ -16,7 +16,7 @@ import {
   View,
 } from 'react-native';
 import { logger } from '@/utils/logger';
-import Ionicons from '@expo/vector-icons/build/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 
 type WorkoutsTab = 'workouts' | 'plans' | 'ready';
 

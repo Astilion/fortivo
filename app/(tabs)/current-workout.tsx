@@ -13,7 +13,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { generateId } from '@/database/database';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 
 const DAYS_OF_WEEK = [
@@ -58,7 +57,7 @@ export default function CurrentWorkoutScreen() {
 
     if (workout) {
       const ex = await workoutService.getWorkoutExercises(workout.id);
-      setExercises(ex.map((item) => ({ ...item, id: generateId('we') })));
+      setExercises(ex);
     }
   };
 
