@@ -1,7 +1,11 @@
 import { Button } from '@/components/ui/Button';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
-import { WorkoutRow, WorkoutExerciseWithSets } from '@/types/training';
+import {
+  WorkoutRow,
+  WorkoutExerciseWithSets,
+  WorkoutHistoryRow,
+} from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -35,14 +39,22 @@ export default function CurrentWorkoutScreen() {
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<number | null>(
     null,
   );
+  const [completedThisWeek, setCompletedThisWeek] = useState<
+    WorkoutHistoryRow[]
+  >([]);
   const router = useRouter();
 
   useFocusEffect(
     useCallback(() => {
       const loadAll = async () => {
-        await loadActiveWorkout();
-        const activePlan = await weeklyPlanService.getActivePlan();
-        setActivePlan(activePlan);
+        const [_, plan, completed] = await Promise.all([
+          loadActiveWorkout(),
+          weeklyPlanService.getActivePlan(),
+          workoutService.getCompletedWorkoutsThisWeek(),
+        ]);
+
+        setActivePlan(plan);
+        setCompletedThisWeek(completed);
       };
       loadAll();
     }, []),
@@ -87,6 +99,24 @@ export default function CurrentWorkoutScreen() {
     await loadActiveWorkout();
   };
 
+  const getDayStatus = (
+    dayOfWeek: number,
+    configuredWorkoutId: string | null,
+  ): 'on_plan' | 'off_plan' | 'none' => {
+    const workoutsFromDay = completedThisWeek.filter(
+      (row) => new Date(row.completed_at).getDay() === dayOfWeek,
+    );
+
+    if (workoutsFromDay.length === 0) return 'none';
+
+    const isOnPlan = workoutsFromDay.some(
+      (row) => row.workout_id === configuredWorkoutId,
+    );
+
+    if (isOnPlan) return 'on_plan';
+
+    return 'off_plan';
+  };
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -102,6 +132,10 @@ export default function CurrentWorkoutScreen() {
                 );
                 const isToday = today === day.dayOfWeek;
                 const isSelected = selectedDayOfWeek === day.dayOfWeek;
+                const dayStatus = getDayStatus(
+                  day.dayOfWeek,
+                  configured?.workout?.id ?? null,
+                );
 
                 return (
                   <Pressable
@@ -136,6 +170,22 @@ export default function CurrentWorkoutScreen() {
                           ? configured.workout.name
                           : '—'}
                     </Text>
+                    {dayStatus === 'on_plan' && (
+                      <Ionicons
+                        name='checkmark-circle'
+                        size={14}
+                        color={isSelected ? colors.primary : colors.accent}
+                        style={styles.planDayStatusIcon}
+                      />
+                    )}
+                    {dayStatus === 'off_plan' && (
+                      <Ionicons
+                        name='checkmark'
+                        size={14}
+                        color={colors.text.secondary}
+                        style={styles.planDayStatusIcon}
+                      />
+                    )}
                   </Pressable>
                 );
               })}
@@ -326,5 +376,8 @@ const styles = StyleSheet.create({
   },
   planDayNameSelected: {
     color: colors.primary,
+  },
+  planDayStatusIcon: {
+    marginTop: 4,
   },
 });
