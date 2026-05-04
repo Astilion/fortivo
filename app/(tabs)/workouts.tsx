@@ -292,7 +292,6 @@ export default function WorkoutsScreen() {
                       color={colors.accent}
                     />
                   </Pressable>
-
                   {plan.is_active === 1 ? (
                     <View style={styles.activeBadge}>
                       <Text style={styles.activeBadgeText}>Aktywny</Text>

@@ -531,4 +531,22 @@ export class WorkoutService {
     ]);
     return newValue === 1;
   }
+
+  async getCompletedWorkoutsThisWeek(
+    userId = LOCAL_USER_ID,
+  ): Promise<WorkoutHistoryRow[]> {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+    return this.db.getAllAsync<WorkoutHistoryRow>(
+      `SELECT * FROM workout_history 
+     WHERE user_id = ? AND completed_at >= ? AND completed_at < ?`,
+      [userId, startOfWeek.toISOString(), endOfWeek.toISOString()],
+    );
+  }
 }
