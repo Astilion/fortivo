@@ -1,11 +1,12 @@
 import colors from '@/constants/Colors';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
 
 interface ButtonProps {
   onPress: () => void;
   title: string;
   variant?: 'primary' | 'secondary' | 'danger';
   disabled?: boolean;
+  style?: ViewStyle;
 }
 
 export const Button = ({
@@ -13,6 +14,7 @@ export const Button = ({
   title,
   variant = 'primary',
   disabled = false,
+  style,
 }: ButtonProps) => {
   const getVariantStyle = () => {
     switch (variant) {
@@ -30,7 +32,12 @@ export const Button = ({
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={[styles.button, getVariantStyle(), disabled && styles.disabled]}
+      style={[
+        styles.button,
+        getVariantStyle(),
+        disabled && styles.disabled,
+        style,
+      ]}
     >
       <Text style={styles.buttonText}>{title}</Text>
     </Pressable>

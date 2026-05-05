@@ -11,12 +11,14 @@ import colors from '@/constants/Colors';
 import {
   View,
   ScrollView,
-  TextInput,
   Text,
   Alert,
   StyleSheet,
+  Pressable,
 } from 'react-native';
+import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Ionicons } from '@expo/vector-icons';
 import { logger } from '@/utils/logger';
 
 type DayConfig = {
@@ -229,61 +231,89 @@ export default function CreateWeeklyPlanScreen() {
         }}
       />
       <ScrollView contentContainerStyle={styles.container}>
-        <TextInput
-          style={styles.nameInput}
-          placeholderTextColor={colors.text.secondary}
+        <Input
           value={planName}
           onChangeText={setPlanName}
           placeholder='Nazwa planu'
         />
 
-        {days.map((day, index) => (
-          <View key={day.dayOfWeek} style={styles.dayCard}>
-            <Text style={styles.dayName}>{day.dayName}</Text>
+        <View style={styles.daysList}>
+          {days.map((day, index) => (
+            <View key={day.dayOfWeek} style={styles.dayCard}>
+              <Text style={styles.dayName}>{day.dayName}</Text>
 
-            {day.workoutId === null && !day.isRestDay && (
-              <View style={styles.buttonRow}>
-                <View style={styles.buttonFlex}>
-                  <Button
-                    title='Dodaj trening'
+              {day.workoutId === null && !day.isRestDay && (
+                <View style={styles.dayActions}>
+                  <Pressable
+                    style={styles.addWorkoutBtn}
                     onPress={() => handleAddWorkout(index)}
-                  />
-                </View>
-                <View style={styles.buttonFlex}>
-                  <Button
-                    title='Odpoczynek'
+                  >
+                    <Ionicons name='add' size={14} color={colors.primary} />
+                    <Text style={styles.addWorkoutText}>Trening</Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.restDayBtn}
                     onPress={() => handleToggleRestDay(index)}
-                  />
+                  >
+                    <Ionicons
+                      name='moon-outline'
+                      size={13}
+                      color={colors.text.secondary}
+                    />
+                    <Text style={styles.restDayText}>Odpoczynek</Text>
+                  </Pressable>
                 </View>
-              </View>
-            )}
+              )}
 
-            {day.workoutId !== null && (
-              <Button
-                title={`Usuń: ${day.workoutName}`}
-                variant='secondary'
-                onPress={() => handleDeleteWorkout(index)}
-              />
-            )}
+              {day.workoutId !== null && (
+                <View style={styles.assignedPill}>
+                  <Text style={styles.assignedWorkoutName} numberOfLines={1}>
+                    {day.workoutName}
+                  </Text>
+                  <Pressable
+                    onPress={() => handleDeleteWorkout(index)}
+                    hitSlop={8}
+                  >
+                    <Ionicons
+                      name='close'
+                      size={16}
+                      color={colors.text.secondary}
+                    />
+                  </Pressable>
+                </View>
+              )}
 
-            {day.isRestDay && (
-              <Button
-                title='Usuń odpoczynek'
-                variant='secondary'
-                onPress={() => handleToggleRestDay(index)}
-              />
-            )}
-          </View>
-        ))}
-
-        <View style={styles.saveButton}>
-          <Button
-            title={isEditMode ? 'Zapisz zmiany' : 'Zapisz plan'}
-            variant='primary'
-            onPress={handleSave}
-          />
+              {day.isRestDay && (
+                <View style={styles.assignedPill}>
+                  <Ionicons
+                    name='moon-outline'
+                    size={13}
+                    color={colors.text.secondary}
+                  />
+                  <Text style={styles.restDayLabel}>Odpoczynek</Text>
+                  <Pressable
+                    onPress={() => handleToggleRestDay(index)}
+                    hitSlop={8}
+                  >
+                    <Ionicons
+                      name='close'
+                      size={16}
+                      color={colors.text.secondary}
+                    />
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          ))}
         </View>
       </ScrollView>
+      <View style={styles.saveButton}>
+        <Button
+          title={isEditMode ? 'Zapisz zmiany' : 'Zapisz plan'}
+          variant='primary'
+          onPress={handleSave}
+        />
+      </View>
     </>
   );
 }
@@ -292,38 +322,78 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
   },
-  nameInput: {
-    backgroundColor: colors.secondary,
-    color: colors.text.primary,
-    padding: 15,
-    borderRadius: 8,
-    fontSize: 16,
-    marginBottom: 20,
+  daysList: {
+    gap: 8,
+    marginTop: 16,
   },
   dayCard: {
     backgroundColor: colors.secondary,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    marginBottom: 12,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   dayName: {
     color: colors.text.primary,
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 6,
+    fontSize: 14,
+    fontWeight: '600',
   },
-  buttonRow: {
+  dayActions: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignContent: 'center',
+    gap: 8,
   },
-  buttonFlex: {
-    flex: 1,
-    transform: [{ scale: 0.85 }],
+  addWorkoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.accent,
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  addWorkoutText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.primary,
+  },
+  restDayBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.background,
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  restDayText: {
+    fontSize: 13,
+    color: colors.text.secondary,
+  },
+  assignedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.background,
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    maxWidth: '60%',
+  },
+  assignedWorkoutName: {
+    fontSize: 13,
+    color: colors.accent,
+    flexShrink: 1,
+  },
+  restDayLabel: {
+    fontSize: 13,
+    color: colors.text.secondary,
   },
   saveButton: {
-    marginTop: 20,
-    marginBottom: 40,
+    padding: 20,
+    paddingBottom: 40,
+    borderTopWidth: 1,
+    borderTopColor: colors.secondary,
   },
 });
