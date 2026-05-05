@@ -29,6 +29,8 @@ export default function SelectExerciseScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const addExercise = useWorkoutStore((state) => state.addExercise);
   const setPendingExercise = useWorkoutStore(
@@ -42,7 +44,6 @@ export default function SelectExerciseScreen() {
   const favoriteExercises = useExerciseStore(
     (state) => state.favoriteExercises,
   );
-
 
   const filteredExercises = exercises.filter((ex) => {
     const matches = matchesSearch(
@@ -79,6 +80,39 @@ export default function SelectExerciseScreen() {
     }
   };
 
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      if (newSet.size === 0) {
+        setIsMultiSelectMode(false);
+      }
+      return newSet;
+    });
+  };
+
+  const enterMultiSelectMode = (id: string) => {
+    setIsMultiSelectMode(true);
+    toggleSelection(id);
+  };
+
+  const exitMultiSelectMode = () => {
+    setIsMultiSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const handleMultiAdd = () => {
+    selectedIds.forEach((id) => {
+      const exercise = exercises.find((ex) => ex.id === id);
+      if (!exercise) return;
+      addExercise(exercise);
+    });
+    router.back();
+  };
   return (
     <View style={commonStyles.container}>
       <Input
@@ -132,7 +166,23 @@ export default function SelectExerciseScreen() {
           maxToRenderPerBatch={10}
           windowSize={5}
           renderItem={({ item }) => (
-            <Card onPress={() => handleSelectExercise(item.id)}>
+            <Card
+              onPress={() =>
+                isMultiSelectMode
+                  ? toggleSelection(item.id)
+                  : handleSelectExercise(item.id)
+              }
+              onLongPress={() => {
+                if (!isMultiSelectMode && source !== 'active-workout') {
+                  enterMultiSelectMode(item.id);
+                }
+              }}
+              style={
+                selectedIds.has(item.id)
+                  ? { borderWidth: 2, borderColor: colors.accent }
+                  : undefined
+              }
+            >
               <View style={styles.cardHeader}>
                 <View style={styles.cardContent}>
                   {item.isCustom && (
@@ -171,12 +221,31 @@ export default function SelectExerciseScreen() {
           )}
         />
       )}
-      <Pressable
-        onPress={() => router.push('/create-exercise')}
-        style={[styles.fab, { bottom: activeWorkoutId ? 170 : 34 }]}
-      >
-        <Ionicons name='add' size={28} color='#1C2227' />
-      </Pressable>
+      {!isMultiSelectMode && (
+        <Pressable
+          onPress={() => router.push('/create-exercise')}
+          style={[styles.fab, { bottom: activeWorkoutId ? 170 : 34 }]}
+        >
+          <Ionicons name='add' size={28} color='#1C2227' />
+        </Pressable>
+      )}
+
+      {isMultiSelectMode && (
+        <View style={styles.floatingBar}>
+          <Button
+            title='Anuluj'
+            onPress={exitMultiSelectMode}
+            variant='secondary'
+            style={{ flex: 1 }}
+          />
+          <Button
+            title={`Dodaj (${selectedIds.size})`}
+            variant='primary'
+            onPress={handleMultiAdd}
+            style={{ flex: 1 }}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -239,5 +308,21 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 11,
     fontWeight: 'bold',
+  },
+  floatingBar: {
+    position: 'absolute',
+    bottom: 24,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    gap: 12,
+    borderRadius: 12,
+    padding: 12,
+    backgroundColor: colors.secondary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
 });

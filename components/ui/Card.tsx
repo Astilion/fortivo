@@ -1,16 +1,22 @@
 import colors from '@/constants/Colors';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 
 interface CardProps {
   children: React.ReactNode;
   onPress?: () => void;
+  onLongPress?: () => void;
+  style?: ViewStyle;
 }
 
-export const Card = ({ children, onPress }: CardProps) => {
+export const Card = ({ children, onPress, onLongPress, style }: CardProps) => {
   const Container = onPress ? Pressable : View;
 
   return (
-    <Container style={styles.container} onPress={onPress}>
+    <Container
+      style={[styles.container, style]}
+      onPress={onPress}
+      onLongPress={onLongPress}
+    >
       {children}
     </Container>
   );
