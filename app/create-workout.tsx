@@ -8,6 +8,7 @@ import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
+import { confirmAction } from '@/utils/confirm';
 
 export default function CreateWorkoutScreen() {
   const router = useRouter();
@@ -114,7 +115,13 @@ export default function CreateWorkoutScreen() {
               sets={item.sets}
               isExpanded={item.isExpanded || false}
               onToggleExpand={() => toggleExpanded(item.id)}
-              onRemoveExercise={() => removeExercise(item.id)}
+              onRemoveExercise={() =>
+                confirmAction(
+                  'Usuń ćwiczenie',
+                  `Czy na pewno chcesz usunąć "${item.exercise.name}"?`,
+                  () => removeExercise(item.id),
+                )
+              }
               onAddSet={() => addSet(item.id)}
               onRemoveSet={(setId) => removeSet(item.id, setId)}
               onUpdateSet={(setId, updates) =>

@@ -10,8 +10,8 @@ import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
 import { capitalize } from '@/utils/capitalize';
+import { confirmAction } from '@/utils/confirm';
 import {
-  Alert,
   FlatList,
   Pressable,
   ScrollView,
@@ -174,17 +174,10 @@ export default function ExercisesScreen() {
                     style={styles.favoriteButton}
                     onPress={(e) => {
                       e.stopPropagation();
-                      Alert.alert(
+                      confirmAction(
                         'Usuń ćwiczenie',
                         'Czy na pewno chcesz usunąć to ćwiczenie?',
-                        [
-                          { text: 'Anuluj', style: 'cancel' },
-                          {
-                            text: 'Usuń',
-                            style: 'destructive',
-                            onPress: () => deleteExercise(item.id),
-                          },
-                        ],
+                        () => deleteExercise(item.id),
                       );
                     }}
                   >

@@ -19,6 +19,7 @@ import { AddEntryForm } from '@/components/weight/AddEntryForm';
 import { WeightEntryRow } from '@/components/weight/WeightEntryRow';
 import { SummaryCard } from '@/components/weight/SummaryCard';
 import { LOCAL_USER_ID } from '@/constants/User';
+import { confirmAction } from '@/utils/confirm';
 
 export default function WeightTrackingScreen() {
   const router = useRouter();
@@ -51,10 +52,16 @@ export default function WeightTrackingScreen() {
     );
     setEntries((prev) => [newEntry, ...prev]);
   };
-  const handleDeleteEntry = async (id: string) => {
-    if (!weightService) return;
-    await weightService.deleteWeightEntry(id);
-    setEntries((prev) => prev.filter((entry) => entry.id !== id));
+  const handleDeleteEntry = (id: string) => {
+    confirmAction(
+      'Usuń wpis',
+      'Czy na pewno chcesz usunąć ten wpis wagi?',
+      async () => {
+        if (!weightService) return;
+        await weightService.deleteWeightEntry(id);
+        setEntries((prev) => prev.filter((entry) => entry.id !== id));
+      },
+    );
   };
 
   return (

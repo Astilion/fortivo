@@ -2,6 +2,7 @@ import colors from '@/constants/Colors';
 import { WorkoutSet } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { parseDecimal, parseInteger } from '@/utils/numbers';
+import { confirmAction } from '@/utils/confirm';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface ExpandableExerciseCardProps {
@@ -225,7 +226,15 @@ export const ExpandableExerciseCard = ({
               {/* Delete set */}
               <View style={styles.actionColumn}>
                 {sets.length > 1 && (
-                  <Pressable onPress={() => onRemoveSet(set.id)}>
+                  <Pressable
+                    onPress={() =>
+                      confirmAction(
+                        'Usuń serię',
+                        'Czy na pewno chcesz usunąć tę serię?',
+                        () => onRemoveSet(set.id),
+                      )
+                    }
+                  >
                     <Ionicons
                       name='close-circle'
                       size={22}
