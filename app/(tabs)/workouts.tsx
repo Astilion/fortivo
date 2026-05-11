@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { LoadingView } from '@/components/ui/LoadingView';
 import { WorkoutCard } from '@/components/ui/WorkoutCard';
 import colors from '@/constants/Colors';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
@@ -26,17 +27,27 @@ export default function WorkoutsScreen() {
   const [workouts, setWorkouts] = useState<WorkoutWithCountRow[]>([]);
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
+  const [isLoading, setIsLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
-      const loadWeeklyPlans = async () => {
-        const plans = await weeklyPlanService.getWeeklyPlans();
-        setWeeklyPlans(plans);
+      const loadAll = async () => {
+        setIsLoading(true);
+        try {
+          const [allWorkouts, plans] = await Promise.all([
+            workoutService.getAllWorkouts(),
+            weeklyPlanService.getWeeklyPlans(),
+          ]);
+          setWorkouts(allWorkouts);
+          setWeeklyPlans(plans);
+        } finally {
+          setIsLoading(false);
+        }
       };
-      loadWorkouts();
-      loadWeeklyPlans();
+      loadAll();
     }, []),
   );
+
   const loadWorkouts = async () => {
     const allWorkouts = await workoutService.getAllWorkouts();
     setWorkouts(allWorkouts);
@@ -159,6 +170,10 @@ export default function WorkoutsScreen() {
       ],
     );
   };
+  if (isLoading) {
+    return <LoadingView />;
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.optionsContainer}>

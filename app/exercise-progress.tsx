@@ -1,4 +1,5 @@
 import { EmptyState } from '@/components/ui/EmptyState';
+import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { ExerciseProgressWithWorkout } from '@/types/training';
@@ -7,7 +8,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   StyleSheet,
@@ -64,11 +64,7 @@ export default function ExerciseProgressScreen() {
   };
 
   if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size='large' color={colors.accent} />
-      </View>
-    );
+    return <LoadingView />;
   }
 
   return (
@@ -150,12 +146,6 @@ export default function ExerciseProgressScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: colors.primary,
   },
   statsContainer: {
