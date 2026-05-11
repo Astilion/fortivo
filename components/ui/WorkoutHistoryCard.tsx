@@ -1,6 +1,7 @@
 import colors from '@/constants/Colors';
 import { formatDate } from '@/utils/date';
 import { Ionicons } from '@expo/vector-icons';
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface WorkoutHistoryCardProps {
@@ -11,13 +12,13 @@ interface WorkoutHistoryCardProps {
   showTime?: boolean;
 }
 
-export const WorkoutHistoryCard = ({
+export const WorkoutHistoryCard = memo(function WorkoutHistoryCard({
   workoutName,
   completedAt,
   duration,
   onPress,
   showTime = true,
-}: WorkoutHistoryCardProps) => {
+}: WorkoutHistoryCardProps) {
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.cardHeader}>
@@ -52,7 +53,7 @@ export const WorkoutHistoryCard = ({
       </View>
     </Pressable>
   );
-};
+});
 
 const styles = StyleSheet.create({
   card: {

@@ -8,7 +8,7 @@ import colors from '@/constants/Colors';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { capitalize } from '@/utils/capitalize';
 import { confirmAction } from '@/utils/confirm';
 import {
@@ -50,28 +50,105 @@ export default function ExercisesScreen() {
       loadExercises();
     }, [loadExercises]),
   );
-  const filteredExercises = exercises.filter((ex) => {
-    const matches = matchesSearch(
-      searchQuery,
-      ex.name,
-      ex.nameEN,
-      ex.muscleGroups?.join(' '),
-      ex.equipment?.join(' '),
-    );
+  const filteredExercises = useMemo(
+    () =>
+      exercises.filter((ex) => {
+        const matches = matchesSearch(
+          searchQuery,
+          ex.name,
+          ex.nameEN,
+          ex.muscleGroups?.join(' '),
+          ex.equipment?.join(' '),
+        );
 
-    const matchesCategory =
-      selectedCategory === 'wszystkie' ||
-      selectedCategory === 'ulubione' ||
-      selectedCategory === 'wlasne' ||
-      ex.categories.includes(selectedCategory);
+        const matchesCategory =
+          selectedCategory === 'wszystkie' ||
+          selectedCategory === 'ulubione' ||
+          selectedCategory === 'wlasne' ||
+          ex.categories.includes(selectedCategory);
 
-    const matchesFavorites =
-      selectedCategory !== 'ulubione' || favoriteExercises.includes(ex.id);
+        const matchesFavorites =
+          selectedCategory !== 'ulubione' || favoriteExercises.includes(ex.id);
 
-    const matchesCustom = selectedCategory !== 'wlasne' || ex.isCustom;
+        const matchesCustom = selectedCategory !== 'wlasne' || ex.isCustom;
 
-    return matches && matchesCategory && matchesFavorites && matchesCustom;
-  });
+        return matches && matchesCategory && matchesFavorites && matchesCustom;
+      }),
+    [exercises, searchQuery, selectedCategory, favoriteExercises],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: (typeof filteredExercises)[number] }) => (
+      <Card onPress={() => router.push(`/exercise-details?id=${item.id}`)}>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardContent}>
+            {item.isCustom && (
+              <View style={styles.customBadge}>
+                <Text style={styles.customBadgeText}>Własne</Text>
+              </View>
+            )}
+            <Text style={styles.exerciseName}>{item.name}</Text>
+            <View style={styles.categoriesRow}>
+              {item.categories.map((cat, idx) => (
+                <Text key={idx} style={styles.categoryChip}>
+                  {capitalize(cat)}
+                </Text>
+              ))}
+            </View>
+          </View>
+          {item.isCustom && (
+            <>
+              <Pressable
+                style={styles.favoriteButton}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  confirmAction(
+                    'Usuń ćwiczenie',
+                    'Czy na pewno chcesz usunąć to ćwiczenie?',
+                    () => deleteExercise(item.id),
+                  );
+                }}
+              >
+                <Ionicons
+                  name='trash-outline'
+                  size={24}
+                  color={colors.text.secondary}
+                />
+              </Pressable>
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  router.push(`/create-exercise?id=${item.id}`);
+                }}
+                style={styles.favoriteButton}
+              >
+                <Ionicons
+                  name='pencil-outline'
+                  size={24}
+                  color={colors.text.secondary}
+                />
+              </Pressable>
+            </>
+          )}
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              toggleFavorite(item.id);
+            }}
+            style={styles.favoriteButton}
+          >
+            <Ionicons
+              name={isFavorite(item.id) ? 'star' : 'star-outline'}
+              size={24}
+              color={isFavorite(item.id) ? colors.accent : colors.text.secondary}
+            />
+          </Pressable>
+        </View>
+      </Card>
+    ),
+    [router, toggleFavorite, isFavorite, deleteExercise],
+  );
+
   if (loading) {
     return <LoadingView />;
   }
@@ -150,76 +227,7 @@ export default function ExercisesScreen() {
             />
           )
         }
-        renderItem={({ item }) => (
-          <Card onPress={() => router.push(`/exercise-details?id=${item.id}`)}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardContent}>
-                {item.isCustom && (
-                  <View style={styles.customBadge}>
-                    <Text style={styles.customBadgeText}>Własne</Text>
-                  </View>
-                )}
-                <Text style={styles.exerciseName}>{item.name}</Text>
-                <View style={styles.categoriesRow}>
-                  {item.categories.map((cat, idx) => (
-                    <Text key={idx} style={styles.categoryChip}>
-                      {capitalize(cat)}
-                    </Text>
-                  ))}
-                </View>
-              </View>
-              {item.isCustom && (
-                <>
-                  <Pressable
-                    style={styles.favoriteButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      confirmAction(
-                        'Usuń ćwiczenie',
-                        'Czy na pewno chcesz usunąć to ćwiczenie?',
-                        () => deleteExercise(item.id),
-                      );
-                    }}
-                  >
-                    <Ionicons
-                      name='trash-outline'
-                      size={24}
-                      color={colors.text.secondary}
-                    />
-                  </Pressable>
-                  <Pressable
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      router.push(`/create-exercise?id=${item.id}`);
-                    }}
-                    style={styles.favoriteButton}
-                  >
-                    <Ionicons
-                      name='pencil-outline'
-                      size={24}
-                      color={colors.text.secondary}
-                    />
-                  </Pressable>
-                </>
-              )}
-              <Pressable
-                onPress={(e) => {
-                  e.stopPropagation();
-                  toggleFavorite(item.id);
-                }}
-                style={styles.favoriteButton}
-              >
-                <Ionicons
-                  name={isFavorite(item.id) ? 'star' : 'star-outline'}
-                  size={24}
-                  color={
-                    isFavorite(item.id) ? colors.accent : colors.text.secondary
-                  }
-                />
-              </Pressable>
-            </View>
-          </Card>
-        )}
+        renderItem={renderItem}
       />
       <Pressable
         onPress={() => router.push('/create-exercise')}

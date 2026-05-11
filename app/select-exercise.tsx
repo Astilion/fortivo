@@ -6,7 +6,7 @@ import { commonStyles } from '@/constants/Styles';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -45,28 +45,32 @@ export default function SelectExerciseScreen() {
     (state) => state.favoriteExercises,
   );
 
-  const filteredExercises = exercises.filter((ex) => {
-    const matches = matchesSearch(
-      searchQuery,
-      ex.name,
-      ex.nameEN,
-      ex.muscleGroups?.join(' '),
-      ex.equipment?.join(' '),
-    );
+  const filteredExercises = useMemo(
+    () =>
+      exercises.filter((ex) => {
+        const matches = matchesSearch(
+          searchQuery,
+          ex.name,
+          ex.nameEN,
+          ex.muscleGroups?.join(' '),
+          ex.equipment?.join(' '),
+        );
 
-    const matchesCategory =
-      selectedCategory === 'wszystkie' ||
-      selectedCategory === 'ulubione' ||
-      selectedCategory === 'wlasne' ||
-      ex.categories.includes(selectedCategory);
+        const matchesCategory =
+          selectedCategory === 'wszystkie' ||
+          selectedCategory === 'ulubione' ||
+          selectedCategory === 'wlasne' ||
+          ex.categories.includes(selectedCategory);
 
-    const matchesFavorites =
-      selectedCategory !== 'ulubione' || favoriteExercises.includes(ex.id);
+        const matchesFavorites =
+          selectedCategory !== 'ulubione' || favoriteExercises.includes(ex.id);
 
-    const matchesCustom = selectedCategory !== 'wlasne' || ex.isCustom;
+        const matchesCustom = selectedCategory !== 'wlasne' || ex.isCustom;
 
-    return matches && matchesCategory && matchesFavorites && matchesCustom;
-  });
+        return matches && matchesCategory && matchesFavorites && matchesCustom;
+      }),
+    [exercises, searchQuery, selectedCategory, favoriteExercises],
+  );
 
   const handleSelectExercise = (exerciseId: string) => {
     const exercise = exercises.find((ex) => ex.id === exerciseId);
@@ -113,6 +117,63 @@ export default function SelectExerciseScreen() {
     });
     router.back();
   };
+
+  const renderItem = useCallback(
+    ({ item }: { item: (typeof filteredExercises)[number] }) => (
+      <Card
+        onPress={() =>
+          isMultiSelectMode
+            ? toggleSelection(item.id)
+            : handleSelectExercise(item.id)
+        }
+        onLongPress={() => {
+          if (!isMultiSelectMode && source !== 'active-workout') {
+            enterMultiSelectMode(item.id);
+          }
+        }}
+        style={
+          selectedIds.has(item.id)
+            ? { borderWidth: 2, borderColor: colors.accent }
+            : undefined
+        }
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.cardContent}>
+            {item.isCustom && (
+              <View style={styles.customBadge}>
+                <Text style={styles.customBadgeText}>Własne</Text>
+              </View>
+            )}
+            <Text style={styles.exerciseName}>{item.name}</Text>
+            <View style={styles.categoriesRow}>
+              {item.categories.map((cat, idx) => (
+                <Text key={idx} style={styles.categoryChip}>
+                  {capitalize(cat)}
+                </Text>
+              ))}
+            </View>
+          </View>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              toggleFavorite(item.id);
+            }}
+            style={styles.favoriteButton}
+          >
+            <Ionicons
+              name={isFavorite(item.id) ? 'star' : 'star-outline'}
+              size={24}
+              color={
+                isFavorite(item.id) ? colors.accent : colors.text.secondary
+              }
+            />
+          </Pressable>
+        </View>
+      </Card>
+    ),
+    [isMultiSelectMode, toggleSelection, handleSelectExercise, source, enterMultiSelectMode, selectedIds, toggleFavorite, isFavorite],
+  );
+
   return (
     <View style={commonStyles.container}>
       <Input
@@ -165,60 +226,7 @@ export default function SelectExerciseScreen() {
           removeClippedSubviews={true}
           maxToRenderPerBatch={10}
           windowSize={5}
-          renderItem={({ item }) => (
-            <Card
-              onPress={() =>
-                isMultiSelectMode
-                  ? toggleSelection(item.id)
-                  : handleSelectExercise(item.id)
-              }
-              onLongPress={() => {
-                if (!isMultiSelectMode && source !== 'active-workout') {
-                  enterMultiSelectMode(item.id);
-                }
-              }}
-              style={
-                selectedIds.has(item.id)
-                  ? { borderWidth: 2, borderColor: colors.accent }
-                  : undefined
-              }
-            >
-              <View style={styles.cardHeader}>
-                <View style={styles.cardContent}>
-                  {item.isCustom && (
-                    <View style={styles.customBadge}>
-                      <Text style={styles.customBadgeText}>Własne</Text>
-                    </View>
-                  )}
-                  <Text style={styles.exerciseName}>{item.name}</Text>
-                  <View style={styles.categoriesRow}>
-                    {item.categories.map((cat, idx) => (
-                      <Text key={idx} style={styles.categoryChip}>
-                        {capitalize(cat)}
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-                <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(item.id);
-                  }}
-                  style={styles.favoriteButton}
-                >
-                  <Ionicons
-                    name={isFavorite(item.id) ? 'star' : 'star-outline'}
-                    size={24}
-                    color={
-                      isFavorite(item.id)
-                        ? colors.accent
-                        : colors.text.secondary
-                    }
-                  />
-                </Pressable>
-              </View>
-            </Card>
-          )}
+          renderItem={renderItem}
         />
       )}
       {!isMultiSelectMode && (
