@@ -1,4 +1,6 @@
 import { generateId } from '@/database/database';
+import { logger } from '@/utils/logger';
+import { ServiceError } from '@/utils/errors';
 import {
   Exercise,
   ExerciseProgressQueryRow,
@@ -44,22 +46,27 @@ export class WorkoutService {
     const id = generateId('workout');
     const createdAt = new Date();
 
-    await this.db.runAsync(
-      `INSERT INTO workouts (
-        id, name, date, duration, notes, tags, completed, template_id, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        workout.name,
-        workout.date.toISOString(),
-        workout.duration || null,
-        workout.notes || null,
-        workout.tags ? JSON.stringify(workout.tags) : null,
-        workout.completed ? 1 : 0,
-        workout.templateId || null,
-        createdAt.toISOString(),
-      ],
-    );
+    try {
+      await this.db.runAsync(
+        `INSERT INTO workouts (
+          id, name, date, duration, notes, tags, completed, template_id, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          workout.name,
+          workout.date.toISOString(),
+          workout.duration || null,
+          workout.notes || null,
+          workout.tags ? JSON.stringify(workout.tags) : null,
+          workout.completed ? 1 : 0,
+          workout.templateId || null,
+          createdAt.toISOString(),
+        ],
+      );
+    } catch (error) {
+      logger.error('WorkoutService.createWorkout failed', error);
+      throw new ServiceError('Nie udało się utworzyć treningu', error);
+    }
 
     return {
       id,
@@ -70,7 +77,12 @@ export class WorkoutService {
   }
 
   async deleteWorkout(id: string): Promise<void> {
-    await this.db.runAsync('DELETE FROM workouts WHERE id = ?', [id]);
+    try {
+      await this.db.runAsync('DELETE FROM workouts WHERE id = ?', [id]);
+    } catch (error) {
+      logger.error('WorkoutService.deleteWorkout failed', error);
+      throw new ServiceError('Nie udało się usunąć treningu', error);
+    }
   }
 
   async updateWorkout(
@@ -109,10 +121,15 @@ export class WorkoutService {
 
     values.push(id);
 
-    await this.db.runAsync(
-      `UPDATE workouts SET ${fields.join(', ')} WHERE id = ?`,
-      values,
-    );
+    try {
+      await this.db.runAsync(
+        `UPDATE workouts SET ${fields.join(', ')} WHERE id = ?`,
+        values,
+      );
+    } catch (error) {
+      logger.error('WorkoutService.updateWorkout failed', error);
+      throw new ServiceError('Nie udało się zaktualizować treningu', error);
+    }
   }
 
   async getWorkoutById(id: string): Promise<WorkoutRow | null> {
@@ -127,25 +144,32 @@ export class WorkoutService {
     workoutId: string,
     exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
-    await this.db.runAsync(
-      'DELETE FROM workout_exercises WHERE workout_id = ?',
-      [workoutId],
-    );
+    try {
+      await this.db.withTransactionAsync(async () => {
+        await this.db.runAsync(
+          'DELETE FROM workout_exercises WHERE workout_id = ?',
+          [workoutId],
+        );
 
-    for (let i = 0; i < exercises.length; i++) {
-      const { exercise, sets } = exercises[i];
-      const workoutExerciseId = generateId('we');
+        for (let i = 0; i < exercises.length; i++) {
+          const { exercise, sets } = exercises[i];
+          const workoutExerciseId = generateId('we');
 
-      await this.db.runAsync(
-        `INSERT INTO workout_exercises (
-          id, workout_id, exercise_id, exercise_order, superset_group, notes
-        ) VALUES (?, ?, ?, ?, ?, ?)`,
-        [workoutExerciseId, workoutId, exercise.id, i, null, null],
-      );
+          await this.db.runAsync(
+            `INSERT INTO workout_exercises (
+              id, workout_id, exercise_id, exercise_order, superset_group, notes
+            ) VALUES (?, ?, ?, ?, ?, ?)`,
+            [workoutExerciseId, workoutId, exercise.id, i, null, null],
+          );
 
-      for (let j = 0; j < sets.length; j++) {
-        await this.insertSet(generateId('ws'), workoutExerciseId, j, sets[j]);
-      }
+          for (let j = 0; j < sets.length; j++) {
+            await this.insertSet(generateId('ws'), workoutExerciseId, j, sets[j]);
+          }
+        }
+      });
+    } catch (error) {
+      logger.error('WorkoutService.saveWorkoutExercises failed', error);
+      throw new ServiceError('Nie udało się zapisać ćwiczeń treningu', error);
     }
   }
 
@@ -259,27 +283,34 @@ export class WorkoutService {
     workoutId: string,
     exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
-    for (const ex of exercises) {
-      const workoutExerciseRow = await this.db.getFirstAsync<{ id: string }>(
-        'SELECT id FROM workout_exercises WHERE workout_id = ? AND exercise_id = ?',
-        [workoutId, ex.exercise.id],
-      );
+    try {
+      await this.db.withTransactionAsync(async () => {
+        for (const ex of exercises) {
+          const workoutExerciseRow = await this.db.getFirstAsync<{ id: string }>(
+            'SELECT id FROM workout_exercises WHERE workout_id = ? AND exercise_id = ?',
+            [workoutId, ex.exercise.id],
+          );
 
-      if (!workoutExerciseRow) continue;
+          if (!workoutExerciseRow) continue;
 
-      await this.db.runAsync(
-        'DELETE FROM workout_sets WHERE workout_exercise_id = ?',
-        [workoutExerciseRow.id],
-      );
+          await this.db.runAsync(
+            'DELETE FROM workout_sets WHERE workout_exercise_id = ?',
+            [workoutExerciseRow.id],
+          );
 
-      for (let i = 0; i < ex.sets.length; i++) {
-        await this.insertSet(
-          ex.sets[i].id,
-          workoutExerciseRow.id,
-          i,
-          ex.sets[i],
-        );
-      }
+          for (let i = 0; i < ex.sets.length; i++) {
+            await this.insertSet(
+              ex.sets[i].id,
+              workoutExerciseRow.id,
+              i,
+              ex.sets[i],
+            );
+          }
+        }
+      });
+    } catch (error) {
+      logger.error('WorkoutService.saveActualValues failed', error);
+      throw new ServiceError('Nie udało się zapisać wyników treningu', error);
     }
   }
 
@@ -290,12 +321,17 @@ export class WorkoutService {
     const id = generateId('wh');
     const userId = LOCAL_USER_ID;
 
-    await this.db.runAsync(
-      `INSERT INTO workout_history (
-        id, workout_id, user_id, completed_at, actual_duration, performance_notes
-      ) VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, workoutId, userId, new Date().toISOString(), durationMinutes, null],
-    );
+    try {
+      await this.db.runAsync(
+        `INSERT INTO workout_history (
+          id, workout_id, user_id, completed_at, actual_duration, performance_notes
+        ) VALUES (?, ?, ?, ?, ?, ?)`,
+        [id, workoutId, userId, new Date().toISOString(), durationMinutes, null],
+      );
+    } catch (error) {
+      logger.error('WorkoutService.saveWorkoutHistory failed', error);
+      throw new ServiceError('Nie udało się zapisać historii treningu', error);
+    }
   }
 
   async saveExerciseProgress(
@@ -305,45 +341,52 @@ export class WorkoutService {
     const userId = LOCAL_USER_ID;
     const date = new Date().toISOString();
 
-    for (const ex of exercises) {
-      const completedSets = ex.sets.filter((s) => s.completed);
-      if (completedSets.length === 0) continue;
+    try {
+      await this.db.withTransactionAsync(async () => {
+        for (const ex of exercises) {
+          const completedSets = ex.sets.filter((s) => s.completed);
+          if (completedSets.length === 0) continue;
 
-      const maxWeight = Math.max(
-        ...completedSets.map((s) => s.actualWeight || 0),
-      );
+          const maxWeight = Math.max(
+            ...completedSets.map((s) => s.actualWeight || 0),
+          );
 
-      const totalVolume = completedSets.reduce(
-        (sum, set) => sum + (set.actualReps || 0) * (set.actualWeight || 0),
-        0,
-      );
+          const totalVolume = completedSets.reduce(
+            (sum, set) => sum + (set.actualReps || 0) * (set.actualWeight || 0),
+            0,
+          );
 
-      const previousRecord = await this.db.getFirstAsync<ExerciseProgressRow>(
-        `SELECT * FROM exercise_progress 
-         WHERE exercise_id = ? AND user_id = ? 
-         ORDER BY max_weight DESC LIMIT 1`,
-        [ex.exercise.id, userId],
-      );
+          const previousRecord = await this.db.getFirstAsync<ExerciseProgressRow>(
+            `SELECT * FROM exercise_progress
+             WHERE exercise_id = ? AND user_id = ?
+             ORDER BY max_weight DESC LIMIT 1`,
+            [ex.exercise.id, userId],
+          );
 
-      const isPersonalRecord =
-        !previousRecord || maxWeight > previousRecord.max_weight;
+          const isPersonalRecord =
+            !previousRecord || maxWeight > previousRecord.max_weight;
 
-      await this.db.runAsync(
-        `INSERT INTO exercise_progress (
-          id, exercise_id, user_id, date, max_weight, total_volume, 
-          estimated_one_rep_max, personal_record
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          generateId('ep'),
-          ex.exercise.id,
-          userId,
-          date,
-          maxWeight,
-          totalVolume,
-          null,
-          isPersonalRecord ? 1 : 0,
-        ],
-      );
+          await this.db.runAsync(
+            `INSERT INTO exercise_progress (
+              id, exercise_id, user_id, date, max_weight, total_volume,
+              estimated_one_rep_max, personal_record
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              generateId('ep'),
+              ex.exercise.id,
+              userId,
+              date,
+              maxWeight,
+              totalVolume,
+              null,
+              isPersonalRecord ? 1 : 0,
+            ],
+          );
+        }
+      });
+    } catch (error) {
+      logger.error('WorkoutService.saveExerciseProgress failed', error);
+      throw new ServiceError('Nie udało się zapisać postępu ćwiczeń', error);
     }
   }
 
@@ -525,10 +568,15 @@ export class WorkoutService {
     if (!workout) return false;
 
     const newValue = workout.is_favorite === 1 ? 0 : 1;
-    await this.db.runAsync('UPDATE workouts SET is_favorite = ? WHERE id = ?', [
-      newValue,
-      id,
-    ]);
+    try {
+      await this.db.runAsync('UPDATE workouts SET is_favorite = ? WHERE id = ?', [
+        newValue,
+        id,
+      ]);
+    } catch (error) {
+      logger.error('WorkoutService.toggleFavoriteWorkout failed', error);
+      throw new ServiceError('Nie udało się zmienić ulubionego treningu', error);
+    }
     return newValue === 1;
   }
 
