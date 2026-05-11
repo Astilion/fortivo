@@ -159,6 +159,8 @@ export default function SelectExerciseScreen() {
               toggleFavorite(item.id);
             }}
             style={styles.favoriteButton}
+            hitSlop={8}
+            accessibilityLabel={isFavorite(item.id) ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
           >
             <Ionicons
               name={isFavorite(item.id) ? 'star' : 'star-outline'}

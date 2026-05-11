@@ -328,6 +328,8 @@ export default function ActiveWorkoutScreen() {
               <Pressable
                 onPress={() => removeExercise(item.id, item.exercise.name)}
                 style={styles.removeExerciseButton}
+                hitSlop={6}
+                accessibilityLabel="Usuń ćwiczenie"
               >
                 <Ionicons
                   name='trash-outline'
@@ -347,6 +349,8 @@ export default function ActiveWorkoutScreen() {
                       <Pressable
                         onPress={() => removeSet(item.id, set.id)}
                         style={styles.deleteButton}
+                        hitSlop={6}
+                        accessibilityLabel="Usuń serię"
                       >
                         <Ionicons
                           name='close-circle'

@@ -64,6 +64,8 @@ export const WorkoutCard = ({
               styles.actionButton,
               isFirst && styles.actionButtonDisabled,
             ]}
+            hitSlop={6}
+            accessibilityLabel="Przesuń w górę"
           >
             <Ionicons
               name='arrow-up'
@@ -78,6 +80,8 @@ export const WorkoutCard = ({
             }}
             disabled={isLast}
             style={[styles.actionButton, isLast && styles.actionButtonDisabled]}
+            hitSlop={6}
+            accessibilityLabel="Przesuń w dół"
           >
             <Ionicons
               name='arrow-down'
@@ -91,6 +95,8 @@ export const WorkoutCard = ({
               onToggleFavorite();
             }}
             style={styles.actionButton}
+            hitSlop={6}
+            accessibilityLabel={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
           >
             <Ionicons
               name={isFavorite ? 'star' : 'star-outline'}
@@ -104,6 +110,8 @@ export const WorkoutCard = ({
               onEdit();
             }}
             style={styles.actionButton}
+            hitSlop={6}
+            accessibilityLabel="Edytuj trening"
           >
             <Ionicons name='create-outline' size={20} color={colors.accent} />
           </Pressable>
@@ -113,6 +121,8 @@ export const WorkoutCard = ({
               onDelete();
             }}
             style={styles.actionButton}
+            hitSlop={6}
+            accessibilityLabel="Usuń trening"
           >
             <Ionicons name='trash-outline' size={20} color={colors.danger} />
           </Pressable>

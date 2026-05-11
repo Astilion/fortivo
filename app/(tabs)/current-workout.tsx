@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   },
   planDayContent: {
     color: colors.text.secondary,
-    fontSize: 10,
+    fontSize: 11,
     textAlign: 'center',
   },
   planDaySelected: {

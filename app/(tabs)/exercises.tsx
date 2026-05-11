@@ -108,6 +108,8 @@ export default function ExercisesScreen() {
                     () => deleteExercise(item.id),
                   );
                 }}
+                hitSlop={8}
+                accessibilityLabel="Usuń ćwiczenie"
               >
                 <Ionicons
                   name='trash-outline'
@@ -121,6 +123,8 @@ export default function ExercisesScreen() {
                   router.push(`/create-exercise?id=${item.id}`);
                 }}
                 style={styles.favoriteButton}
+                hitSlop={8}
+                accessibilityLabel="Edytuj ćwiczenie"
               >
                 <Ionicons
                   name='pencil-outline'
@@ -136,6 +140,8 @@ export default function ExercisesScreen() {
               toggleFavorite(item.id);
             }}
             style={styles.favoriteButton}
+            hitSlop={8}
+            accessibilityLabel={isFavorite(item.id) ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
           >
             <Ionicons
               name={isFavorite(item.id) ? 'star' : 'star-outline'}

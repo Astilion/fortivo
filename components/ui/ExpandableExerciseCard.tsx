@@ -104,6 +104,8 @@ export const ExpandableExerciseCard = ({
                 styles.reorderButton,
                 isFirst && styles.reorderButtonDisabled,
               ]}
+              hitSlop={5}
+              accessibilityLabel="Przesuń ćwiczenie w górę"
             >
               <Ionicons
                 name='arrow-up'
@@ -122,6 +124,8 @@ export const ExpandableExerciseCard = ({
                 styles.reorderButton,
                 isLast && styles.reorderButtonDisabled,
               ]}
+              hitSlop={5}
+              accessibilityLabel="Przesuń ćwiczenie w dół"
             >
               <Ionicons
                 name='arrow-down'
@@ -132,7 +136,12 @@ export const ExpandableExerciseCard = ({
           )}
 
           {/* Delete button */}
-          <Pressable onPress={onRemoveExercise} style={styles.deleteButton}>
+          <Pressable
+            onPress={onRemoveExercise}
+            style={styles.deleteButton}
+            hitSlop={4}
+            accessibilityLabel="Usuń ćwiczenie"
+          >
             <Ionicons name='trash-outline' size={20} color={colors.danger} />
           </Pressable>
         </View>

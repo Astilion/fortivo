@@ -286,6 +286,8 @@ export default function WorkoutsScreen() {
                       router.push(`/create-weekly-plan?id=${plan.id}`)
                     }
                     style={styles.editIcon}
+                    hitSlop={4}
+                    accessibilityLabel="Edytuj plan"
                   >
                     <Ionicons
                       name='create-outline'
@@ -319,6 +321,8 @@ export default function WorkoutsScreen() {
                   <Pressable
                     style={styles.deleteIcon}
                     onPress={() => handleDeleteWeeklyPlan(plan.id, plan.name)}
+                    hitSlop={6}
+                    accessibilityLabel="Usuń plan"
                   >
                     <Ionicons
                       name='trash-outline'
