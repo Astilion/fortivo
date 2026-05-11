@@ -2,6 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import { generateId } from '../database/database';
 import { Exercise, ExerciseRow, FavoriteExerciseRow } from '../types/training';
 import { logger } from '@/utils/logger';
+import { ServiceError } from '@/utils/errors';
 import { LOCAL_USER_ID } from '@/constants/User';
 
 export class ExerciseService {
@@ -38,6 +39,9 @@ export class ExerciseService {
           exercise.createdAt.toISOString(),
         ]);
       }
+    } catch (error) {
+      logger.error('ExerciseService.seedExercises failed', error);
+      throw new ServiceError('Nie udało się załadować biblioteki ćwiczeń', error);
     } finally {
       await stmt.finalizeAsync();
     }
@@ -137,28 +141,33 @@ export class ExerciseService {
     const id = generateId('ex');
     const createdAt = new Date();
 
-    await this.db.runAsync(
-      `INSERT INTO exercises (
-        id, name, name_en, categories, muscle_groups, instructions, equipment,
-        difficulty, measurement_type, is_custom, user_id, photo, video, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        exercise.name,
-        exercise.nameEN || null,
-        JSON.stringify(exercise.categories),
-        JSON.stringify(exercise.muscleGroups),
-        exercise.instructions || null,
-        exercise.equipment ? JSON.stringify(exercise.equipment) : null,
-        exercise.difficulty || null,
-        exercise.measurementType || 'reps',
-        1,
-        userId,
-        exercise.photo || null,
-        exercise.video || null,
-        createdAt.toISOString(),
-      ],
-    );
+    try {
+      await this.db.runAsync(
+        `INSERT INTO exercises (
+          id, name, name_en, categories, muscle_groups, instructions, equipment,
+          difficulty, measurement_type, is_custom, user_id, photo, video, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          exercise.name,
+          exercise.nameEN || null,
+          JSON.stringify(exercise.categories),
+          JSON.stringify(exercise.muscleGroups),
+          exercise.instructions || null,
+          exercise.equipment ? JSON.stringify(exercise.equipment) : null,
+          exercise.difficulty || null,
+          exercise.measurementType || 'reps',
+          1,
+          userId,
+          exercise.photo || null,
+          exercise.video || null,
+          createdAt.toISOString(),
+        ],
+      );
+    } catch (error) {
+      logger.error('ExerciseService.createExercise failed', error);
+      throw new ServiceError('Nie udało się utworzyć ćwiczenia', error);
+    }
 
     return {
       ...exercise,
@@ -231,10 +240,15 @@ export class ExerciseService {
 
     values.push(id);
 
-    await this.db.runAsync(
-      `UPDATE exercises SET ${fields.join(', ')} WHERE id = ?`,
-      values,
-    );
+    try {
+      await this.db.runAsync(
+        `UPDATE exercises SET ${fields.join(', ')} WHERE id = ?`,
+        values,
+      );
+    } catch (error) {
+      logger.error('ExerciseService.updateExercise failed', error);
+      throw new ServiceError('Nie udało się zaktualizować ćwiczenia', error);
+    }
   }
 
   /** Only custom exercises can be deleted */
@@ -245,7 +259,12 @@ export class ExerciseService {
       throw new Error('Can only delete your own custom exercises');
     }
 
-    await this.db.runAsync('DELETE FROM exercises WHERE id = ?', [id]);
+    try {
+      await this.db.runAsync('DELETE FROM exercises WHERE id = ?', [id]);
+    } catch (error) {
+      logger.error('ExerciseService.deleteExercise failed', error);
+      throw new ServiceError('Nie udało się usunąć ćwiczenia', error);
+    }
   }
 
   async getCategories(userId?: string): Promise<string[]> {
