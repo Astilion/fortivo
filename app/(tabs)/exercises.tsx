@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
@@ -122,6 +123,33 @@ export default function ExercisesScreen() {
         removeClippedSubviews={true}
         maxToRenderPerBatch={10}
         windowSize={5}
+        ListEmptyComponent={
+          searchQuery.trim() !== '' ? (
+            <EmptyState
+              icon='search-outline'
+              title='Nie znaleziono ćwiczeń'
+              subtitle={`Brak wyników dla "${searchQuery}"`}
+            />
+          ) : selectedCategory === 'ulubione' ? (
+            <EmptyState
+              icon='star-outline'
+              title='Brak ulubionych ćwiczeń'
+              subtitle='Dodaj ćwiczenia do ulubionych gwiazdką'
+              action={{ label: 'Przeglądaj wszystkie', onPress: () => setSelectedCategory('wszystkie') }}
+            />
+          ) : selectedCategory === 'wlasne' ? (
+            <EmptyState
+              icon='barbell-outline'
+              title='Nie masz własnych ćwiczeń'
+              action={{ label: 'Dodaj ćwiczenie', onPress: () => router.push('/create-exercise') }}
+            />
+          ) : (
+            <EmptyState
+              icon='list-outline'
+              title='Brak ćwiczeń w tej kategorii'
+            />
+          )
+        }
         renderItem={({ item }) => (
           <Card onPress={() => router.push(`/exercise-details?id=${item.id}`)}>
             <View style={styles.cardHeader}>
