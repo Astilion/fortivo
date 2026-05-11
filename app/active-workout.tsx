@@ -20,6 +20,7 @@ import { parseDecimal, parseInteger } from '@/utils/numbers';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { validateRPE, validateTempo } from '@/utils/validation';
 import { logger } from '@/utils/logger';
+import { confirmAction } from '@/utils/confirm';
 import { useWorkoutStore } from '@/store/workoutStore';
 
 export default function ActiveWorkoutScreen() {
@@ -175,21 +176,18 @@ export default function ActiveWorkoutScreen() {
     });
   };
   const removeSet = (exerciseId: string, setId: string) => {
-    setExercises((prevExercises) => {
-      return prevExercises.map((ex) => {
-        if (ex.id === exerciseId) {
-          if (ex.sets.length <= 1) {
-            Alert.alert('Uwaga', 'Nie możesz usunąć ostatniej serii');
-            return ex;
-          }
+    const ex = exercises.find((e) => e.id === exerciseId);
+    if (!ex || ex.sets.length <= 1) return;
 
-          return {
-            ...ex,
-            sets: ex.sets.filter((s) => s.id !== setId),
-          };
-        }
-        return ex;
-      });
+    confirmAction('Usuń serię', 'Czy na pewno chcesz usunąć tę serię?', () => {
+      setExercises((prevExercises) =>
+        prevExercises.map((e) => {
+          if (e.id === exerciseId) {
+            return { ...e, sets: e.sets.filter((s) => s.id !== setId) };
+          }
+          return e;
+        }),
+      );
     });
   };
 
@@ -216,50 +214,45 @@ export default function ActiveWorkoutScreen() {
     });
   };
   const handleFinishWorkout = () => {
-    Alert.alert('Zakończ trening', 'Czy na pewno chcesz zakończyć trening?', [
-      { text: 'Anuluj', style: 'cancel' },
-      {
-        text: 'Zakończ',
-        style: 'destructive',
-        onPress: async () => {
-          if (!workout || workoutStartTime === null) return;
+    confirmAction(
+      'Zakończ trening',
+      'Czy na pewno chcesz zakończyć trening?',
+      async () => {
+        if (!workout || workoutStartTime === null) return;
 
-          const endTime = Date.now();
-          const durationMinutes = Math.max(
-            0,
-            Math.round((endTime - workoutStartTime) / 60000),
+        const endTime = Date.now();
+        const durationMinutes = Math.max(
+          0,
+          Math.round((endTime - workoutStartTime) / 60000),
+        );
+
+        try {
+          await workoutService.saveWorkoutExercises(
+            workout.id,
+            exercisesRef.current,
           );
 
-          try {
-            await workoutService.saveWorkoutExercises(
-              workout.id,
-              exercisesRef.current,
-            );
+          await workoutService.saveWorkoutHistory(workout.id, durationMinutes);
 
-            await workoutService.saveWorkoutHistory(
-              workout.id,
-              durationMinutes,
-            );
+          await workoutService.saveExerciseProgress(
+            workout.id,
+            exercisesRef.current,
+          );
 
-            await workoutService.saveExerciseProgress(
-              workout.id,
-              exercisesRef.current,
-            );
+          Alert.alert('Sukces', 'Trening został zapisany');
+          await workoutService.clearActiveWorkout();
+          finishActiveWorkout();
 
-            Alert.alert('Sukces', 'Trening został zapisany');
-            await workoutService.clearActiveWorkout();
-            finishActiveWorkout();
-
-            router.replace('/(tabs)/workout-history');
-          } catch (error) {
-            const message =
-              error instanceof Error ? error.message : String(error);
-            logger.error('Błąd zakończenia treningu', error);
-            Alert.alert('Błąd', `Nie udało się zapisać treningu:\n${message}`);
-          }
-        },
+          router.replace('/(tabs)/workout-history');
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          logger.error('Błąd zakończenia treningu', error);
+          Alert.alert('Błąd', `Nie udało się zapisać treningu:\n${message}`);
+        }
       },
-    ]);
+      'Zakończ',
+    );
   };
 
   const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
@@ -281,18 +274,10 @@ export default function ActiveWorkoutScreen() {
       Alert.alert('Uwaga', 'Nie możesz usunąć ostatniego ćwiczenia');
       return;
     }
-    Alert.alert(
+    confirmAction(
       'Usuń ćwiczenie',
       `Czy na pewno chcesz usunąć "${exerciseName}" z treningu?`,
-      [
-        { text: 'Anuluj', style: 'cancel' },
-        {
-          text: 'Usuń',
-          style: 'destructive',
-          onPress: () =>
-            setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId)),
-        },
-      ],
+      () => setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId)),
     );
   };
 
@@ -343,6 +328,8 @@ export default function ActiveWorkoutScreen() {
               <Pressable
                 onPress={() => removeExercise(item.id, item.exercise.name)}
                 style={styles.removeExerciseButton}
+                hitSlop={6}
+                accessibilityLabel="Usuń ćwiczenie"
               >
                 <Ionicons
                   name='trash-outline'
@@ -362,6 +349,8 @@ export default function ActiveWorkoutScreen() {
                       <Pressable
                         onPress={() => removeSet(item.id, set.id)}
                         style={styles.deleteButton}
+                        hitSlop={6}
+                        accessibilityLabel="Usuń serię"
                       >
                         <Ionicons
                           name='close-circle'

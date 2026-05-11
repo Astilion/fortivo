@@ -5,6 +5,7 @@ import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
 import colors from '@/constants/Colors';
 import { useWorkoutHistory } from '@/hooks/useWorkoutHistory';
 import { useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 export default function WorkoutHistoryScreen() {
@@ -12,13 +13,28 @@ export default function WorkoutHistoryScreen() {
 
   const { history, loading, error, refresh } = useWorkoutHistory();
 
-  const handleWorkoutPress = (historyId: string) => {
-    router.push({
-      pathname: '/workout-details',
-      params: { historyId },
-    });
-  };
+  const handleWorkoutPress = useCallback(
+    (historyId: string) => {
+      router.push({
+        pathname: '/workout-details',
+        params: { historyId },
+      });
+    },
+    [router],
+  );
   const handleRetry = refresh;
+
+  const renderItem = useCallback(
+    ({ item }: { item: (typeof history)[number] }) => (
+      <WorkoutHistoryCard
+        workoutName={item.workoutName}
+        completedAt={item.completedAt}
+        duration={item.actualDuration}
+        onPress={() => handleWorkoutPress(item.id)}
+      />
+    ),
+    [handleWorkoutPress],
+  );
 
   if (loading) {
     return <LoadingView />;
@@ -50,14 +66,7 @@ export default function WorkoutHistoryScreen() {
           removeClippedSubviews={true}
           maxToRenderPerBatch={10}
           windowSize={5}
-          renderItem={({ item }) => (
-            <WorkoutHistoryCard
-              workoutName={item.workoutName}
-              completedAt={item.completedAt}
-              duration={item.actualDuration}
-              onPress={() => handleWorkoutPress(item.id)}
-            />
-          )}
+          renderItem={renderItem}
         />
       )}
     </View>

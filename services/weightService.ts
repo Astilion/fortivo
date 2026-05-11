@@ -1,6 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { WeightEntry, WeightEntryRow } from '@/types/training';
 import { logger } from '@/utils/logger';
+import { ServiceError } from '@/utils/errors';
 import { generateId } from '@/database/database';
 export class WeightService {
   private db: SQLite.SQLiteDatabase;
@@ -17,10 +18,15 @@ export class WeightService {
   ): Promise<WeightEntry> {
     const id = generateId('weight-entry');
     const createdAt = new Date().toISOString();
-    await this.db.runAsync(
-      `INSERT INTO weight_entries (id, user_id, weight, date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, userId, weight, date, notes || null, createdAt],
-    );
+    try {
+      await this.db.runAsync(
+        `INSERT INTO weight_entries (id, user_id, weight, date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+        [id, userId, weight, date, notes || null, createdAt],
+      );
+    } catch (error) {
+      logger.error('WeightService.addWeightEntry failed', error);
+      throw new ServiceError('Nie udało się zapisać pomiaru wagi', error);
+    }
 
     logger.db('added weight entry', { userId, weight, date, notes });
     return {
@@ -51,7 +57,12 @@ export class WeightService {
   }
 
   async deleteWeightEntry(id: string): Promise<void> {
-    await this.db.runAsync(`DELETE FROM weight_entries WHERE id = ?`, [id]);
+    try {
+      await this.db.runAsync(`DELETE FROM weight_entries WHERE id = ?`, [id]);
+    } catch (error) {
+      logger.error('WeightService.deleteWeightEntry failed', error);
+      throw new ServiceError('Nie udało się usunąć pomiaru wagi', error);
+    }
     logger.db('deleted weight entry', { id });
   }
 }

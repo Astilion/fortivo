@@ -1,6 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { BodyMeasurement, BodyMeasurementRow } from '@/types/training';
 import { logger } from '@/utils/logger';
+import { ServiceError } from '@/utils/errors';
 import { generateId } from '@/database/database';
 
 export class MeasurementService {
@@ -19,10 +20,15 @@ export class MeasurementService {
   ): Promise<BodyMeasurement> {
     const id = generateId('measurement-entry');
     const createdAt = new Date().toISOString();
-    await this.db.runAsync(
-      'INSERT INTO body_measurements (id, user_id, body_part, value, date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [id, userId, bodyPart, value, date, notes || null, createdAt],
-    );
+    try {
+      await this.db.runAsync(
+        'INSERT INTO body_measurements (id, user_id, body_part, value, date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [id, userId, bodyPart, value, date, notes || null, createdAt],
+      );
+    } catch (error) {
+      logger.error('MeasurementService.addMeasurement failed', error);
+      throw new ServiceError('Nie udało się zapisać pomiaru ciała', error);
+    }
 
     logger.db('added body measurement', {
       userId,
@@ -60,7 +66,12 @@ export class MeasurementService {
   }
 
   async deleteMeasurement(id: string): Promise<void> {
-    await this.db.runAsync('DELETE FROM body_measurements WHERE id = ?', [id]);
+    try {
+      await this.db.runAsync('DELETE FROM body_measurements WHERE id = ?', [id]);
+    } catch (error) {
+      logger.error('MeasurementService.deleteMeasurement failed', error);
+      throw new ServiceError('Nie udało się usunąć pomiaru ciała', error);
+    }
     logger.db('deleted body measurement', { id });
   }
 }

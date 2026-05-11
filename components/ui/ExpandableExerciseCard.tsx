@@ -2,6 +2,7 @@ import colors from '@/constants/Colors';
 import { WorkoutSet } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { parseDecimal, parseInteger } from '@/utils/numbers';
+import { confirmAction } from '@/utils/confirm';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface ExpandableExerciseCardProps {
@@ -103,6 +104,8 @@ export const ExpandableExerciseCard = ({
                 styles.reorderButton,
                 isFirst && styles.reorderButtonDisabled,
               ]}
+              hitSlop={5}
+              accessibilityLabel="Przesuń ćwiczenie w górę"
             >
               <Ionicons
                 name='arrow-up'
@@ -121,6 +124,8 @@ export const ExpandableExerciseCard = ({
                 styles.reorderButton,
                 isLast && styles.reorderButtonDisabled,
               ]}
+              hitSlop={5}
+              accessibilityLabel="Przesuń ćwiczenie w dół"
             >
               <Ionicons
                 name='arrow-down'
@@ -131,7 +136,12 @@ export const ExpandableExerciseCard = ({
           )}
 
           {/* Delete button */}
-          <Pressable onPress={onRemoveExercise} style={styles.deleteButton}>
+          <Pressable
+            onPress={onRemoveExercise}
+            style={styles.deleteButton}
+            hitSlop={4}
+            accessibilityLabel="Usuń ćwiczenie"
+          >
             <Ionicons name='trash-outline' size={20} color={colors.danger} />
           </Pressable>
         </View>
@@ -225,7 +235,15 @@ export const ExpandableExerciseCard = ({
               {/* Delete set */}
               <View style={styles.actionColumn}>
                 {sets.length > 1 && (
-                  <Pressable onPress={() => onRemoveSet(set.id)}>
+                  <Pressable
+                    onPress={() =>
+                      confirmAction(
+                        'Usuń serię',
+                        'Czy na pewno chcesz usunąć tę serię?',
+                        () => onRemoveSet(set.id),
+                      )
+                    }
+                  >
                     <Ionicons
                       name='close-circle'
                       size={22}

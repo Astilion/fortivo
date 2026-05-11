@@ -31,6 +31,7 @@ export const EmptyState = ({
           onPress={action.onPress}
           variant='primary'
           title={action.label}
+          style={{ marginTop: 16 }}
         />
       )}
     </View>

@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button';
+import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import {
@@ -42,19 +43,24 @@ export default function CurrentWorkoutScreen() {
   const [completedThisWeek, setCompletedThisWeek] = useState<
     WorkoutHistoryRow[]
   >([]);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useFocusEffect(
     useCallback(() => {
       const loadAll = async () => {
-        const [_, plan, completed] = await Promise.all([
-          loadActiveWorkout(),
-          weeklyPlanService.getActivePlan(),
-          workoutService.getCompletedWorkoutsThisWeek(),
-        ]);
-
-        setActivePlan(plan);
-        setCompletedThisWeek(completed);
+        setIsLoading(true);
+        try {
+          const [_, plan, completed] = await Promise.all([
+            loadActiveWorkout(),
+            weeklyPlanService.getActivePlan(),
+            workoutService.getCompletedWorkoutsThisWeek(),
+          ]);
+          setActivePlan(plan);
+          setCompletedThisWeek(completed);
+        } finally {
+          setIsLoading(false);
+        }
       };
       loadAll();
     }, []),
@@ -117,6 +123,10 @@ export default function CurrentWorkoutScreen() {
 
     return 'off_plan';
   };
+  if (isLoading) {
+    return <LoadingView />;
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -368,7 +378,7 @@ const styles = StyleSheet.create({
   },
   planDayContent: {
     color: colors.text.secondary,
-    fontSize: 10,
+    fontSize: 11,
     textAlign: 'center',
   },
   planDaySelected: {

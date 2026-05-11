@@ -47,3 +47,7 @@ yarn-error.*
 
 # env files
 .env
+
+# AI / internal docs
+CLAUDE.md
+/docs/

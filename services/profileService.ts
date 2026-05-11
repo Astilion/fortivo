@@ -1,6 +1,7 @@
 import { UserSettings, UserSettingsRow } from '@/types/training';
 import * as SQLite from 'expo-sqlite';
 import { logger } from '@/utils/logger';
+import { ServiceError } from '@/utils/errors';
 
 export class ProfileService {
   private db: SQLite.SQLiteDatabase;
@@ -42,20 +43,25 @@ export class ProfileService {
   }
 
   async updateUserSettings(settings: UserSettings): Promise<void> {
-    await this.db.runAsync(
-      `INSERT OR REPLACE INTO user_settings (user_id, preferred_weight_unit, default_rest_time, track_rpe, track_tempo, track_rest_time, week_starts_on, goal_weight)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        settings.userId,
-        settings.preferredWeightUnit,
-        settings.defaultRestTime,
-        settings.trackRPE ? 1 : 0,
-        settings.trackTempo ? 1 : 0,
-        settings.trackRestTime ? 1 : 0,
-        settings.weekStartsOn,
-        settings.goalWeight ?? null,
-      ],
-    );
+    try {
+      await this.db.runAsync(
+        `INSERT OR REPLACE INTO user_settings (user_id, preferred_weight_unit, default_rest_time, track_rpe, track_tempo, track_rest_time, week_starts_on, goal_weight)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          settings.userId,
+          settings.preferredWeightUnit,
+          settings.defaultRestTime,
+          settings.trackRPE ? 1 : 0,
+          settings.trackTempo ? 1 : 0,
+          settings.trackRestTime ? 1 : 0,
+          settings.weekStartsOn,
+          settings.goalWeight ?? null,
+        ],
+      );
+    } catch (error) {
+      logger.error('ProfileService.updateUserSettings failed', error);
+      throw new ServiceError('Nie udało się zapisać ustawień', error);
+    }
     logger.db('updated user settings', { userId: settings.userId, settings });
   }
 }

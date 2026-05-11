@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { LoadingView } from '@/components/ui/LoadingView';
 import { WorkoutCard } from '@/components/ui/WorkoutCard';
 import colors from '@/constants/Colors';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutWithCountRow } from '@/types/training';
+import { confirmAction } from '@/utils/confirm';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
@@ -26,66 +28,66 @@ export default function WorkoutsScreen() {
   const [workouts, setWorkouts] = useState<WorkoutWithCountRow[]>([]);
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
+  const [isLoading, setIsLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
-      const loadWeeklyPlans = async () => {
-        const plans = await weeklyPlanService.getWeeklyPlans();
-        setWeeklyPlans(plans);
+      const loadAll = async () => {
+        setIsLoading(true);
+        try {
+          const [allWorkouts, plans] = await Promise.all([
+            workoutService.getAllWorkouts(),
+            weeklyPlanService.getWeeklyPlans(),
+          ]);
+          setWorkouts(allWorkouts);
+          setWeeklyPlans(plans);
+        } finally {
+          setIsLoading(false);
+        }
       };
-      loadWorkouts();
-      loadWeeklyPlans();
+      loadAll();
     }, []),
   );
+
   const loadWorkouts = async () => {
     const allWorkouts = await workoutService.getAllWorkouts();
     setWorkouts(allWorkouts);
   };
 
-  const handleDeleteWorkout = async (id: string, name: string) => {
-    Alert.alert('Usuń trening', `Czy na pewno chcesz usunąć "${name}"?`, [
-      { text: 'Anuluj', style: 'cancel' },
-      {
-        text: 'Usuń',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await workoutService.deleteWorkout(id);
-            loadWorkouts();
-          } catch (error) {
-            logger.error('Błąd usuwania:', error);
-            Alert.alert('Błąd', 'Nie udało się usunąć');
-          }
-        },
+  const handleDeleteWorkout = (id: string, name: string) => {
+    confirmAction(
+      'Usuń trening',
+      `Czy na pewno chcesz usunąć "${name}"?`,
+      async () => {
+        try {
+          await workoutService.deleteWorkout(id);
+          loadWorkouts();
+        } catch (error) {
+          logger.error('Błąd usuwania:', error);
+          Alert.alert('Błąd', 'Nie udało się usunąć');
+        }
       },
-    ]);
+    );
   };
 
-  const handleDeleteWeeklyPlan = async (id: string, name: string) => {
-    Alert.alert(
+  const handleDeleteWeeklyPlan = (id: string, name: string) => {
+    confirmAction(
       'Usuń plan tygodniowy',
       `Czy na pewno chcesz usunąć plan "${name}"?`,
-      [
-        { text: 'Anuluj', style: 'cancel' },
-        {
-          text: 'Usuń',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await weeklyPlanService.deleteWeeklyPlan(id);
-              const [plans, activePlan] = await Promise.all([
-                weeklyPlanService.getWeeklyPlans(),
-                weeklyPlanService.getActivePlan(),
-              ]);
-              setWeeklyPlans(plans);
-              setActivePlan(activePlan);
-            } catch (error) {
-              logger.error('Błąd usuwania planu', error);
-              Alert.alert('Błąd', 'Nie udało się usunąć planu');
-            }
-          },
-        },
-      ],
+      async () => {
+        try {
+          await weeklyPlanService.deleteWeeklyPlan(id);
+          const [plans, activePlan] = await Promise.all([
+            weeklyPlanService.getWeeklyPlans(),
+            weeklyPlanService.getActivePlan(),
+          ]);
+          setWeeklyPlans(plans);
+          setActivePlan(activePlan);
+        } catch (error) {
+          logger.error('Błąd usuwania planu', error);
+          Alert.alert('Błąd', 'Nie udało się usunąć planu');
+        }
+      },
     );
   };
 
@@ -141,24 +143,23 @@ export default function WorkoutsScreen() {
     setWeeklyPlans(plans);
     setActivePlan(activePlan);
   };
-  const handleClearActivePlan = async () => {
-    Alert.alert(
+  const handleClearActivePlan = () => {
+    confirmAction(
       'Wyłącz aktywny plan',
       'Plan pozostanie zapisany, ale nie będzie aktywny.',
-      [
-        { text: 'Anuluj', style: 'cancel' },
-        {
-          text: 'Wyłącz',
-          onPress: async () => {
-            await weeklyPlanService.clearActivePlan();
-            const plans = await weeklyPlanService.getWeeklyPlans();
-            setWeeklyPlans(plans);
-            setActivePlan(null);
-          },
-        },
-      ],
+      async () => {
+        await weeklyPlanService.clearActivePlan();
+        const plans = await weeklyPlanService.getWeeklyPlans();
+        setWeeklyPlans(plans);
+        setActivePlan(null);
+      },
+      'Wyłącz',
     );
   };
+  if (isLoading) {
+    return <LoadingView />;
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.optionsContainer}>
@@ -285,6 +286,8 @@ export default function WorkoutsScreen() {
                       router.push(`/create-weekly-plan?id=${plan.id}`)
                     }
                     style={styles.editIcon}
+                    hitSlop={4}
+                    accessibilityLabel="Edytuj plan"
                   >
                     <Ionicons
                       name='create-outline'
@@ -318,6 +321,8 @@ export default function WorkoutsScreen() {
                   <Pressable
                     style={styles.deleteIcon}
                     onPress={() => handleDeleteWeeklyPlan(plan.id, plan.name)}
+                    hitSlop={6}
+                    accessibilityLabel="Usuń plan"
                   >
                     <Ionicons
                       name='trash-outline'

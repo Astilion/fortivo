@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import colors from '@/constants/Colors';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState, useCallback } from 'react';
 import { useApp } from '@/providers/AppProvider';
@@ -284,7 +285,7 @@ export default function CreateExerciseScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1C2227',
+    backgroundColor: colors.primary,
   },
   content: {
     padding: 16,
@@ -294,17 +295,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1C2227',
+    backgroundColor: colors.primary,
   },
   loadingText: {
-    color: '#A2A6AB',
+    color: colors.text.secondary,
     fontSize: 16,
   },
   section: {
     marginBottom: 24,
   },
   label: {
-    color: '#A2A6AB',
+    color: colors.text.secondary,
     fontSize: 13,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -312,16 +313,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   required: {
-    color: '#E0FE10',
+    color: colors.accent,
   },
   input: {
-    backgroundColor: '#2A2F37',
-    color: '#FFFFFF',
+    backgroundColor: colors.secondary,
+    color: colors.text.primary,
     borderRadius: 10,
     padding: 14,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#434B53',
+    borderColor: colors.background,
   },
   textArea: {
     minHeight: 100,
@@ -335,24 +336,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#2A2F37',
+    backgroundColor: colors.secondary,
     borderWidth: 1,
-    borderColor: '#434B53',
+    borderColor: colors.background,
   },
   chipSelected: {
-    backgroundColor: '#E0FE10',
-    borderColor: '#E0FE10',
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   chipText: {
-    color: '#A2A6AB',
+    color: colors.text.secondary,
     fontSize: 14,
   },
   chipTextSelected: {
-    color: '#1C2227',
+    color: colors.primary,
     fontWeight: '600',
   },
   submitButton: {
-    backgroundColor: '#E0FE10',
+    backgroundColor: colors.accent,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -362,7 +363,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitText: {
-    color: '#1C2227',
+    color: colors.primary,
     fontSize: 16,
     fontWeight: 'bold',
   },
