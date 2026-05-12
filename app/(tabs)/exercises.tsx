@@ -25,6 +25,8 @@ import {
 import { matchesSearch } from '@/utils/search';
 
 export default function ExercisesScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
   const router = useRouter();
   const activeWorkoutId = useWorkoutStore((state) => state.activeWorkoutId);
   const { showToast } = useToastStore();
@@ -40,16 +42,6 @@ export default function ExercisesScreen() {
   );
   const categories = useExerciseStore((state) => state.categories);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
-
-  useEffect(() => {
-    if (selectedCategory !== 'wszystkie') {
-      setSearchQuery('');
-    }
-  }, [selectedCategory]);
-
-  useRefreshOnFocus(loadExercises, [loadExercises]);
   const filteredExercises = useMemo(
     () =>
       exercises.filter((ex) => {
@@ -76,6 +68,14 @@ export default function ExercisesScreen() {
       }),
     [exercises, searchQuery, selectedCategory, favoriteExercises],
   );
+
+  useEffect(() => {
+    if (selectedCategory !== 'wszystkie') {
+      setSearchQuery('');
+    }
+  }, [selectedCategory]);
+
+  useRefreshOnFocus(loadExercises, [loadExercises]);
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof filteredExercises)[number] }) => (

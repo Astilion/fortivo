@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyTabState } from '@/components/ui/EmptyTabState';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { WeeklyPlanCard } from '@/components/ui/WeeklyPlanCard';
 import { WorkoutCard } from '@/components/ui/WorkoutCard';
@@ -10,6 +11,7 @@ import { useApp } from '@/providers/AppProvider';
 import { WorkoutWithCountRow } from '@/types/training';
 import { confirmAction } from '@/utils/confirm';
 import { ServiceError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
@@ -20,18 +22,17 @@ import {
   Text,
   View,
 } from 'react-native';
-import { logger } from '@/utils/logger';
 
 type WorkoutsTab = 'workouts' | 'plans' | 'ready';
 
 export default function WorkoutsScreen() {
+  const [workouts, setWorkouts] = useState<WorkoutWithCountRow[]>([]);
+  const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
+  const [isLoading, setIsLoading] = useState(true);
   const { weeklyPlans, setWeeklyPlans, setActivePlan } = useWeeklyPlanStore();
   const { workoutService, weeklyPlanService } = useApp();
   const { showToast } = useToastStore();
-  const [workouts, setWorkouts] = useState<WorkoutWithCountRow[]>([]);
   const router = useRouter();
-  const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
-  const [isLoading, setIsLoading] = useState(true);
 
   useRefreshOnFocus(() => {
     const load = async () => {
@@ -153,6 +154,7 @@ export default function WorkoutsScreen() {
     setWeeklyPlans(plans);
     setActivePlan(activePlan);
   };
+
   const handleClearActivePlan = () => {
     confirmAction(
       'Wyłącz aktywny plan',
@@ -166,6 +168,7 @@ export default function WorkoutsScreen() {
       'Wyłącz',
     );
   };
+
   if (isLoading) {
     return <LoadingView />;
   }
@@ -280,7 +283,7 @@ export default function WorkoutsScreen() {
             <Text style={styles.sectionTitle}>Twoje Plany Tygodniowe:</Text>
 
             {weeklyPlans.length === 0 ? (
-              <EmptyState
+              <EmptyTabState
                 icon='calendar-outline'
                 title='Nie masz planów tygodniowych'
                 subtitle='Stwórz swój pierwszy plan'
@@ -290,17 +293,18 @@ export default function WorkoutsScreen() {
                 <WeeklyPlanCard
                   key={plan.id}
                   plan={plan}
+                  isActive={plan.is_active === 1}
                   onEdit={() => router.push(`/create-weekly-plan?id=${plan.id}`)}
                   onDelete={() => handleDeleteWeeklyPlan(plan.id, plan.name)}
-                  onSetActive={() => handleSetActivePlan(plan.id)}
-                  onClearActive={handleClearActivePlan}
+                  onActivate={() => handleSetActivePlan(plan.id)}
+                  onDeactivate={handleClearActivePlan}
                 />
               ))
             )}
           </>
         )}
         {selectedTab === 'ready' && (
-          <EmptyState icon='hourglass-outline' title='Wkrótce dostępne' />
+          <EmptyTabState icon='hourglass-outline' title='Wkrótce dostępne' />
         )}
       </ScrollView>
     </View>

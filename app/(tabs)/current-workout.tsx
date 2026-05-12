@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button';
+import { DayCard } from '@/components/ui/DayCard';
 import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useWeeklyPlanData } from '@/hooks/useWeeklyPlanData';
@@ -10,7 +11,6 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   Alert,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,15 +18,15 @@ import {
 } from 'react-native';
 
 export default function CurrentWorkoutScreen() {
-  const { workoutService } = useApp();
-  const { activePlan, planDays, selectedDay, setSelectedDay, loading: planLoading } =
-    useWeeklyPlanData();
-  const today = new Date().getDay();
   const [activeWorkout, setActiveWorkout] = useState<WorkoutRow | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
   const [workoutsCount, setWorkoutsCount] = useState(0);
   const [workoutLoading, setWorkoutLoading] = useState(true);
+  const { workoutService } = useApp();
+  const { activePlan, planDays, selectedDay, setSelectedDay, loading: planLoading } =
+    useWeeklyPlanData();
   const router = useRouter();
+  const today = new Date().getDay();
 
   const loadActiveWorkout = useCallback(async () => {
     const workout = await workoutService.getActiveWorkout();
@@ -92,15 +92,12 @@ export default function CurrentWorkoutScreen() {
               {planDays.map((day) => {
                 const isToday = today === day.dayOfWeek;
                 const isSelected = selectedDay === day.dayOfWeek;
-
                 return (
-                  <Pressable
+                  <DayCard
                     key={day.dayOfWeek}
-                    style={[
-                      styles.planDay,
-                      isToday && styles.planDayToday,
-                      isSelected && styles.planDaySelected,
-                    ]}
+                    day={day}
+                    isToday={isToday}
+                    isSelected={isSelected}
                     onPress={() => {
                       if (day.configured?.workout) {
                         handleStartFromPlan(
@@ -109,40 +106,7 @@ export default function CurrentWorkoutScreen() {
                         );
                       }
                     }}
-                    disabled={!day.configured?.workout}
-                  >
-                    <Text
-                      style={[
-                        styles.planDayName,
-                        isSelected && styles.planDayNameSelected,
-                      ]}
-                    >
-                      {day.dayName.slice(0, 3)}
-                    </Text>
-                    <Text style={styles.planDayContent} numberOfLines={2}>
-                      {day.configured?.isRestDay
-                        ? '💤'
-                        : day.configured?.workout
-                          ? day.configured.workout.name
-                          : '—'}
-                    </Text>
-                    {day.status === 'on_plan' && (
-                      <Ionicons
-                        name='checkmark-circle'
-                        size={14}
-                        color={isSelected ? colors.primary : colors.accent}
-                        style={styles.planDayStatusIcon}
-                      />
-                    )}
-                    {day.status === 'off_plan' && (
-                      <Ionicons
-                        name='checkmark'
-                        size={14}
-                        color={colors.text.secondary}
-                        style={styles.planDayStatusIcon}
-                      />
-                    )}
-                  </Pressable>
+                  />
                 );
               })}
             </View>
@@ -302,38 +266,5 @@ const styles = StyleSheet.create({
   planDaysRow: {
     flexDirection: 'row',
     gap: 4,
-  },
-  planDay: {
-    flex: 1,
-    backgroundColor: colors.secondary,
-    padding: 6,
-    borderRadius: 8,
-    minHeight: 70,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  planDayToday: {
-    borderWidth: 2,
-    borderColor: colors.accent,
-  },
-  planDayName: {
-    color: colors.text.primary,
-    fontWeight: '600',
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  planDayContent: {
-    color: colors.text.secondary,
-    fontSize: 11,
-    textAlign: 'center',
-  },
-  planDaySelected: {
-    backgroundColor: colors.accent,
-  },
-  planDayNameSelected: {
-    color: colors.primary,
-  },
-  planDayStatusIcon: {
-    marginTop: 4,
   },
 });

@@ -25,16 +25,17 @@ import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 
 export default function ActiveWorkoutScreen() {
-  const { workoutService } = useApp();
-  const router = useRouter();
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
   const [restTargetTime, setRestTargetTime] = useState<number | null>(null);
   const [validationKey, setValidationKey] = useState(0);
   const [isResting, setIsResting] = useState(false);
-  const { settings } = useProfileSettings();
   const [isLoaded, setIsLoaded] = useState(false);
   const [tick, setTick] = useState(0);
+  const exercisesRef = useRef<WorkoutExerciseWithSets[]>([]);
+  const { workoutService } = useApp();
+  const router = useRouter();
+  const { settings } = useProfileSettings();
   const workoutStartTime = useWorkoutStore((state) => state.workoutStartTime);
   const startActiveWorkout = useWorkoutStore(
     (state) => state.startActiveWorkout,
@@ -73,7 +74,6 @@ export default function ActiveWorkoutScreen() {
     }, [pendingExercise]),
   );
 
-  const exercisesRef = useRef<WorkoutExerciseWithSets[]>([]);
   useEffect(() => {
     if (!isResting || restTargetTime === null) return;
 
@@ -89,6 +89,7 @@ export default function ActiveWorkoutScreen() {
 
     return () => clearInterval(interval);
   }, [isResting, restTargetTime]);
+
   useEffect(() => {
     exercisesRef.current = exercises;
   }, [exercises]);
@@ -144,6 +145,7 @@ export default function ActiveWorkoutScreen() {
       return newExercises;
     });
   };
+
   const addSet = (exerciseId: string) => {
     setExercises((prevExercises) => {
       return prevExercises.map((ex) => {
@@ -177,6 +179,7 @@ export default function ActiveWorkoutScreen() {
       });
     });
   };
+
   const removeSet = (exerciseId: string, setId: string) => {
     const ex = exercises.find((e) => e.id === exerciseId);
     if (!ex || ex.sets.length <= 1) return;
@@ -215,6 +218,7 @@ export default function ActiveWorkoutScreen() {
       });
     });
   };
+
   const handleFinishWorkout = () => {
     confirmAction(
       'Zakończ trening',
@@ -258,6 +262,18 @@ export default function ActiveWorkoutScreen() {
     );
   };
 
+  const removeExercise = (exerciseId: string, exerciseName: string) => {
+    if (exercises.length <= 1) {
+      showToast('Nie możesz usunąć ostatniego ćwiczenia', 'info');
+      return;
+    }
+    confirmAction(
+      'Usuń ćwiczenie',
+      `Czy na pewno chcesz usunąć "${exerciseName}" z treningu?`,
+      () => setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId)),
+    );
+  };
+
   const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
 
   const completedSets = exercises.reduce(
@@ -271,18 +287,6 @@ export default function ActiveWorkoutScreen() {
   const restTimeRemaining = restTargetTime
     ? Math.max(0, Math.ceil((restTargetTime - Date.now()) / 1000))
     : null;
-
-  const removeExercise = (exerciseId: string, exerciseName: string) => {
-    if (exercises.length <= 1) {
-      showToast('Nie możesz usunąć ostatniego ćwiczenia', 'info');
-      return;
-    }
-    confirmAction(
-      'Usuń ćwiczenie',
-      `Czy na pewno chcesz usunąć "${exerciseName}" z treningu?`,
-      () => setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId)),
-    );
-  };
 
   return (
     <View style={styles.container}>

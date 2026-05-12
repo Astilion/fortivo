@@ -30,39 +30,45 @@ function hasAnyWorkout(days: WeeklyPlanDaySummary[]): boolean {
 
 interface Props {
   plan: WeeklyPlanWithDays;
+  isActive: boolean;
   onEdit: () => void;
   onDelete: () => void;
-  onSetActive: () => void;
-  onClearActive: () => void;
+  onActivate: () => void;
+  onDeactivate: () => void;
 }
 
 export function WeeklyPlanCard({
   plan,
+  isActive,
   onEdit,
   onDelete,
-  onSetActive,
-  onClearActive,
+  onActivate,
+  onDeactivate,
 }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
   const sortedDays = sortDays(plan.days);
   const anyWorkout = hasAnyWorkout(sortedDays);
 
   return (
-    <Pressable style={styles.card} onPress={() => setIsExpanded((v) => !v)}>
+    <Pressable
+      style={styles.card}
+      onPress={() => setIsExpanded((v) => !v)}
+      accessibilityLabel={`Plan ${plan.name}`}
+    >
       <Text style={styles.planName} numberOfLines={2}>
         {plan.name}
       </Text>
 
       <View style={styles.controls}>
-        {plan.is_active === 1 ? (
+        {isActive ? (
           <View style={styles.activeBadge}>
             <Text style={styles.activeBadgeText}>Aktywny</Text>
-            <Pressable onPress={onClearActive} style={styles.clearBtn} hitSlop={8}>
+            <Pressable onPress={onDeactivate} style={styles.clearBtn} hitSlop={8}>
               <Ionicons name="close-circle-outline" size={18} color={colors.accent} />
             </Pressable>
           </View>
         ) : (
-          <Pressable style={styles.setActiveBtn} onPress={onSetActive}>
+          <Pressable style={styles.setActiveBtn} onPress={onActivate}>
             <Text style={styles.setActiveBtnText}>Ustaw aktywny</Text>
           </Pressable>
         )}
