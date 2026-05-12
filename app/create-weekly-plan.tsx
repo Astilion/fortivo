@@ -21,14 +21,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { logger } from '@/utils/logger';
-
-type DayConfig = {
-  dayOfWeek: number;
-  dayName: string;
-  workoutId: string | null;
-  workoutName: string | null;
-  isRestDay: boolean;
-};
+import { DayConfig, createEmptyWeekDays } from '@/utils/days';
 export default function CreateWeeklyPlanScreen() {
   const { weeklyPlanService } = useApp();
   const router = useRouter();
@@ -39,57 +32,7 @@ export default function CreateWeeklyPlanScreen() {
   const [planName, setPlanName] = useState('');
 
   const [pendingDayIndex, setPendingDayIndex] = useState<number | null>(null);
-  const [days, setDays] = useState<DayConfig[]>([
-    {
-      dayOfWeek: 1,
-      dayName: 'Poniedziałek',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 2,
-      dayName: 'Wtorek',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 3,
-      dayName: 'Środa',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 4,
-      dayName: 'Czwartek',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 5,
-      dayName: 'Piątek',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 6,
-      dayName: 'Sobota',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 0,
-      dayName: 'Niedziela',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-  ]);
+  const [days, setDays] = useState<DayConfig[]>(createEmptyWeekDays);
 
   useEffect(() => {
     if (!isEditMode) return;

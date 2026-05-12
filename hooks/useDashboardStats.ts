@@ -1,7 +1,7 @@
 import { useApp } from '@/providers/AppProvider';
-import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { logger } from '@/utils/logger';
+import { useRefreshOnFocus } from './useRefreshOnFocus';
 
 interface DashboardStats {
   workoutsThisWeek: number;
@@ -44,11 +44,7 @@ export const useDashboardStats = () => {
     }
   }, [workoutService]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadStats();
-    }, [loadStats]),
-  );
+  useRefreshOnFocus(loadStats, [loadStats]);
 
   return { stats, loading, error, refresh: loadStats };
 };

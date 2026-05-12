@@ -10,8 +10,9 @@ import { useApp } from '@/providers/AppProvider';
 import { WorkoutWithCountRow } from '@/types/training';
 import { confirmAction } from '@/utils/confirm';
 import { ServiceError } from '@/utils/errors';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import {
   Pressable,
   ScrollView,
@@ -32,24 +33,22 @@ export default function WorkoutsScreen() {
   const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
   const [isLoading, setIsLoading] = useState(true);
 
-  useFocusEffect(
-    useCallback(() => {
-      const loadAll = async () => {
-        setIsLoading(true);
-        try {
-          const [allWorkouts, plans] = await Promise.all([
-            workoutService.getAllWorkouts(),
-            weeklyPlanService.getAllPlansWithDetails(),
-          ]);
-          setWorkouts(allWorkouts);
-          setWeeklyPlans(plans);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      loadAll();
-    }, []),
-  );
+  useRefreshOnFocus(() => {
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const [allWorkouts, plans] = await Promise.all([
+          workoutService.getAllWorkouts(),
+          weeklyPlanService.getAllPlansWithDetails(),
+        ]);
+        setWorkouts(allWorkouts);
+        setWeeklyPlans(plans);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const loadWorkouts = async () => {
     const allWorkouts = await workoutService.getAllWorkouts();

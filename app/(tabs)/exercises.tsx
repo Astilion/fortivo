@@ -9,8 +9,9 @@ import { useExerciseStore } from '@/store/exerciseStore';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { capitalize } from '@/utils/capitalize';
 import { confirmAction } from '@/utils/confirm';
 import {
@@ -48,11 +49,7 @@ export default function ExercisesScreen() {
     }
   }, [selectedCategory]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadExercises();
-    }, [loadExercises]),
-  );
+  useRefreshOnFocus(loadExercises, [loadExercises]);
   const filteredExercises = useMemo(
     () =>
       exercises.filter((ex) => {
