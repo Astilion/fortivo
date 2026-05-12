@@ -7,12 +7,13 @@ import {
   Stack,
 } from 'expo-router';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
 import colors from '@/constants/Colors';
 import {
   View,
   ScrollView,
   Text,
-  Alert,
   StyleSheet,
   Pressable,
 } from 'react-native';
@@ -32,6 +33,7 @@ export default function CreateWeeklyPlanScreen() {
   const { weeklyPlanService } = useApp();
   const router = useRouter();
   const { pendingWorkout, clearPendingWorkout } = useWeeklyPlanStore();
+  const { showToast } = useToastStore();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditMode = !!id;
   const [planName, setPlanName] = useState('');
@@ -169,7 +171,7 @@ export default function CreateWeeklyPlanScreen() {
 
   const handleSave = async () => {
     if (!planName.trim()) {
-      Alert.alert('Błąd', 'Podaj nazwę planu');
+      showToast('Podaj nazwę planu', 'error');
       return;
     }
     if (isEditMode) {
@@ -194,7 +196,11 @@ export default function CreateWeeklyPlanScreen() {
         router.back();
       } catch (error) {
         logger.error('Błąd aktualizacji planu', error);
-        Alert.alert('Błąd', 'Nie udało się zaktualizować planu');
+        if (error instanceof ServiceError) {
+          showToast(error.userMessage, 'error');
+        } else {
+          showToast('Nie udało się zaktualizować planu', 'error');
+        }
         return;
       }
     } else {
@@ -218,7 +224,11 @@ export default function CreateWeeklyPlanScreen() {
         router.back();
       } catch (error) {
         logger.error('Błąd zapisu planu', error);
-        Alert.alert('Błąd', 'Nie udało się zapisać planu');
+        if (error instanceof ServiceError) {
+          showToast(error.userMessage, 'error');
+        } else {
+          showToast('Nie udało się zapisać planu', 'error');
+        }
       }
     }
   };

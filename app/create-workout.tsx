@@ -5,13 +5,17 @@ import { commonStyles } from '@/constants/Styles';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { useWorkoutStore } from '@/store/workoutStore';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { confirmAction } from '@/utils/confirm';
 
 export default function CreateWorkoutScreen() {
   const router = useRouter();
+  const { showToast } = useToastStore();
   const [showNameError, setShowNameError] = useState(false);
   const [showExercisesError, setShowExercisesError] = useState(false);
 
@@ -68,8 +72,12 @@ export default function CreateWorkoutScreen() {
       clearDraft();
       router.back();
     } catch (error) {
-      console.error('Błąd zapisu', error);
-      Alert.alert('Błąd', 'Nie udało się zapisać treningu');
+      logger.error('Błąd zapisu treningu', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się zapisać treningu', 'error');
+      }
     }
   };
 

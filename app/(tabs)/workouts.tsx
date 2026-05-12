@@ -4,13 +4,14 @@ import { LoadingView } from '@/components/ui/LoadingView';
 import { WorkoutCard } from '@/components/ui/WorkoutCard';
 import colors from '@/constants/Colors';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
+import { useToastStore } from '@/store/toastStore';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutWithCountRow } from '@/types/training';
 import { confirmAction } from '@/utils/confirm';
+import { ServiceError } from '@/utils/errors';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,6 +26,7 @@ type WorkoutsTab = 'workouts' | 'plans' | 'ready';
 export default function WorkoutsScreen() {
   const { weeklyPlans, setWeeklyPlans, setActivePlan } = useWeeklyPlanStore();
   const { workoutService, weeklyPlanService } = useApp();
+  const { showToast } = useToastStore();
   const [workouts, setWorkouts] = useState<WorkoutWithCountRow[]>([]);
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
@@ -61,10 +63,15 @@ export default function WorkoutsScreen() {
       async () => {
         try {
           await workoutService.deleteWorkout(id);
+          showToast('Trening usunięty', 'info');
           loadWorkouts();
         } catch (error) {
           logger.error('Błąd usuwania:', error);
-          Alert.alert('Błąd', 'Nie udało się usunąć');
+          if (error instanceof ServiceError) {
+            showToast(error.userMessage, 'error');
+          } else {
+            showToast('Nie udało się usunąć treningu', 'error');
+          }
         }
       },
     );
@@ -85,7 +92,11 @@ export default function WorkoutsScreen() {
           setActivePlan(activePlan);
         } catch (error) {
           logger.error('Błąd usuwania planu', error);
-          Alert.alert('Błąd', 'Nie udało się usunąć planu');
+          if (error instanceof ServiceError) {
+            showToast(error.userMessage, 'error');
+          } else {
+            showToast('Nie udało się usunąć planu', 'error');
+          }
         }
       },
     );

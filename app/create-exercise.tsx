@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import colors from '@/constants/Colors';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -13,6 +12,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useApp } from '@/providers/AppProvider';
 import { LOCAL_USER_ID } from '@/constants/User';
 import { logger } from '@/utils/logger';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
 
 interface ExerciseForm {
   name: string;
@@ -53,6 +54,7 @@ const DIFFICULTY_OPTIONS = [
 export default function CreateExerciseScreen() {
   const { exerciseService } = useApp();
   const router = useRouter();
+  const { showToast } = useToastStore();
 
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditMode = !!id;
@@ -75,7 +77,7 @@ export default function CreateExerciseScreen() {
       if (isEditMode && id) {
         const exercise = await exerciseService.getExerciseById(id);
         if (!exercise) {
-          Alert.alert('Błąd', 'Nie znaleziono ćwiczenia');
+          showToast('Nie znaleziono ćwiczenia', 'error');
           router.back();
           return;
         }
@@ -121,11 +123,11 @@ export default function CreateExerciseScreen() {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      Alert.alert('Błąd', 'Nazwa ćwiczenia jest wymagana');
+      showToast('Nazwa ćwiczenia jest wymagana', 'error');
       return;
     }
     if (form.categories.length === 0) {
-      Alert.alert('Błąd', 'Wybierz co najmniej jedną kategorię');
+      showToast('Wybierz co najmniej jedną kategorię', 'error');
       return;
     }
 
@@ -158,10 +160,15 @@ export default function CreateExerciseScreen() {
           LOCAL_USER_ID,
         );
       }
+      showToast('Ćwiczenie zapisane', 'success');
       router.back();
     } catch (error) {
       logger.error('Failed to save exercise', error);
-      Alert.alert('Błąd', 'Nie udało się zapisać ćwiczenia');
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się zapisać ćwiczenia', 'error');
+      }
     } finally {
       setIsLoading(false);
     }

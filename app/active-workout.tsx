@@ -8,7 +8,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { generateId } from '@/database/database';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,6 +21,8 @@ import { validateRPE, validateTempo } from '@/utils/validation';
 import { logger } from '@/utils/logger';
 import { confirmAction } from '@/utils/confirm';
 import { useWorkoutStore } from '@/store/workoutStore';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
 
 export default function ActiveWorkoutScreen() {
   const { workoutService } = useApp();
@@ -45,6 +46,7 @@ export default function ActiveWorkoutScreen() {
   const clearPendingExercise = useWorkoutStore(
     (state) => state.clearPendingExercise,
   );
+  const { showToast } = useToastStore();
 
   useFocusEffect(
     useCallback(() => {
@@ -239,16 +241,17 @@ export default function ActiveWorkoutScreen() {
             exercisesRef.current,
           );
 
-          Alert.alert('Sukces', 'Trening został zapisany');
           await workoutService.clearActiveWorkout();
           finishActiveWorkout();
-
+          showToast('Trening zakończony!', 'success');
           router.replace('/(tabs)/workout-history');
         } catch (error) {
-          const message =
-            error instanceof Error ? error.message : String(error);
           logger.error('Błąd zakończenia treningu', error);
-          Alert.alert('Błąd', `Nie udało się zapisać treningu:\n${message}`);
+          if (error instanceof ServiceError) {
+            showToast(error.userMessage, 'error');
+          } else {
+            showToast('Nie udało się zapisać treningu', 'error');
+          }
         }
       },
       'Zakończ',
@@ -271,7 +274,7 @@ export default function ActiveWorkoutScreen() {
 
   const removeExercise = (exerciseId: string, exerciseName: string) => {
     if (exercises.length <= 1) {
-      Alert.alert('Uwaga', 'Nie możesz usunąć ostatniego ćwiczenia');
+      showToast('Nie możesz usunąć ostatniego ćwiczenia', 'info');
       return;
     }
     confirmAction(

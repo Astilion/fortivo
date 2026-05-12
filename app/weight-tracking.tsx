@@ -3,6 +3,9 @@ import { WeightEntry } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -25,6 +28,7 @@ export default function WeightTrackingScreen() {
   const router = useRouter();
   const { settings } = useProfileSettings();
   const { weightService } = useApp();
+  const { showToast } = useToastStore();
 
   const [entries, setEntries] = useState<WeightEntry[]>([]);
   const weightUnit = settings?.preferredWeightUnit || 'kg';
@@ -44,13 +48,22 @@ export default function WeightTrackingScreen() {
   );
   const handleAddEntry = async (weight: number, notes?: string) => {
     if (!weightService) return;
-    const newEntry = await weightService.addWeightEntry(
-      LOCAL_USER_ID,
-      weight,
-      new Date().toISOString().split('T')[0],
-      notes,
-    );
-    setEntries((prev) => [newEntry, ...prev]);
+    try {
+      const newEntry = await weightService.addWeightEntry(
+        LOCAL_USER_ID,
+        weight,
+        new Date().toISOString().split('T')[0],
+        notes,
+      );
+      setEntries((prev) => [newEntry, ...prev]);
+    } catch (error) {
+      logger.error('Failed to add weight entry', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się dodać wpisu', 'error');
+      }
+    }
   };
   const handleDeleteEntry = (id: string) => {
     confirmAction(
@@ -58,8 +71,17 @@ export default function WeightTrackingScreen() {
       'Czy na pewno chcesz usunąć ten wpis wagi?',
       async () => {
         if (!weightService) return;
-        await weightService.deleteWeightEntry(id);
-        setEntries((prev) => prev.filter((entry) => entry.id !== id));
+        try {
+          await weightService.deleteWeightEntry(id);
+          setEntries((prev) => prev.filter((entry) => entry.id !== id));
+        } catch (error) {
+          logger.error('Failed to delete weight entry', error);
+          if (error instanceof ServiceError) {
+            showToast(error.userMessage, 'error');
+          } else {
+            showToast('Nie udało się usunąć wpisu', 'error');
+          }
+        }
       },
     );
   };
