@@ -8,9 +8,9 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function SelectWorkoutScreen() {
+  const [workouts, setWorkouts] = useState<WorkoutWithCountRow[]>([]);
   const { workoutService } = useApp();
   const { setPendingWorkout } = useWeeklyPlanStore();
-  const [workouts, setWorkouts] = useState<WorkoutWithCountRow[]>([]);
   const router = useRouter();
 
   useFocusEffect(

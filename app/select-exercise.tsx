@@ -22,16 +22,14 @@ import { matchesSearch } from '@/utils/search';
 import { useLocalSearchParams } from 'expo-router';
 
 export default function SelectExerciseScreen() {
-  const router = useRouter();
-  const exercises = useExerciseStore((state) => state.exercises);
-  const loading = useExerciseStore((state) => state.loading);
-  const source = useLocalSearchParams().source as string | undefined;
-
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
+  const router = useRouter();
+  const exercises = useExerciseStore((state) => state.exercises);
+  const loading = useExerciseStore((state) => state.loading);
+  const source = useLocalSearchParams().source as string | undefined;
   const addExercise = useWorkoutStore((state) => state.addExercise);
   const setPendingExercise = useWorkoutStore(
     (state) => state.setPendingExercise,

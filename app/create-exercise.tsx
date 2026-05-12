@@ -52,18 +52,17 @@ const DIFFICULTY_OPTIONS = [
 ] as const;
 
 export default function CreateExerciseScreen() {
+  const [form, setForm] = useState<ExerciseForm>(EMPTY_FORM);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const { exerciseService } = useApp();
   const router = useRouter();
   const { showToast } = useToastStore();
 
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditMode = !!id;
-
-  const [form, setForm] = useState<ExerciseForm>(EMPTY_FORM);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
 
   const initialize = useCallback(async () => {
     try {

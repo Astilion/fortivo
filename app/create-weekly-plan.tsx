@@ -22,17 +22,17 @@ import { Button } from '@/components/ui/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { logger } from '@/utils/logger';
 import { DayConfig, createEmptyWeekDays } from '@/utils/days';
+
 export default function CreateWeeklyPlanScreen() {
+  const [planName, setPlanName] = useState('');
+  const [pendingDayIndex, setPendingDayIndex] = useState<number | null>(null);
+  const [days, setDays] = useState<DayConfig[]>(createEmptyWeekDays);
   const { weeklyPlanService } = useApp();
   const router = useRouter();
   const { pendingWorkout, clearPendingWorkout } = useWeeklyPlanStore();
   const { showToast } = useToastStore();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditMode = !!id;
-  const [planName, setPlanName] = useState('');
-
-  const [pendingDayIndex, setPendingDayIndex] = useState<number | null>(null);
-  const [days, setDays] = useState<DayConfig[]>(createEmptyWeekDays);
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -61,11 +61,6 @@ export default function CreateWeeklyPlanScreen() {
     load();
   }, [id]);
 
-  const handleAddWorkout = (dayIndex: number) => {
-    setPendingDayIndex(dayIndex);
-    router.push('/select-workout');
-  };
-
   useFocusEffect(
     useCallback(() => {
       if (pendingWorkout && pendingDayIndex !== null) {
@@ -86,6 +81,11 @@ export default function CreateWeeklyPlanScreen() {
       }
     }, [pendingWorkout, pendingDayIndex]),
   );
+
+  const handleAddWorkout = (dayIndex: number) => {
+    setPendingDayIndex(dayIndex);
+    router.push('/select-workout');
+  };
 
   const handleToggleRestDay = (dayIndex: number) => {
     setDays((prev) =>

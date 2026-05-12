@@ -15,11 +15,10 @@ import { confirmAction } from '@/utils/confirm';
 import { generateId } from '@/database/database';
 
 export default function EditWorkoutScreen() {
-  const router = useRouter();
-  const { showToast } = useToastStore();
   const [showNameError, setShowNameError] = useState(false);
   const [showExercisesError, setShowExercisesError] = useState(false);
-
+  const router = useRouter();
+  const { showToast } = useToastStore();
   const {
     draft,
     setWorkoutName,
@@ -35,10 +34,6 @@ export default function EditWorkoutScreen() {
   } = useWorkoutStore();
   const { workoutService } = useApp();
   const { id } = useLocalSearchParams<{ id: string }>();
-
-  useEffect(() => {
-    loadWorkout();
-  }, [id, workoutService]);
 
   const loadWorkout = useCallback(async () => {
     try {
@@ -57,6 +52,10 @@ export default function EditWorkoutScreen() {
         showToast('Nie udało się załadować treningu', 'error');
       }
     }
+  }, [id, workoutService]);
+
+  useEffect(() => {
+    loadWorkout();
   }, [id, workoutService]);
 
   const handleSaveWorkout = async () => {

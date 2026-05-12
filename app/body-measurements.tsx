@@ -26,15 +26,14 @@ import { LOCAL_USER_ID } from '@/constants/User';
 type TabType = 'measurements' | 'history';
 
 export default function BodyMeasurementsScreen() {
-  const { measurementService } = useApp();
-  const { showToast } = useToastStore();
-
   const [activeTab, setActiveTab] = useState<TabType>('measurements');
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>([]);
   const [inputs, setInputs] = useState<Record<string, string>>(
     Object.fromEntries(BODY_PARTS.map((p) => [p.key, ''])),
   );
   const [error, setError] = useState<string | null>(null);
+  const { measurementService } = useApp();
+  const { showToast } = useToastStore();
 
   const loadMeasurements = useCallback(async () => {
     if (!measurementService) return;

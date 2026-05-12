@@ -25,12 +25,11 @@ import { LOCAL_USER_ID } from '@/constants/User';
 import { confirmAction } from '@/utils/confirm';
 
 export default function WeightTrackingScreen() {
+  const [entries, setEntries] = useState<WeightEntry[]>([]);
   const router = useRouter();
   const { settings } = useProfileSettings();
   const { weightService } = useApp();
   const { showToast } = useToastStore();
-
-  const [entries, setEntries] = useState<WeightEntry[]>([]);
   const weightUnit = settings?.preferredWeightUnit || 'kg';
   const goalWeight = settings?.goalWeight || undefined;
   const currentWeight = entries[0]?.weight;
