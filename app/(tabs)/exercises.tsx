@@ -7,8 +7,11 @@ import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useWorkoutStore } from '@/store/workoutStore';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
+import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { capitalize } from '@/utils/capitalize';
 import { confirmAction } from '@/utils/confirm';
 import {
@@ -22,8 +25,11 @@ import {
 import { matchesSearch } from '@/utils/search';
 
 export default function ExercisesScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
   const router = useRouter();
   const activeWorkoutId = useWorkoutStore((state) => state.activeWorkoutId);
+  const { showToast } = useToastStore();
   const exercises = useExerciseStore((state) => state.exercises);
   const loading = useExerciseStore((state) => state.loading);
   const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
@@ -36,20 +42,6 @@ export default function ExercisesScreen() {
   );
   const categories = useExerciseStore((state) => state.categories);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
-
-  useEffect(() => {
-    if (selectedCategory !== 'wszystkie') {
-      setSearchQuery('');
-    }
-  }, [selectedCategory]);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadExercises();
-    }, [loadExercises]),
-  );
   const filteredExercises = useMemo(
     () =>
       exercises.filter((ex) => {
@@ -76,6 +68,14 @@ export default function ExercisesScreen() {
       }),
     [exercises, searchQuery, selectedCategory, favoriteExercises],
   );
+
+  useEffect(() => {
+    if (selectedCategory !== 'wszystkie') {
+      setSearchQuery('');
+    }
+  }, [selectedCategory]);
+
+  useRefreshOnFocus(loadExercises, [loadExercises]);
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof filteredExercises)[number] }) => (
@@ -105,7 +105,17 @@ export default function ExercisesScreen() {
                   confirmAction(
                     'Usuń ćwiczenie',
                     'Czy na pewno chcesz usunąć to ćwiczenie?',
-                    () => deleteExercise(item.id),
+                    async () => {
+                      try {
+                        await deleteExercise(item.id);
+                      } catch (error) {
+                        if (error instanceof ServiceError) {
+                          showToast(error.userMessage, 'error');
+                        } else {
+                          showToast('Nie udało się usunąć ćwiczenia', 'error');
+                        }
+                      }
+                    },
                   );
                 }}
                 hitSlop={8}
@@ -152,7 +162,7 @@ export default function ExercisesScreen() {
         </View>
       </Card>
     ),
-    [router, toggleFavorite, isFavorite, deleteExercise],
+    [router, toggleFavorite, isFavorite, deleteExercise, showToast],
   );
 
   if (loading) {

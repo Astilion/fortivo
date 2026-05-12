@@ -7,12 +7,13 @@ import {
   Stack,
 } from 'expo-router';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
 import colors from '@/constants/Colors';
 import {
   View,
   ScrollView,
   Text,
-  Alert,
   StyleSheet,
   Pressable,
 } from 'react-native';
@@ -20,74 +21,18 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { logger } from '@/utils/logger';
+import { DayConfig, createEmptyWeekDays } from '@/utils/days';
 
-type DayConfig = {
-  dayOfWeek: number;
-  dayName: string;
-  workoutId: string | null;
-  workoutName: string | null;
-  isRestDay: boolean;
-};
 export default function CreateWeeklyPlanScreen() {
+  const [planName, setPlanName] = useState('');
+  const [pendingDayIndex, setPendingDayIndex] = useState<number | null>(null);
+  const [days, setDays] = useState<DayConfig[]>(createEmptyWeekDays);
   const { weeklyPlanService } = useApp();
   const router = useRouter();
   const { pendingWorkout, clearPendingWorkout } = useWeeklyPlanStore();
+  const { showToast } = useToastStore();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditMode = !!id;
-  const [planName, setPlanName] = useState('');
-
-  const [pendingDayIndex, setPendingDayIndex] = useState<number | null>(null);
-  const [days, setDays] = useState<DayConfig[]>([
-    {
-      dayOfWeek: 1,
-      dayName: 'Poniedziałek',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 2,
-      dayName: 'Wtorek',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 3,
-      dayName: 'Środa',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 4,
-      dayName: 'Czwartek',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 5,
-      dayName: 'Piątek',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 6,
-      dayName: 'Sobota',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-    {
-      dayOfWeek: 0,
-      dayName: 'Niedziela',
-      workoutId: null,
-      workoutName: null,
-      isRestDay: false,
-    },
-  ]);
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -116,11 +61,6 @@ export default function CreateWeeklyPlanScreen() {
     load();
   }, [id]);
 
-  const handleAddWorkout = (dayIndex: number) => {
-    setPendingDayIndex(dayIndex);
-    router.push('/select-workout');
-  };
-
   useFocusEffect(
     useCallback(() => {
       if (pendingWorkout && pendingDayIndex !== null) {
@@ -141,6 +81,11 @@ export default function CreateWeeklyPlanScreen() {
       }
     }, [pendingWorkout, pendingDayIndex]),
   );
+
+  const handleAddWorkout = (dayIndex: number) => {
+    setPendingDayIndex(dayIndex);
+    router.push('/select-workout');
+  };
 
   const handleToggleRestDay = (dayIndex: number) => {
     setDays((prev) =>
@@ -169,7 +114,7 @@ export default function CreateWeeklyPlanScreen() {
 
   const handleSave = async () => {
     if (!planName.trim()) {
-      Alert.alert('Błąd', 'Podaj nazwę planu');
+      showToast('Podaj nazwę planu', 'error');
       return;
     }
     if (isEditMode) {
@@ -194,7 +139,11 @@ export default function CreateWeeklyPlanScreen() {
         router.back();
       } catch (error) {
         logger.error('Błąd aktualizacji planu', error);
-        Alert.alert('Błąd', 'Nie udało się zaktualizować planu');
+        if (error instanceof ServiceError) {
+          showToast(error.userMessage, 'error');
+        } else {
+          showToast('Nie udało się zaktualizować planu', 'error');
+        }
         return;
       }
     } else {
@@ -218,7 +167,11 @@ export default function CreateWeeklyPlanScreen() {
         router.back();
       } catch (error) {
         logger.error('Błąd zapisu planu', error);
-        Alert.alert('Błąd', 'Nie udało się zapisać planu');
+        if (error instanceof ServiceError) {
+          showToast(error.userMessage, 'error');
+        } else {
+          showToast('Nie udało się zapisać planu', 'error');
+        }
       }
     }
   };

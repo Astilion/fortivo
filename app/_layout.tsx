@@ -1,5 +1,6 @@
 import colors from '@/constants/Colors';
 import { ActiveWorkoutFAB } from '@/components/ui/ActiveWorkoutFAB';
+import { Toast } from '@/components/Toast';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { AppProvider } from '@/providers/AppProvider';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -155,6 +156,7 @@ export default function RootLayout() {
           pathname !== '/active-workout' && (
             <ActiveWorkoutFAB workoutStartTime={workoutStartTime} />
           )}
+        <Toast />
       </ThemeProvider>
     </AppProvider>
   );

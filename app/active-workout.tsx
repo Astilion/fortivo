@@ -8,7 +8,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { generateId } from '@/database/database';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,18 +21,21 @@ import { validateRPE, validateTempo } from '@/utils/validation';
 import { logger } from '@/utils/logger';
 import { confirmAction } from '@/utils/confirm';
 import { useWorkoutStore } from '@/store/workoutStore';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
 
 export default function ActiveWorkoutScreen() {
-  const { workoutService } = useApp();
-  const router = useRouter();
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
   const [restTargetTime, setRestTargetTime] = useState<number | null>(null);
   const [validationKey, setValidationKey] = useState(0);
   const [isResting, setIsResting] = useState(false);
-  const { settings } = useProfileSettings();
   const [isLoaded, setIsLoaded] = useState(false);
   const [tick, setTick] = useState(0);
+  const exercisesRef = useRef<WorkoutExerciseWithSets[]>([]);
+  const { workoutService } = useApp();
+  const router = useRouter();
+  const { settings } = useProfileSettings();
   const workoutStartTime = useWorkoutStore((state) => state.workoutStartTime);
   const startActiveWorkout = useWorkoutStore(
     (state) => state.startActiveWorkout,
@@ -45,6 +47,7 @@ export default function ActiveWorkoutScreen() {
   const clearPendingExercise = useWorkoutStore(
     (state) => state.clearPendingExercise,
   );
+  const { showToast } = useToastStore();
 
   useFocusEffect(
     useCallback(() => {
@@ -71,7 +74,6 @@ export default function ActiveWorkoutScreen() {
     }, [pendingExercise]),
   );
 
-  const exercisesRef = useRef<WorkoutExerciseWithSets[]>([]);
   useEffect(() => {
     if (!isResting || restTargetTime === null) return;
 
@@ -87,6 +89,7 @@ export default function ActiveWorkoutScreen() {
 
     return () => clearInterval(interval);
   }, [isResting, restTargetTime]);
+
   useEffect(() => {
     exercisesRef.current = exercises;
   }, [exercises]);
@@ -142,6 +145,7 @@ export default function ActiveWorkoutScreen() {
       return newExercises;
     });
   };
+
   const addSet = (exerciseId: string) => {
     setExercises((prevExercises) => {
       return prevExercises.map((ex) => {
@@ -175,6 +179,7 @@ export default function ActiveWorkoutScreen() {
       });
     });
   };
+
   const removeSet = (exerciseId: string, setId: string) => {
     const ex = exercises.find((e) => e.id === exerciseId);
     if (!ex || ex.sets.length <= 1) return;
@@ -213,6 +218,7 @@ export default function ActiveWorkoutScreen() {
       });
     });
   };
+
   const handleFinishWorkout = () => {
     confirmAction(
       'Zakończ trening',
@@ -239,19 +245,32 @@ export default function ActiveWorkoutScreen() {
             exercisesRef.current,
           );
 
-          Alert.alert('Sukces', 'Trening został zapisany');
           await workoutService.clearActiveWorkout();
           finishActiveWorkout();
-
+          showToast('Trening zakończony!', 'success');
           router.replace('/(tabs)/workout-history');
         } catch (error) {
-          const message =
-            error instanceof Error ? error.message : String(error);
           logger.error('Błąd zakończenia treningu', error);
-          Alert.alert('Błąd', `Nie udało się zapisać treningu:\n${message}`);
+          if (error instanceof ServiceError) {
+            showToast(error.userMessage, 'error');
+          } else {
+            showToast('Nie udało się zapisać treningu', 'error');
+          }
         }
       },
       'Zakończ',
+    );
+  };
+
+  const removeExercise = (exerciseId: string, exerciseName: string) => {
+    if (exercises.length <= 1) {
+      showToast('Nie możesz usunąć ostatniego ćwiczenia', 'info');
+      return;
+    }
+    confirmAction(
+      'Usuń ćwiczenie',
+      `Czy na pewno chcesz usunąć "${exerciseName}" z treningu?`,
+      () => setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId)),
     );
   };
 
@@ -268,18 +287,6 @@ export default function ActiveWorkoutScreen() {
   const restTimeRemaining = restTargetTime
     ? Math.max(0, Math.ceil((restTargetTime - Date.now()) / 1000))
     : null;
-
-  const removeExercise = (exerciseId: string, exerciseName: string) => {
-    if (exercises.length <= 1) {
-      Alert.alert('Uwaga', 'Nie możesz usunąć ostatniego ćwiczenia');
-      return;
-    }
-    confirmAction(
-      'Usuń ćwiczenie',
-      `Czy na pewno chcesz usunąć "${exerciseName}" z treningu?`,
-      () => setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId)),
-    );
-  };
 
   return (
     <View style={styles.container}>

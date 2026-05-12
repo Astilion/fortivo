@@ -1,9 +1,9 @@
 import { useApp } from '@/providers/AppProvider';
 import { useCallback, useState } from 'react';
 import { UserSettings } from '@/types/training';
-import { useFocusEffect } from 'expo-router';
 import { logger } from '@/utils/logger';
 import { LOCAL_USER_ID } from '@/constants/User';
+import { useRefreshOnFocus } from './useRefreshOnFocus';
 
 export const useProfileSettings = () => {
   const { profileService } = useApp();
@@ -25,11 +25,7 @@ export const useProfileSettings = () => {
     }
   }, [profileService]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadSettings();
-    }, [loadSettings]),
-  );
+  useRefreshOnFocus(loadSettings, [loadSettings]);
 
   const updateSettings = useCallback(async () => {
     if (!settings) return;

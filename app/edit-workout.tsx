@@ -5,17 +5,20 @@ import { commonStyles } from '@/constants/Styles';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { useWorkoutStore } from '@/store/workoutStore';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { confirmAction } from '@/utils/confirm';
 import { generateId } from '@/database/database';
 
 export default function EditWorkoutScreen() {
-  const router = useRouter();
   const [showNameError, setShowNameError] = useState(false);
   const [showExercisesError, setShowExercisesError] = useState(false);
-
+  const router = useRouter();
+  const { showToast } = useToastStore();
   const {
     draft,
     setWorkoutName,
@@ -32,10 +35,6 @@ export default function EditWorkoutScreen() {
   const { workoutService } = useApp();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  useEffect(() => {
-    loadWorkout();
-  }, [id, workoutService]);
-
   const loadWorkout = useCallback(async () => {
     try {
       clearDraft();
@@ -46,9 +45,17 @@ export default function EditWorkoutScreen() {
         setExercises(exercises.map((ex) => ({ ...ex, id: generateId('we') })));
       }
     } catch (error) {
-      console.error('Error loading workout:', error);
-      Alert.alert('Błąd', 'Nie udało się załadować treningu');
+      logger.error('Error loading workout:', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się załadować treningu', 'error');
+      }
     }
+  }, [id, workoutService]);
+
+  useEffect(() => {
+    loadWorkout();
   }, [id, workoutService]);
 
   const handleSaveWorkout = async () => {
@@ -71,8 +78,12 @@ export default function EditWorkoutScreen() {
       clearDraft();
       router.back();
     } catch (error) {
-      console.error('Błąd zapisu', error);
-      Alert.alert('Błąd', 'Nie udało się zapisać treningu');
+      logger.error('Błąd zapisu treningu', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się zapisać treningu', 'error');
+      }
     }
   };
 

@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface WorkoutCardProps {
   workoutName: string;
-  workoutDate: string;
+  workoutDate?: string;
   exerciseCount: number;
   onPress: () => void;
   onEdit: () => void;
@@ -49,8 +49,7 @@ export const WorkoutCard = ({
             <Text style={styles.workoutName}>{workoutName}</Text>
           </View>
           <Text style={styles.metadata}>
-            {formatDate(workoutDate)} • {exerciseCount}{' '}
-            {getExerciseLabel(exerciseCount)}
+            {exerciseCount} {getExerciseLabel(exerciseCount)}
           </Text>
         </View>
         <View style={styles.actions}>
@@ -65,7 +64,7 @@ export const WorkoutCard = ({
               isFirst && styles.actionButtonDisabled,
             ]}
             hitSlop={6}
-            accessibilityLabel="Przesuń w górę"
+            accessibilityLabel='Przesuń w górę'
           >
             <Ionicons
               name='arrow-up'
@@ -81,7 +80,7 @@ export const WorkoutCard = ({
             disabled={isLast}
             style={[styles.actionButton, isLast && styles.actionButtonDisabled]}
             hitSlop={6}
-            accessibilityLabel="Przesuń w dół"
+            accessibilityLabel='Przesuń w dół'
           >
             <Ionicons
               name='arrow-down'
@@ -96,7 +95,9 @@ export const WorkoutCard = ({
             }}
             style={styles.actionButton}
             hitSlop={6}
-            accessibilityLabel={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+            accessibilityLabel={
+              isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'
+            }
           >
             <Ionicons
               name={isFavorite ? 'star' : 'star-outline'}
@@ -111,7 +112,7 @@ export const WorkoutCard = ({
             }}
             style={styles.actionButton}
             hitSlop={6}
-            accessibilityLabel="Edytuj trening"
+            accessibilityLabel='Edytuj trening'
           >
             <Ionicons name='create-outline' size={20} color={colors.accent} />
           </Pressable>
@@ -122,7 +123,7 @@ export const WorkoutCard = ({
             }}
             style={styles.actionButton}
             hitSlop={6}
-            accessibilityLabel="Usuń trening"
+            accessibilityLabel='Usuń trening'
           >
             <Ionicons name='trash-outline' size={20} color={colors.danger} />
           </Pressable>

@@ -1,35 +1,16 @@
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutHistoryWithDetails } from '@/types/training';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { logger } from '@/utils/logger';
+import { useCallback } from 'react';
+import { useAsyncLoader } from './useAsyncLoader';
+import { useRefreshOnFocus } from './useRefreshOnFocus';
 
 export const useWorkoutHistory = () => {
   const { workoutService } = useApp();
-  const [history, setHistory] = useState<WorkoutHistoryWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadHistory = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const data = await workoutService.getWorkoutHistory();
-      setHistory(data);
-    } catch (err) {
-      logger.error('Error loading workout history', err);
-      setError('Nie udało się załadować historii treningów');
-    } finally {
-      setLoading(false);
-    }
-  }, [workoutService]);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadHistory();
-    }, [loadHistory]),
+  const loader = useCallback(
+    () => workoutService.getWorkoutHistory(),
+    [workoutService],
   );
-
-  return { history, loading, error, refresh: loadHistory };
+  const { data: history, loading, error, reload } = useAsyncLoader<WorkoutHistoryWithDetails[]>(loader, []);
+  useRefreshOnFocus(reload, [reload]);
+  return { history, loading, error, refresh: reload };
 };

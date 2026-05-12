@@ -1,8 +1,8 @@
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutHistoryWithDetails } from '@/types/training';
-import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { logger } from '@/utils/logger';
+import { useRefreshOnFocus } from './useRefreshOnFocus';
 
 export const useRecentWorkouts = (limit: number = 5) => {
   const { workoutService } = useApp();
@@ -25,10 +25,6 @@ export const useRecentWorkouts = (limit: number = 5) => {
     }
   }, [workoutService, limit]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadWorkouts();
-    }, [loadWorkouts]),
-  );
+  useRefreshOnFocus(loadWorkouts, [loadWorkouts]);
   return { workouts, loading, error, refresh: loadWorkouts };
 };

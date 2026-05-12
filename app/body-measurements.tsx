@@ -4,6 +4,9 @@ import { BodyMeasurement } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -23,14 +26,14 @@ import { LOCAL_USER_ID } from '@/constants/User';
 type TabType = 'measurements' | 'history';
 
 export default function BodyMeasurementsScreen() {
-  const { measurementService } = useApp();
-
   const [activeTab, setActiveTab] = useState<TabType>('measurements');
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>([]);
   const [inputs, setInputs] = useState<Record<string, string>>(
     Object.fromEntries(BODY_PARTS.map((p) => [p.key, ''])),
   );
   const [error, setError] = useState<string | null>(null);
+  const { measurementService } = useApp();
+  const { showToast } = useToastStore();
 
   const loadMeasurements = useCallback(async () => {
     if (!measurementService) return;
@@ -52,20 +55,38 @@ export default function BodyMeasurementsScreen() {
       return;
     }
     setError(null);
-    const newEntry = await measurementService.addMeasurement(
-      LOCAL_USER_ID,
-      bodyPartKey,
-      value,
-      new Date().toISOString().split('T')[0],
-    );
-    setMeasurements((prev) => [newEntry, ...prev]);
-    setInputs((prev) => ({ ...prev, [bodyPartKey]: '' }));
+    try {
+      const newEntry = await measurementService.addMeasurement(
+        LOCAL_USER_ID,
+        bodyPartKey,
+        value,
+        new Date().toISOString().split('T')[0],
+      );
+      setMeasurements((prev) => [newEntry, ...prev]);
+      setInputs((prev) => ({ ...prev, [bodyPartKey]: '' }));
+    } catch (error) {
+      logger.error('Failed to add measurement', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się dodać pomiaru', 'error');
+      }
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!measurementService) return;
-    await measurementService.deleteMeasurement(id);
-    setMeasurements((prev) => prev.filter((m) => m.id !== id));
+    try {
+      await measurementService.deleteMeasurement(id);
+      setMeasurements((prev) => prev.filter((m) => m.id !== id));
+    } catch (error) {
+      logger.error('Failed to delete measurement', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się usunąć pomiaru', 'error');
+      }
+    }
   };
 
   const getLastEntry = (bodyPartKey: string) =>

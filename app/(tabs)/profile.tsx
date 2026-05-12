@@ -3,6 +3,8 @@ import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
 import {
   ActivityIndicator,
   ScrollView,
@@ -59,6 +61,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { settings, setSettings, loading, error, updateSettings } =
     useProfileSettings();
+  const { showToast } = useToastStore();
   const [restTimeInput, setRestTimeInput] = useState<string>('');
   const [goalWeightInput, setGoalWeightInput] = useState<string>('');
   const [goalWeightError, setGoalWeightError] = useState<string | null>(null);
@@ -103,6 +106,9 @@ export default function ProfileScreen() {
         await profileService.updateUserSettings(updatedSettings);
       } catch (error) {
         logger.error('Error updating goal weight:', error);
+        if (error instanceof ServiceError) {
+          showToast(error.userMessage, 'error');
+        }
       }
     }
   };
@@ -124,6 +130,9 @@ export default function ProfileScreen() {
       await profileService.updateUserSettings(updatedSettings);
     } catch (error) {
       logger.error('Error updating rest time:', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      }
     }
   };
 
