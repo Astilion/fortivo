@@ -1,11 +1,11 @@
 import { create } from 'zustand';
-import { WeeklyPlan, WeeklyPlanRow, Workout } from '@/types/training';
+import { WeeklyPlan, WeeklyPlanWithDays, Workout } from '@/types/training';
 
 interface WeeklyPlanStore {
-  weeklyPlans: WeeklyPlanRow[];
+  weeklyPlans: WeeklyPlanWithDays[];
   activePlan: WeeklyPlan | null;
   pendingWorkout: Workout | null;
-  setWeeklyPlans: (plans: WeeklyPlanRow[]) => void;
+  setWeeklyPlans: (plans: WeeklyPlanWithDays[]) => void;
   setActivePlan: (plan: WeeklyPlan | null) => void;
   setPendingWorkout: (workout: Workout | null) => void;
   clearPendingWorkout: () => void;
@@ -15,7 +15,7 @@ export const useWeeklyPlanStore = create<WeeklyPlanStore>((set) => ({
   weeklyPlans: [],
   activePlan: null,
   pendingWorkout: null,
-  setWeeklyPlans: (plans: WeeklyPlanRow[]) => set({ weeklyPlans: plans }),
+  setWeeklyPlans: (plans: WeeklyPlanWithDays[]) => set({ weeklyPlans: plans }),
   setActivePlan: (plan: WeeklyPlan | null) => set({ activePlan: plan }),
   setPendingWorkout: (workout: Workout | null) =>
     set({ pendingWorkout: workout }),

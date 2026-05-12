@@ -421,3 +421,14 @@ export interface BodyMeasurementRow {
 export interface WorkoutWithCountRow extends WorkoutRow {
   exercise_count: number;
 }
+
+export interface WeeklyPlanDaySummary {
+  day_of_week: number;
+  is_rest_day: number;
+  day_name: string | null;
+  workout_name: string | null;
+}
+
+export interface WeeklyPlanWithDays extends WeeklyPlanRow {
+  days: WeeklyPlanDaySummary[];
+}

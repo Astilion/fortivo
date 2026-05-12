@@ -4,7 +4,7 @@ import colors from '@/constants/Colors';
 import { useToastStore } from '@/store/toastStore';
 
 const SLIDE_OFFSET = 120;
-const DISMISS_AFTER = 3000;
+const DISMISS_AFTER = 1500;
 
 type ToastType = 'error' | 'success' | 'info';
 
@@ -19,7 +19,7 @@ export function Toast() {
     if (timerRef.current) clearTimeout(timerRef.current);
     Animated.timing(slideAnim, {
       toValue: SLIDE_OFFSET,
-      duration: 250,
+      duration: 300,
       useNativeDriver: true,
     }).start(() => {
       hideToast();
@@ -66,8 +66,8 @@ export function Toast() {
         { backgroundColor, transform: [{ translateY: slideAnim }] },
       ]}
       pointerEvents={displayMessage ? 'auto' : 'none'}
-      accessibilityRole="alert"
-      accessibilityLiveRegion="assertive"
+      accessibilityRole='alert'
+      accessibilityLiveRegion='assertive'
     >
       {displayMessage && (
         <Text style={[styles.message, { color: textColor }]}>

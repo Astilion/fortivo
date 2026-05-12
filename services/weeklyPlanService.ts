@@ -3,6 +3,7 @@ import {
   WeeklyPlanRow,
   WeeklyPlanDayRow,
   WeeklyPlan,
+  WeeklyPlanWithDays,
   Workout,
 } from '@/types/training';
 import { generateId } from '@/database/database';
@@ -25,6 +26,51 @@ export class WeeklyPlanService {
       `SELECT * FROM weekly_plans ORDER BY created_at DESC`,
     );
     return weeklyPlans;
+  }
+
+  async getAllPlansWithDetails(): Promise<WeeklyPlanWithDays[]> {
+    try {
+      type JoinRow = WeeklyPlanRow & {
+        day_of_week: number | null;
+        is_rest_day: number | null;
+        day_name: string | null;
+        workout_name: string | null;
+      };
+      const rows = await this.db.getAllAsync<JoinRow>(
+        `SELECT wp.id, wp.name, wp.week_number, wp.notes, wp.created_at, wp.is_active,
+                wpd.day_of_week, wpd.is_rest_day, wpd.day_name, w.name as workout_name
+         FROM weekly_plans wp
+         LEFT JOIN weekly_plan_days wpd ON wpd.weekly_plan_id = wp.id
+         LEFT JOIN workouts w ON wpd.workout_id = w.id
+         ORDER BY wp.created_at DESC, wpd.day_of_week ASC`,
+      );
+      const planMap = new Map<string, WeeklyPlanWithDays>();
+      for (const row of rows) {
+        if (!planMap.has(row.id)) {
+          planMap.set(row.id, {
+            id: row.id,
+            name: row.name,
+            week_number: row.week_number,
+            notes: row.notes,
+            created_at: row.created_at,
+            is_active: row.is_active,
+            days: [],
+          });
+        }
+        if (row.day_of_week !== null) {
+          planMap.get(row.id)!.days.push({
+            day_of_week: row.day_of_week,
+            is_rest_day: row.is_rest_day ?? 0,
+            day_name: row.day_name,
+            workout_name: row.workout_name,
+          });
+        }
+      }
+      return Array.from(planMap.values());
+    } catch (error) {
+      logger.error('WeeklyPlanService.getAllPlansWithDetails failed', error);
+      throw new ServiceError('Nie udało się pobrać planów tygodniowych', error);
+    }
   }
 
   async getWeeklyPlan(id: string): Promise<WeeklyPlan | null> {

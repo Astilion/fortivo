@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingView } from '@/components/ui/LoadingView';
+import { WeeklyPlanCard } from '@/components/ui/WeeklyPlanCard';
 import { WorkoutCard } from '@/components/ui/WorkoutCard';
 import colors from '@/constants/Colors';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
@@ -19,7 +20,6 @@ import {
   View,
 } from 'react-native';
 import { logger } from '@/utils/logger';
-import { Ionicons } from '@expo/vector-icons';
 
 type WorkoutsTab = 'workouts' | 'plans' | 'ready';
 
@@ -39,7 +39,7 @@ export default function WorkoutsScreen() {
         try {
           const [allWorkouts, plans] = await Promise.all([
             workoutService.getAllWorkouts(),
-            weeklyPlanService.getWeeklyPlans(),
+            weeklyPlanService.getAllPlansWithDetails(),
           ]);
           setWorkouts(allWorkouts);
           setWeeklyPlans(plans);
@@ -85,7 +85,7 @@ export default function WorkoutsScreen() {
         try {
           await weeklyPlanService.deleteWeeklyPlan(id);
           const [plans, activePlan] = await Promise.all([
-            weeklyPlanService.getWeeklyPlans(),
+            weeklyPlanService.getAllPlansWithDetails(),
             weeklyPlanService.getActivePlan(),
           ]);
           setWeeklyPlans(plans);
@@ -148,7 +148,7 @@ export default function WorkoutsScreen() {
     await weeklyPlanService.setWeeklyPlanActive(planId);
 
     const [plans, activePlan] = await Promise.all([
-      weeklyPlanService.getWeeklyPlans(),
+      weeklyPlanService.getAllPlansWithDetails(),
       weeklyPlanService.getActivePlan(),
     ]);
     setWeeklyPlans(plans);
@@ -160,7 +160,7 @@ export default function WorkoutsScreen() {
       'Plan pozostanie zapisany, ale nie będzie aktywny.',
       async () => {
         await weeklyPlanService.clearActivePlan();
-        const plans = await weeklyPlanService.getWeeklyPlans();
+        const plans = await weeklyPlanService.getAllPlansWithDetails();
         setWeeklyPlans(plans);
         setActivePlan(null);
       },
@@ -251,7 +251,6 @@ export default function WorkoutsScreen() {
                   <WorkoutCard
                     key={workout.id}
                     workoutName={workout.name}
-                    workoutDate={workout.date}
                     exerciseCount={workout.exercise_count}
                     onPress={() => setAsActive(workout.id)}
                     onEdit={() => router.push(`/edit-workout?id=${workout.id}`)}
@@ -289,59 +288,14 @@ export default function WorkoutsScreen() {
               />
             ) : (
               weeklyPlans.map((plan) => (
-                <View key={plan.id} style={styles.planCard}>
-                  <Text style={styles.planName}>{plan.name}</Text>
-
-                  <Pressable
-                    onPress={() =>
-                      router.push(`/create-weekly-plan?id=${plan.id}`)
-                    }
-                    style={styles.editIcon}
-                    hitSlop={4}
-                    accessibilityLabel="Edytuj plan"
-                  >
-                    <Ionicons
-                      name='create-outline'
-                      size={20}
-                      color={colors.accent}
-                    />
-                  </Pressable>
-                  {plan.is_active === 1 ? (
-                    <View style={styles.activeBadge}>
-                      <Text style={styles.activeBadgeText}>Aktywny</Text>
-                      <Pressable
-                        onPress={handleClearActivePlan}
-                        style={styles.clearActiveBtn}
-                        hitSlop={8}
-                      >
-                        <Ionicons
-                          name='close-circle-outline'
-                          size={18}
-                          color={colors.accent}
-                        />
-                      </Pressable>
-                    </View>
-                  ) : (
-                    <Pressable
-                      style={styles.setActiveBtn}
-                      onPress={() => handleSetActivePlan(plan.id)}
-                    >
-                      <Text style={styles.setActiveBtnText}>Ustaw aktywny</Text>
-                    </Pressable>
-                  )}
-                  <Pressable
-                    style={styles.deleteIcon}
-                    onPress={() => handleDeleteWeeklyPlan(plan.id, plan.name)}
-                    hitSlop={6}
-                    accessibilityLabel="Usuń plan"
-                  >
-                    <Ionicons
-                      name='trash-outline'
-                      size={20}
-                      color={colors.danger}
-                    />
-                  </Pressable>
-                </View>
+                <WeeklyPlanCard
+                  key={plan.id}
+                  plan={plan}
+                  onEdit={() => router.push(`/create-weekly-plan?id=${plan.id}`)}
+                  onDelete={() => handleDeleteWeeklyPlan(plan.id, plan.name)}
+                  onSetActive={() => handleSetActivePlan(plan.id)}
+                  onClearActive={handleClearActivePlan}
+                />
               ))
             )}
           </>
@@ -414,57 +368,5 @@ const styles = StyleSheet.create({
   },
   createButtonWrapper: {
     marginBottom: 20,
-  },
-  planCard: {
-    backgroundColor: colors.secondary,
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  planName: {
-    color: colors.text.primary,
-    fontSize: 18,
-    fontWeight: '600',
-    flex: 1,
-  },
-  editIcon: {
-    padding: 8,
-    marginRight: 8,
-  },
-  setActiveBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  setActiveBtnText: {
-    color: colors.accent,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  activeBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  activeBadgeText: {
-    color: colors.accent,
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  deleteIcon: {
-    padding: 6,
-    borderRadius: 6,
-  },
-  clearActiveBtn: {
-    marginLeft: 6,
-    padding: 2,
   },
 });
