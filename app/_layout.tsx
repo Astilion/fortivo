@@ -2,11 +2,12 @@ import colors from '@/constants/Colors';
 import { ActiveWorkoutFAB } from '@/components/ui/ActiveWorkoutFAB';
 import { Toast } from '@/components/Toast';
 import { useWorkoutStore } from '@/store/workoutStore';
+import { useOnboardingStore } from '@/store/onboardingStore';
 import { AppProvider } from '@/providers/AppProvider';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
-import { Stack, usePathname } from 'expo-router';
+import { Href, Redirect, Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -55,18 +56,25 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
+  const showOnboarding = useOnboardingStore((state) => state.showOnboarding);
+
+  const isReady = loaded && showOnboarding !== null;
 
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    useOnboardingStore.getState().loadStatus();
+  }, []);
+
+  useEffect(() => {
+    if (isReady) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [isReady]);
 
-  if (!loaded) {
+  if (!isReady) {
     return null;
   }
 
@@ -74,6 +82,7 @@ export default function RootLayout() {
     <AppProvider>
       <ThemeProvider value={FortivoDarkTheme}>
         <StatusBar style='light' backgroundColor={colors.primary} />
+        {showOnboarding && <Redirect href={'/onboarding' as Href} />}
         <Stack
           screenOptions={{
             headerShown: false,
@@ -89,6 +98,11 @@ export default function RootLayout() {
               headerShown: false,
               title: '',
             }}
+          />
+
+          <Stack.Screen
+            name='onboarding'
+            options={{ headerShown: false, animation: 'fade' }}
           />
 
           <Stack.Screen
