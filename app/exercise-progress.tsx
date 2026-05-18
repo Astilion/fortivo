@@ -11,7 +11,7 @@ import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { logger } from '@/utils/logger';
 
 export default function ExerciseProgressScreen() {
-  const { exerciseId, exerciseName } = useLocalSearchParams<{
+  const { exerciseId } = useLocalSearchParams<{
     exerciseId: string;
     exerciseName?: string;
   }>();

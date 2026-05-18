@@ -2,7 +2,7 @@ import { useProfileSettings } from '@/hooks/useProfileSettings';
 import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 import {
@@ -17,7 +17,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/providers/AppProvider';
-import { useState, useEffect } from 'react';
 import { logger } from '@/utils/logger';
 
 type WeightUnit = 'kg' | 'lbs';
@@ -59,8 +58,7 @@ const SettingsRow: React.FC<SettingsRowProps> = ({
 export default function ProfileScreen() {
   const { profileService } = useApp();
   const router = useRouter();
-  const { settings, setSettings, loading, error, updateSettings } =
-    useProfileSettings();
+  const { settings, setSettings, loading, error } = useProfileSettings();
   const { showToast } = useToastStore();
   const [restTimeInput, setRestTimeInput] = useState<string>('');
   const [goalWeightInput, setGoalWeightInput] = useState<string>('');

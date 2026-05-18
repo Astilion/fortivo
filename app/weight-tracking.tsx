@@ -1,7 +1,7 @@
 import colors from '@/constants/Colors';
 import { WeightEntry } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
@@ -10,7 +10,6 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -26,7 +25,6 @@ import { confirmAction } from '@/utils/confirm';
 
 export default function WeightTrackingScreen() {
   const [entries, setEntries] = useState<WeightEntry[]>([]);
-  const router = useRouter();
   const { settings } = useProfileSettings();
   const { weightService } = useApp();
   const { showToast } = useToastStore();
