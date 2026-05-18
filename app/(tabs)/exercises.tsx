@@ -122,7 +122,7 @@ export default function ExercisesScreen() {
                 accessibilityLabel="Usuń ćwiczenie"
               >
                 <Ionicons
-                  name='trash-outline'
+                  name="trash-outline"
                   size={24}
                   color={colors.text.secondary}
                 />
@@ -137,7 +137,7 @@ export default function ExercisesScreen() {
                 accessibilityLabel="Edytuj ćwiczenie"
               >
                 <Ionicons
-                  name='pencil-outline'
+                  name="pencil-outline"
                   size={24}
                   color={colors.text.secondary}
                 />
@@ -151,12 +151,16 @@ export default function ExercisesScreen() {
             }}
             style={styles.favoriteButton}
             hitSlop={8}
-            accessibilityLabel={isFavorite(item.id) ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+            accessibilityLabel={
+              isFavorite(item.id) ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'
+            }
           >
             <Ionicons
               name={isFavorite(item.id) ? 'star' : 'star-outline'}
               size={24}
-              color={isFavorite(item.id) ? colors.accent : colors.text.secondary}
+              color={
+                isFavorite(item.id) ? colors.accent : colors.text.secondary
+              }
             />
           </Pressable>
         </View>
@@ -174,8 +178,8 @@ export default function ExercisesScreen() {
       <Input
         value={searchQuery}
         onChangeText={setSearchQuery}
-        placeholder='Wyszukaj ćwiczenie...'
-        icon='search'
+        placeholder="Wyszukaj ćwiczenie..."
+        icon="search"
       />
       <ScrollView
         horizontal
@@ -184,17 +188,17 @@ export default function ExercisesScreen() {
         contentContainerStyle={styles.filterContent}
       >
         <Button
-          title='Wszystkie'
+          title="Wszystkie"
           variant={selectedCategory === 'wszystkie' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('wszystkie')}
         />
         <Button
-          title='⭐ Ulubione'
+          title="⭐ Ulubione"
           variant={selectedCategory === 'ulubione' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('ulubione')}
         />
         <Button
-          title='Własne'
+          title="Własne"
           variant={selectedCategory === 'wlasne' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('wlasne')}
         />
@@ -219,27 +223,33 @@ export default function ExercisesScreen() {
         ListEmptyComponent={
           searchQuery.trim() !== '' ? (
             <EmptyState
-              icon='search-outline'
-              title='Nie znaleziono ćwiczeń'
+              icon="search-outline"
+              title="Nie znaleziono ćwiczeń"
               subtitle={`Brak wyników dla "${searchQuery}"`}
             />
           ) : selectedCategory === 'ulubione' ? (
             <EmptyState
-              icon='star-outline'
-              title='Brak ulubionych ćwiczeń'
-              subtitle='Dodaj ćwiczenia do ulubionych gwiazdką'
-              action={{ label: 'Przeglądaj wszystkie', onPress: () => setSelectedCategory('wszystkie') }}
+              icon="star-outline"
+              title="Brak ulubionych ćwiczeń"
+              subtitle="Dodaj ćwiczenia do ulubionych gwiazdką"
+              action={{
+                label: 'Przeglądaj wszystkie',
+                onPress: () => setSelectedCategory('wszystkie'),
+              }}
             />
           ) : selectedCategory === 'wlasne' ? (
             <EmptyState
-              icon='barbell-outline'
-              title='Nie masz własnych ćwiczeń'
-              action={{ label: 'Dodaj ćwiczenie', onPress: () => router.push('/create-exercise') }}
+              icon="barbell-outline"
+              title="Nie masz własnych ćwiczeń"
+              action={{
+                label: 'Dodaj ćwiczenie',
+                onPress: () => router.push('/create-exercise'),
+              }}
             />
           ) : (
             <EmptyState
-              icon='list-outline'
-              title='Brak ćwiczeń w tej kategorii'
+              icon="list-outline"
+              title="Brak ćwiczeń w tej kategorii"
             />
           )
         }
@@ -249,7 +259,7 @@ export default function ExercisesScreen() {
         onPress={() => router.push('/create-exercise')}
         style={[styles.fab, { bottom: activeWorkoutId ? 100 : 34 }]}
       >
-        <Ionicons name='add' size={28} color='#1C2227' />
+        <Ionicons name="add" size={28} color="#1C2227" />
       </Pressable>
     </View>
   );

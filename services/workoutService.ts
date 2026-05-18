@@ -163,7 +163,12 @@ export class WorkoutService {
           );
 
           for (let j = 0; j < sets.length; j++) {
-            await this.insertSet(generateId('ws'), workoutExerciseId, j, sets[j]);
+            await this.insertSet(
+              generateId('ws'),
+              workoutExerciseId,
+              j,
+              sets[j],
+            );
           }
         }
       });
@@ -286,7 +291,9 @@ export class WorkoutService {
     try {
       await this.db.withTransactionAsync(async () => {
         for (const ex of exercises) {
-          const workoutExerciseRow = await this.db.getFirstAsync<{ id: string }>(
+          const workoutExerciseRow = await this.db.getFirstAsync<{
+            id: string;
+          }>(
             'SELECT id FROM workout_exercises WHERE workout_id = ? AND exercise_id = ?',
             [workoutId, ex.exercise.id],
           );
@@ -326,7 +333,14 @@ export class WorkoutService {
         `INSERT INTO workout_history (
           id, workout_id, user_id, completed_at, actual_duration, performance_notes
         ) VALUES (?, ?, ?, ?, ?, ?)`,
-        [id, workoutId, userId, new Date().toISOString(), durationMinutes, null],
+        [
+          id,
+          workoutId,
+          userId,
+          new Date().toISOString(),
+          durationMinutes,
+          null,
+        ],
       );
     } catch (error) {
       logger.error('WorkoutService.saveWorkoutHistory failed', error);
@@ -356,12 +370,13 @@ export class WorkoutService {
             0,
           );
 
-          const previousRecord = await this.db.getFirstAsync<ExerciseProgressRow>(
-            `SELECT * FROM exercise_progress
+          const previousRecord =
+            await this.db.getFirstAsync<ExerciseProgressRow>(
+              `SELECT * FROM exercise_progress
              WHERE exercise_id = ? AND user_id = ?
              ORDER BY max_weight DESC LIMIT 1`,
-            [ex.exercise.id, userId],
-          );
+              [ex.exercise.id, userId],
+            );
 
           const isPersonalRecord =
             !previousRecord || maxWeight > previousRecord.max_weight;
@@ -569,13 +584,16 @@ export class WorkoutService {
 
     const newValue = workout.is_favorite === 1 ? 0 : 1;
     try {
-      await this.db.runAsync('UPDATE workouts SET is_favorite = ? WHERE id = ?', [
-        newValue,
-        id,
-      ]);
+      await this.db.runAsync(
+        'UPDATE workouts SET is_favorite = ? WHERE id = ?',
+        [newValue, id],
+      );
     } catch (error) {
       logger.error('WorkoutService.toggleFavoriteWorkout failed', error);
-      throw new ServiceError('Nie udało się zmienić ulubionego treningu', error);
+      throw new ServiceError(
+        'Nie udało się zmienić ulubionego treningu',
+        error,
+      );
     }
     return newValue === 1;
   }

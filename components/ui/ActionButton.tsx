@@ -22,7 +22,7 @@ export const ActionButton = ({
       <Text style={styles.title}>{title}</Text>
       {showChevron && (
         <Ionicons
-          name='chevron-forward'
+          name="chevron-forward"
           size={20}
           color={colors.text.secondary}
         />

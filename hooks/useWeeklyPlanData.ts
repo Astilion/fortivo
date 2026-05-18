@@ -17,7 +17,9 @@ export type PlanDay = {
 export const useWeeklyPlanData = () => {
   const { workoutService, weeklyPlanService } = useApp();
   const { activePlan, setActivePlan } = useWeeklyPlanStore();
-  const [completedThisWeek, setCompletedThisWeek] = useState<WorkoutHistoryRow[]>([]);
+  const [completedThisWeek, setCompletedThisWeek] = useState<
+    WorkoutHistoryRow[]
+  >([]);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +42,9 @@ export const useWeeklyPlanData = () => {
   const planDays = useMemo<PlanDay[]>(
     () =>
       DAYS_OF_WEEK.map((day) => {
-        const configured = activePlan?.days.find((d) => d.dayOfWeek === day.dayOfWeek);
+        const configured = activePlan?.days.find(
+          (d) => d.dayOfWeek === day.dayOfWeek,
+        );
         const workoutsFromDay = completedThisWeek.filter(
           (row) => new Date(row.completed_at).getDay() === day.dayOfWeek,
         );
@@ -57,5 +61,12 @@ export const useWeeklyPlanData = () => {
     [activePlan, completedThisWeek],
   );
 
-  return { activePlan, planDays, selectedDay, setSelectedDay, loading, refreshPlan };
+  return {
+    activePlan,
+    planDays,
+    selectedDay,
+    setSelectedDay,
+    loading,
+    refreshPlan,
+  };
 };

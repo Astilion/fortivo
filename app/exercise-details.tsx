@@ -71,7 +71,7 @@ export default function ExerciseDetailsScreen() {
       )}
       <View style={styles.actionRow}>
         <Pressable style={styles.actionCard} onPress={openYouTubeSearch}>
-          <Ionicons name='logo-youtube' size={28} color='#FF0000' />
+          <Ionicons name="logo-youtube" size={28} color="#FF0000" />
           <Text style={styles.actionLabel}>YouTube</Text>
         </Pressable>
         <Pressable
@@ -83,7 +83,7 @@ export default function ExerciseDetailsScreen() {
             })
           }
         >
-          <Ionicons name='stats-chart' size={28} color={colors.accent} />
+          <Ionicons name="stats-chart" size={28} color={colors.accent} />
           <Text style={styles.actionLabel}>Historia</Text>
         </Pressable>
       </View>

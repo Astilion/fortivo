@@ -99,7 +99,7 @@ export default function EditWorkoutScreen() {
             setWorkoutName(text);
             if (showNameError) setShowNameError(false);
           }}
-          placeholder='Nazwa treningu...'
+          placeholder="Nazwa treningu..."
         />
         {showNameError && (
           <Text
@@ -151,12 +151,12 @@ export default function EditWorkoutScreen() {
       )}
 
       <Button
-        title='+ Dodaj Ćwiczenie'
+        title="+ Dodaj Ćwiczenie"
         onPress={() => {
           router.push('/select-exercise');
           if (showExercisesError) setShowExercisesError(false);
         }}
-        variant='primary'
+        variant="primary"
       />
 
       {showExercisesError && (
@@ -173,9 +173,9 @@ export default function EditWorkoutScreen() {
       )}
 
       <Button
-        title='Zapisz zmiany'
+        title="Zapisz zmiany"
         onPress={handleSaveWorkout}
-        variant='primary'
+        variant="primary"
       />
     </ScrollView>
   );

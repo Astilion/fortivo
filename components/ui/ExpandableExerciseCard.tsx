@@ -108,7 +108,7 @@ export const ExpandableExerciseCard = ({
               accessibilityLabel="Przesuń ćwiczenie w górę"
             >
               <Ionicons
-                name='arrow-up'
+                name="arrow-up"
                 size={18}
                 color={isFirst ? colors.text.secondary : colors.accent}
               />
@@ -128,7 +128,7 @@ export const ExpandableExerciseCard = ({
               accessibilityLabel="Przesuń ćwiczenie w dół"
             >
               <Ionicons
-                name='arrow-down'
+                name="arrow-down"
                 size={18}
                 color={isLast ? colors.text.secondary : colors.accent}
               />
@@ -142,7 +142,7 @@ export const ExpandableExerciseCard = ({
             hitSlop={4}
             accessibilityLabel="Usuń ćwiczenie"
           >
-            <Ionicons name='trash-outline' size={20} color={colors.danger} />
+            <Ionicons name="trash-outline" size={20} color={colors.danger} />
           </Pressable>
         </View>
       </Pressable>
@@ -183,8 +183,8 @@ export const ExpandableExerciseCard = ({
                     const weight = parseDecimal(e.nativeEvent.text);
                     onUpdateSet(set.id, { weight });
                   }}
-                  keyboardType='decimal-pad'
-                  placeholder='0'
+                  keyboardType="decimal-pad"
+                  placeholder="0"
                   placeholderTextColor={colors.text.secondary}
                 />
               </View>
@@ -226,8 +226,8 @@ export const ExpandableExerciseCard = ({
                       parseInteger(e.nativeEvent.text) || undefined;
                     onUpdateSet(set.id, { restTime });
                   }}
-                  keyboardType='numeric'
-                  placeholder='90'
+                  keyboardType="numeric"
+                  placeholder="90"
                   placeholderTextColor={colors.text.secondary}
                 />
               </View>
@@ -245,7 +245,7 @@ export const ExpandableExerciseCard = ({
                     }
                   >
                     <Ionicons
-                      name='close-circle'
+                      name="close-circle"
                       size={22}
                       color={colors.danger}
                     />
@@ -258,7 +258,7 @@ export const ExpandableExerciseCard = ({
           {/* Add set */}
           <Pressable style={styles.addSetButton} onPress={onAddSet}>
             <Ionicons
-              name='add-circle-outline'
+              name="add-circle-outline"
               size={18}
               color={colors.accent}
             />

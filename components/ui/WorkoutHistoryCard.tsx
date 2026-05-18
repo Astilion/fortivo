@@ -24,7 +24,7 @@ export const WorkoutHistoryCard = memo(function WorkoutHistoryCard({
       <View style={styles.cardHeader}>
         <Text style={styles.workoutName}>{workoutName}</Text>
         <Ionicons
-          name='chevron-forward'
+          name="chevron-forward"
           size={20}
           color={colors.text.secondary}
         />
@@ -33,7 +33,7 @@ export const WorkoutHistoryCard = memo(function WorkoutHistoryCard({
       <View style={styles.cardInfo}>
         <View style={styles.infoItem}>
           <Ionicons
-            name='calendar-outline'
+            name="calendar-outline"
             size={16}
             color={colors.text.secondary}
           />
@@ -44,7 +44,7 @@ export const WorkoutHistoryCard = memo(function WorkoutHistoryCard({
 
         <View style={styles.infoItem}>
           <Ionicons
-            name='time-outline'
+            name="time-outline"
             size={16}
             color={colors.text.secondary}
           />

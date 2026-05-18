@@ -112,7 +112,7 @@ export default function WeightTrackingScreen() {
 
         {entries.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name='scale-outline' size={48} color={colors.muted} />
+            <Ionicons name="scale-outline" size={48} color={colors.muted} />
             <Text style={styles.emptyText}>Brak wpisów</Text>
             <Text style={styles.emptySubtext}>
               Dodaj pierwszy pomiar powyżej

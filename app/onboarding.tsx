@@ -47,8 +47,7 @@ const SLIDES: Slide[] = [
   {
     key: 'workouts',
     title: 'Treningi',
-    description:
-      'Twórz treningi, zarządzaj planami i organizuj swoje sesje.',
+    description: 'Twórz treningi, zarządzaj planami i organizuj swoje sesje.',
     icon: 'clipboard-outline',
   },
   {
@@ -67,7 +66,8 @@ const SLIDES: Slide[] = [
   {
     key: 'start',
     title: 'Zaczynamy!',
-    description: 'Rozpocznij swój pierwszy trening i osiągnij swoje cele z Fortivo!',
+    description:
+      'Rozpocznij swój pierwszy trening i osiągnij swoje cele z Fortivo!',
     icon: 'rocket',
   },
 ];
@@ -122,7 +122,7 @@ export default function OnboardingScreen() {
             <Image
               source={item.image}
               style={styles.logo}
-              resizeMode='contain'
+              resizeMode="contain"
             />
           ) : (
             <Ionicons name={item.icon} size={ICON_SIZE} color={colors.accent} />

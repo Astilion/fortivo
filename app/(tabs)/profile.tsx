@@ -150,7 +150,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
-          <ActivityIndicator size='large' color={colors.accent} />
+          <ActivityIndicator size="large" color={colors.accent} />
           <Text style={styles.loadingText}>Ładowanie ustawień...</Text>
         </View>
       </SafeAreaView>
@@ -162,7 +162,7 @@ export default function ProfileScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
           <Ionicons
-            name='alert-circle-outline'
+            name="alert-circle-outline"
             size={48}
             color={colors.danger}
           />
@@ -176,7 +176,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {loading && (
         <ActivityIndicator
-          size='small'
+          size="small"
           color={colors.accent}
           style={styles.headerSpinner}
         />
@@ -188,9 +188,9 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Sekcja: Jednostki ── */}
-        <SectionHeader icon='scale-outline' title='JEDNOSTKI' />
+        <SectionHeader icon="scale-outline" title="JEDNOSTKI" />
         <View style={styles.card}>
-          <SettingsRow label='Jednostka wagi' isLast>
+          <SettingsRow label="Jednostka wagi" isLast>
             <View style={styles.segmentedControl}>
               {(['kg', 'lbs'] as WeightUnit[]).map((unit) => (
                 <Pressable
@@ -217,11 +217,11 @@ export default function ProfileScreen() {
           </SettingsRow>
         </View>
         {/* -- Sekcja: Cel Wagowy -- */}
-        <SectionHeader icon='trophy-outline' title='CEL' />
+        <SectionHeader icon="trophy-outline" title="CEL" />
         <View style={styles.card}>
           <SettingsRow
-            label='Cel wagowy'
-            description='Twoja docelowa waga'
+            label="Cel wagowy"
+            description="Twoja docelowa waga"
             isLast
           >
             <View style={styles.numberInputWrapper}>
@@ -230,9 +230,9 @@ export default function ProfileScreen() {
                 value={goalWeightInput}
                 onChangeText={handleGoalWeightChange}
                 onBlur={handleGoalWeightBlur}
-                keyboardType='decimal-pad'
+                keyboardType="decimal-pad"
                 maxLength={6}
-                placeholder='--'
+                placeholder="--"
                 placeholderTextColor={colors.muted}
               />
               <Text style={styles.numberInputUnit}>
@@ -244,9 +244,9 @@ export default function ProfileScreen() {
             <Text style={styles.goalWeightError}>{goalWeightError}</Text>
           )}
           <Pressable onPress={() => router.push('/weight-tracking')}>
-            <SettingsRow label='Historia wagi'>
+            <SettingsRow label="Historia wagi">
               <Ionicons
-                name='chevron-forward'
+                name="chevron-forward"
                 size={20}
                 color={colors.text.secondary}
               />
@@ -254,9 +254,9 @@ export default function ProfileScreen() {
           </Pressable>
 
           <Pressable onPress={() => router.push('/body-measurements')}>
-            <SettingsRow label='Historia Pomiarów' isLast>
+            <SettingsRow label="Historia Pomiarów" isLast>
               <Ionicons
-                name='chevron-forward'
+                name="chevron-forward"
                 size={20}
                 color={colors.text.secondary}
               />
@@ -265,11 +265,11 @@ export default function ProfileScreen() {
         </View>
 
         {/* ── Sekcja: Trening ── */}
-        <SectionHeader icon='timer-outline' title='TRENING' />
+        <SectionHeader icon="timer-outline" title="TRENING" />
         <View style={styles.card}>
           <SettingsRow
-            label='Domyślny czas odpoczynku'
-            description='Czas między seriami (sekundy)'
+            label="Domyślny czas odpoczynku"
+            description="Czas między seriami (sekundy)"
           >
             <View style={styles.numberInputWrapper}>
               <TextInput
@@ -277,7 +277,7 @@ export default function ProfileScreen() {
                 value={restTimeInput}
                 onChangeText={handleRestTimeChange}
                 onBlur={handleRestTimeBlur}
-                keyboardType='number-pad'
+                keyboardType="number-pad"
                 maxLength={4}
                 placeholderTextColor={colors.muted}
               />
@@ -286,8 +286,8 @@ export default function ProfileScreen() {
           </SettingsRow>
 
           <SettingsRow
-            label='Tracking RPE'
-            description='Ocena subiektywnego wysiłku (1-10)'
+            label="Tracking RPE"
+            description="Ocena subiektywnego wysiłku (1-10)"
           >
             <Switch
               value={settings?.trackRPE ?? false}
@@ -299,8 +299,8 @@ export default function ProfileScreen() {
           </SettingsRow>
 
           <SettingsRow
-            label='Tracking Tempo'
-            description='Tempo wykonania ćwiczenia (np. 3-1-2)'
+            label="Tracking Tempo"
+            description="Tempo wykonania ćwiczenia (np. 3-1-2)"
           >
             <Switch
               value={settings?.trackTempo ?? false}
@@ -312,8 +312,8 @@ export default function ProfileScreen() {
           </SettingsRow>
 
           <SettingsRow
-            label='Tracking odpoczynku'
-            description='Mierz czas przerw między seriami'
+            label="Tracking odpoczynku"
+            description="Mierz czas przerw między seriami"
             isLast
           >
             <Switch
@@ -329,7 +329,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* ── Sekcja: Aplikacja ── */}
-        <SectionHeader icon='information-circle-outline' title='APLIKACJA' />
+        <SectionHeader icon="information-circle-outline" title="APLIKACJA" />
         <View style={styles.card}>
           <View style={[styles.row, styles.rowBorder]}>
             <Text style={styles.rowLabelText}>Wersja</Text>

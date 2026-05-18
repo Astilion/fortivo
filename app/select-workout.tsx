@@ -33,9 +33,9 @@ export default function SelectWorkoutScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {workouts.length === 0 ? (
           <EmptyState
-            icon='barbell-outline'
-            title='Brak treningów'
-            subtitle='Najpierw stwórz jakiś trening'
+            icon="barbell-outline"
+            title="Brak treningów"
+            subtitle="Najpierw stwórz jakiś trening"
           />
         ) : (
           workouts.map((workout) => (

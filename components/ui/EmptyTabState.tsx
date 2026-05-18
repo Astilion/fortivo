@@ -28,7 +28,7 @@ export function EmptyTabState({
       {actionLabel && onAction && (
         <Button
           onPress={onAction}
-          variant='primary'
+          variant="primary"
           title={actionLabel}
           style={{ marginTop: 16 }}
         />

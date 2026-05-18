@@ -36,15 +36,15 @@ export const MeasurementRow: React.FC<MeasurementRowProps> = ({
           style={styles.input}
           value={inputValue}
           onChangeText={onChangeText}
-          keyboardType='decimal-pad'
-          placeholder='0.0'
+          keyboardType="decimal-pad"
+          placeholder="0.0"
           placeholderTextColor={colors.muted}
           maxLength={5}
         />
         <Text style={styles.inputUnit}>cm</Text>
       </View>
       <Pressable style={styles.addButton} onPress={onAdd}>
-        <Ionicons name='add' size={20} color={colors.primary} />
+        <Ionicons name="add" size={20} color={colors.primary} />
       </Pressable>
     </View>
   </View>

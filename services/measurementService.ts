@@ -67,7 +67,9 @@ export class MeasurementService {
 
   async deleteMeasurement(id: string): Promise<void> {
     try {
-      await this.db.runAsync('DELETE FROM body_measurements WHERE id = ?', [id]);
+      await this.db.runAsync('DELETE FROM body_measurements WHERE id = ?', [
+        id,
+      ]);
     } catch (error) {
       logger.error('MeasurementService.deleteMeasurement failed', error);
       throw new ServiceError('Nie udało się usunąć pomiaru ciała', error);

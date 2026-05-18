@@ -7,13 +7,7 @@ import { formatDate } from '@/utils/date';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import {
-  Alert,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { logger } from '@/utils/logger';
 
 export default function ExerciseProgressScreen() {
@@ -90,9 +84,9 @@ export default function ExerciseProgressScreen() {
       {/* History List */}
       {progress.length === 0 ? (
         <EmptyState
-          icon='barbell-outline'
-          title='Brak historii'
-          subtitle='Wykonaj to ćwiczenie w treningu!'
+          icon="barbell-outline"
+          title="Brak historii"
+          subtitle="Wykonaj to ćwiczenie w treningu!"
         />
       ) : (
         <FlatList
@@ -108,7 +102,7 @@ export default function ExerciseProgressScreen() {
                 <Text style={styles.date}>{formatDate(item.date)}</Text>
                 {item.personalRecord && (
                   <View style={styles.prBadge}>
-                    <Ionicons name='trophy' size={18} color={colors.primary} />{' '}
+                    <Ionicons name="trophy" size={18} color={colors.primary} />{' '}
                     <Text style={styles.prText}>REKORD!</Text>{' '}
                   </View>
                 )}
@@ -129,7 +123,7 @@ export default function ExerciseProgressScreen() {
               {item.workoutName && (
                 <View style={styles.workoutInfo}>
                   <Ionicons
-                    name='fitness-outline'
+                    name="fitness-outline"
                     size={14}
                     color={colors.text.secondary}
                   />

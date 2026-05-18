@@ -10,7 +10,12 @@ export const useWorkoutHistory = () => {
     () => workoutService.getWorkoutHistory(),
     [workoutService],
   );
-  const { data: history, loading, error, reload } = useAsyncLoader<WorkoutHistoryWithDetails[]>(loader, []);
+  const {
+    data: history,
+    loading,
+    error,
+    reload,
+  } = useAsyncLoader<WorkoutHistoryWithDetails[]>(loader, []);
   useRefreshOnFocus(reload, [reload]);
   return { history, loading, error, refresh: reload };
 };

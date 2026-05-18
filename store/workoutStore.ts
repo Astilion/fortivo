@@ -1,7 +1,10 @@
-import { Exercise, WorkoutSet, WorkoutExerciseWithSets } from '@/types/training';
+import {
+  Exercise,
+  WorkoutSet,
+  WorkoutExerciseWithSets,
+} from '@/types/training';
 import { create } from 'zustand';
 import { generateId } from '@/database/database';
-
 
 interface WorkoutDraft {
   name: string;

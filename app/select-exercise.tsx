@@ -158,7 +158,9 @@ export default function SelectExerciseScreen() {
             }}
             style={styles.favoriteButton}
             hitSlop={8}
-            accessibilityLabel={isFavorite(item.id) ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+            accessibilityLabel={
+              isFavorite(item.id) ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'
+            }
           >
             <Ionicons
               name={isFavorite(item.id) ? 'star' : 'star-outline'}
@@ -171,7 +173,16 @@ export default function SelectExerciseScreen() {
         </View>
       </Card>
     ),
-    [isMultiSelectMode, toggleSelection, handleSelectExercise, source, enterMultiSelectMode, selectedIds, toggleFavorite, isFavorite],
+    [
+      isMultiSelectMode,
+      toggleSelection,
+      handleSelectExercise,
+      source,
+      enterMultiSelectMode,
+      selectedIds,
+      toggleFavorite,
+      isFavorite,
+    ],
   );
 
   return (
@@ -179,8 +190,8 @@ export default function SelectExerciseScreen() {
       <Input
         value={searchQuery}
         onChangeText={setSearchQuery}
-        placeholder='Wyszukaj ćwiczenie...'
-        icon='search'
+        placeholder="Wyszukaj ćwiczenie..."
+        icon="search"
       />
 
       <ScrollView
@@ -190,17 +201,17 @@ export default function SelectExerciseScreen() {
         contentContainerStyle={styles.filterContent}
       >
         <Button
-          title='Wszystkie'
+          title="Wszystkie"
           variant={selectedCategory === 'wszystkie' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('wszystkie')}
         />
         <Button
-          title='⭐ Ulubione'
+          title="⭐ Ulubione"
           variant={selectedCategory === 'ulubione' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('ulubione')}
         />
         <Button
-          title='Własne'
+          title="Własne"
           variant={selectedCategory === 'wlasne' ? 'primary' : 'secondary'}
           onPress={() => setSelectedCategory('wlasne')}
         />
@@ -217,7 +228,7 @@ export default function SelectExerciseScreen() {
       </ScrollView>
 
       {loading ? (
-        <ActivityIndicator size='large' color={colors.accent} />
+        <ActivityIndicator size="large" color={colors.accent} />
       ) : (
         <FlatList
           data={filteredExercises}
@@ -234,21 +245,21 @@ export default function SelectExerciseScreen() {
           onPress={() => router.push('/create-exercise')}
           style={[styles.fab, { bottom: activeWorkoutId ? 170 : 34 }]}
         >
-          <Ionicons name='add' size={28} color='#1C2227' />
+          <Ionicons name="add" size={28} color="#1C2227" />
         </Pressable>
       )}
 
       {isMultiSelectMode && (
         <View style={styles.floatingBar}>
           <Button
-            title='Anuluj'
+            title="Anuluj"
             onPress={exitMultiSelectMode}
-            variant='secondary'
+            variant="secondary"
             style={{ flex: 1 }}
           />
           <Button
             title={`Dodaj (${selectedIds.size})`}
-            variant='primary'
+            variant="primary"
             onPress={handleMultiAdd}
             style={{ flex: 1 }}
           />

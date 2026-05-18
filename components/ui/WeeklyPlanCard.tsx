@@ -63,8 +63,16 @@ export function WeeklyPlanCard({
         {isActive ? (
           <View style={styles.activeBadge}>
             <Text style={styles.activeBadgeText}>Aktywny</Text>
-            <Pressable onPress={onDeactivate} style={styles.clearBtn} hitSlop={8}>
-              <Ionicons name="close-circle-outline" size={18} color={colors.accent} />
+            <Pressable
+              onPress={onDeactivate}
+              style={styles.clearBtn}
+              hitSlop={8}
+            >
+              <Ionicons
+                name="close-circle-outline"
+                size={18}
+                color={colors.accent}
+              />
             </Pressable>
           </View>
         ) : (
@@ -107,7 +115,9 @@ export function WeeklyPlanCard({
             ) : (
               sortedDays.map((day) => (
                 <View key={day.day_of_week} style={styles.dayRow}>
-                  <Text style={styles.dayAbbr}>{DAY_ABBR[day.day_of_week]}</Text>
+                  <Text style={styles.dayAbbr}>
+                    {DAY_ABBR[day.day_of_week]}
+                  </Text>
                   <Text style={styles.daySeparator}>:</Text>
                   {day.workout_name ? (
                     <Text style={styles.dayWorkout} numberOfLines={1}>

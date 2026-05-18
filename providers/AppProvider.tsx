@@ -126,7 +126,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   if (!isReady || !context) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size='large' color={colors.accent} />
+        <ActivityIndicator size="large" color={colors.accent} />
         <Text style={styles.loadingText}>Inicjalizacja aplikacji...</Text>
       </View>
     );
