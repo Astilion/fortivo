@@ -22,6 +22,9 @@ jest.mock('@/providers/AppProvider', () => ({
 
 jest.mock('expo-router', () => ({
   useFocusEffect: (callback: () => void) => {
+    // jest.mock factories are hoisted and cannot close over imports, so a
+    // runtime require is required here.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('react').useEffect(callback, []);
   },
 }));
@@ -48,7 +51,6 @@ describe('loadSettings', () => {
   });
   test('check if updateSettings calls profileService.updateUserSettings', async () => {
     const { result } = renderHook(() => useProfileSettings());
-    const { profileService } = require('@/providers/AppProvider').useApp();
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });

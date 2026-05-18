@@ -1,5 +1,5 @@
 import exercisesData from '@/assets/data/exercises.json';
-import initDatabase from '@/database/database';
+import { initDatabase } from '@/database/database';
 import { Exercise, ExerciseService } from '@/services/exerciseService';
 import { WorkoutService } from '@/services/workoutService';
 import { useExerciseStore } from '@/store/exerciseStore';

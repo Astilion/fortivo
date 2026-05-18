@@ -6,6 +6,6 @@ export default defineConfig([
   expoConfig,
   eslintPluginPrettierRecommended,
   {
-    ignores: ['dist/*'],
+    ignores: ['dist/*', 'expo-env.d.ts', '.expo/*'],
   },
 ]);

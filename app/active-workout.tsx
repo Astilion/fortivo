@@ -1,8 +1,11 @@
 import { Button } from '@/components/ui/Button';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
-import { WorkoutExerciseWithSets } from '@/types/training';
-import { WorkoutRow, WorkoutSet } from '@/types/training';
+import {
+  WorkoutExerciseWithSets,
+  WorkoutRow,
+  WorkoutSet,
+} from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState, useEffect, useRef } from 'react';
@@ -31,7 +34,7 @@ export default function ActiveWorkoutScreen() {
   const [validationKey, setValidationKey] = useState(0);
   const [isResting, setIsResting] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
   const exercisesRef = useRef<WorkoutExerciseWithSets[]>([]);
   const { workoutService } = useApp();
   const router = useRouter();

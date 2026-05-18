@@ -5,7 +5,7 @@ import colors from '@/constants/Colors';
 import { commonStyles } from '@/constants/Styles';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useWorkoutStore } from '@/store/workoutStore';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -19,7 +19,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { capitalize } from '@/utils/capitalize';
 import { matchesSearch } from '@/utils/search';
-import { useLocalSearchParams } from 'expo-router';
 
 export default function SelectExerciseScreen() {
   const [searchQuery, setSearchQuery] = useState('');

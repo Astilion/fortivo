@@ -13,7 +13,7 @@ import { confirmAction } from '@/utils/confirm';
 import { ServiceError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 

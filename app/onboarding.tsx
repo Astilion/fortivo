@@ -1,7 +1,7 @@
 import colors from '@/constants/Colors';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
   BackHandler,
@@ -16,7 +16,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Slide = {

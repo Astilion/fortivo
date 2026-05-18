@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/Button';
 import colors from '@/constants/Colors';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { capitalize } from '@/utils/capitalize';
