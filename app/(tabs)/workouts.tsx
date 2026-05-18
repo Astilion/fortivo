@@ -15,13 +15,7 @@ import { logger } from '@/utils/logger';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type WorkoutsTab = 'workouts' | 'plans' | 'ready';
 
@@ -221,8 +215,8 @@ export default function WorkoutsScreen() {
           <>
             <View style={styles.createButtonWrapper}>
               <Button
-                title='Stwórz nowy trening'
-                variant='primary'
+                title="Stwórz nowy trening"
+                variant="primary"
                 onPress={() => router.push('/create-workout')}
               />
             </View>
@@ -233,9 +227,9 @@ export default function WorkoutsScreen() {
 
             {workouts.length === 0 ? (
               <EmptyState
-                icon='barbell-outline'
-                title='Nie masz jeszcze treningów'
-                subtitle='Stwórz swój pierwszy plan treningowy'
+                icon="barbell-outline"
+                title="Nie masz jeszcze treningów"
+                subtitle="Stwórz swój pierwszy plan treningowy"
               />
             ) : (
               workouts.map((workout, index) => {
@@ -275,8 +269,8 @@ export default function WorkoutsScreen() {
           <>
             <View style={styles.createButtonWrapper}>
               <Button
-                title='Stwórz nowy plan'
-                variant='primary'
+                title="Stwórz nowy plan"
+                variant="primary"
                 onPress={() => router.push('/create-weekly-plan')}
               />
             </View>
@@ -284,9 +278,9 @@ export default function WorkoutsScreen() {
 
             {weeklyPlans.length === 0 ? (
               <EmptyTabState
-                icon='calendar-outline'
-                title='Nie masz planów tygodniowych'
-                subtitle='Stwórz swój pierwszy plan'
+                icon="calendar-outline"
+                title="Nie masz planów tygodniowych"
+                subtitle="Stwórz swój pierwszy plan"
               />
             ) : (
               weeklyPlans.map((plan) => (
@@ -294,7 +288,9 @@ export default function WorkoutsScreen() {
                   key={plan.id}
                   plan={plan}
                   isActive={plan.is_active === 1}
-                  onEdit={() => router.push(`/create-weekly-plan?id=${plan.id}`)}
+                  onEdit={() =>
+                    router.push(`/create-weekly-plan?id=${plan.id}`)
+                  }
                   onDelete={() => handleDeleteWeeklyPlan(plan.id, plan.name)}
                   onActivate={() => handleSetActivePlan(plan.id)}
                   onDeactivate={handleClearActivePlan}
@@ -304,7 +300,7 @@ export default function WorkoutsScreen() {
           </>
         )}
         {selectedTab === 'ready' && (
-          <EmptyTabState icon='hourglass-outline' title='Wkrótce dostępne' />
+          <EmptyTabState icon="hourglass-outline" title="Wkrótce dostępne" />
         )}
       </ScrollView>
     </View>

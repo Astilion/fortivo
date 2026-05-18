@@ -66,8 +66,8 @@ export function Toast() {
         { backgroundColor, transform: [{ translateY: slideAnim }] },
       ]}
       pointerEvents={displayMessage ? 'auto' : 'none'}
-      accessibilityRole='alert'
-      accessibilityLiveRegion='assertive'
+      accessibilityRole="alert"
+      accessibilityLiveRegion="assertive"
     >
       {displayMessage && (
         <Text style={[styles.message, { color: textColor }]}>

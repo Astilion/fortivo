@@ -54,19 +54,19 @@ export default function HomeScreen() {
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <StatCard
-          icon='calendar-outline'
+          icon="calendar-outline"
           value={stats.workoutsThisWeek}
-          label='Ten tydzień'
+          label="Ten tydzień"
         />
         <StatCard
-          icon='bar-chart-outline'
+          icon="bar-chart-outline"
           value={stats.workoutsThisMonth}
-          label='Ten miesiąc'
+          label="Ten miesiąc"
         />
         <StatCard
-          icon='trophy-outline'
+          icon="trophy-outline"
           value={stats.totalWorkouts}
-          label='Razem'
+          label="Razem"
         />
       </View>
 
@@ -81,9 +81,9 @@ export default function HomeScreen() {
 
         {workouts.length === 0 ? (
           <EmptyState
-            icon='fitness-outline'
-            title='Brak treningów'
-            subtitle='Rozpocznij swój pierwszy trening!'
+            icon="fitness-outline"
+            title="Brak treningów"
+            subtitle="Rozpocznij swój pierwszy trening!"
           />
         ) : (
           workouts.map((workout) => (
@@ -109,14 +109,14 @@ export default function HomeScreen() {
         <Text style={styles.sectionTitle}>Szybkie akcje</Text>
 
         <ActionButton
-          icon='play-circle'
-          title='Rozpocznij trening'
+          icon="play-circle"
+          title="Rozpocznij trening"
           onPress={() => router.push('/current-workout')}
         />
 
         <ActionButton
-          icon='list'
-          title='Moje plany'
+          icon="list"
+          title="Moje plany"
           onPress={() => router.push('/(tabs)/workouts')}
         />
       </View>

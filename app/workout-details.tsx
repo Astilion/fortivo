@@ -50,7 +50,7 @@ export default function WorkoutDetailsScreen() {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size='large' color={colors.accent} />
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -71,7 +71,7 @@ export default function WorkoutDetailsScreen() {
         <View style={styles.headerInfo}>
           <View style={styles.headerInfoItem}>
             <Ionicons
-              name='calendar-outline'
+              name="calendar-outline"
               size={16}
               color={colors.text.secondary}
             />
@@ -81,7 +81,7 @@ export default function WorkoutDetailsScreen() {
           </View>
           <View style={styles.headerInfoItem}>
             <Ionicons
-              name='time-outline'
+              name="time-outline"
               size={16}
               color={colors.text.secondary}
             />
@@ -139,7 +139,7 @@ export default function WorkoutDetailsScreen() {
                   {/* Completed indicator */}
                   {set.completed && (
                     <Ionicons
-                      name='checkmark-circle'
+                      name="checkmark-circle"
                       size={20}
                       color={colors.accent}
                     />

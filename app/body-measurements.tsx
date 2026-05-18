@@ -136,7 +136,7 @@ export default function BodyMeasurementsScreen() {
           <ScrollView
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps='handled'
+            keyboardShouldPersistTaps="handled"
           >
             {error && <Text style={styles.errorText}>{error}</Text>}
             {BODY_PARTS.map((part) => (
@@ -159,7 +159,7 @@ export default function BodyMeasurementsScreen() {
           <>
             {measurements.length === 0 ? (
               <View style={styles.emptyState}>
-                <Ionicons name='body-outline' size={48} color={colors.muted} />
+                <Ionicons name="body-outline" size={48} color={colors.muted} />
                 <Text style={styles.emptyText}>Brak pomiarów</Text>
                 <Text style={styles.emptySubtext}>
                   Dodaj pierwszy pomiar w zakładce Pomiary

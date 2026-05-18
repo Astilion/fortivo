@@ -44,7 +44,7 @@ export const WorkoutCard = ({
         <View style={styles.leftSection}>
           <View style={styles.nameRow}>
             {isFavorite && (
-              <Ionicons name='star' size={14} color={colors.accent} />
+              <Ionicons name="star" size={14} color={colors.accent} />
             )}
             <Text style={styles.workoutName}>{workoutName}</Text>
           </View>
@@ -64,10 +64,10 @@ export const WorkoutCard = ({
               isFirst && styles.actionButtonDisabled,
             ]}
             hitSlop={6}
-            accessibilityLabel='Przesuń w górę'
+            accessibilityLabel="Przesuń w górę"
           >
             <Ionicons
-              name='arrow-up'
+              name="arrow-up"
               size={18}
               color={isFirst ? colors.text.secondary : colors.accent}
             />
@@ -80,10 +80,10 @@ export const WorkoutCard = ({
             disabled={isLast}
             style={[styles.actionButton, isLast && styles.actionButtonDisabled]}
             hitSlop={6}
-            accessibilityLabel='Przesuń w dół'
+            accessibilityLabel="Przesuń w dół"
           >
             <Ionicons
-              name='arrow-down'
+              name="arrow-down"
               size={18}
               color={isLast ? colors.text.secondary : colors.accent}
             />
@@ -112,9 +112,9 @@ export const WorkoutCard = ({
             }}
             style={styles.actionButton}
             hitSlop={6}
-            accessibilityLabel='Edytuj trening'
+            accessibilityLabel="Edytuj trening"
           >
-            <Ionicons name='create-outline' size={20} color={colors.accent} />
+            <Ionicons name="create-outline" size={20} color={colors.accent} />
           </Pressable>
           <Pressable
             onPress={(e) => {
@@ -123,9 +123,9 @@ export const WorkoutCard = ({
             }}
             style={styles.actionButton}
             hitSlop={6}
-            accessibilityLabel='Usuń trening'
+            accessibilityLabel="Usuń trening"
           >
-            <Ionicons name='trash-outline' size={20} color={colors.danger} />
+            <Ionicons name="trash-outline" size={20} color={colors.danger} />
           </Pressable>
         </View>
       </View>

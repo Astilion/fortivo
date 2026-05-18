@@ -93,11 +93,21 @@ export class WeeklyPlanService {
     try {
       await this.db.runAsync(
         `INSERT INTO weekly_plans (id, name, week_number, notes, created_at, is_active) VALUES (?, ?, ?, ?, ?, ?)`,
-        [id, name, weekNumber ?? null, notes || null, createdAt.toISOString(), 0],
+        [
+          id,
+          name,
+          weekNumber ?? null,
+          notes || null,
+          createdAt.toISOString(),
+          0,
+        ],
       );
     } catch (error) {
       logger.error('WeeklyPlanService.createWeeklyPlan failed', error);
-      throw new ServiceError('Nie udało się utworzyć planu tygodniowego', error);
+      throw new ServiceError(
+        'Nie udało się utworzyć planu tygodniowego',
+        error,
+      );
     }
     return {
       id,
@@ -129,7 +139,10 @@ export class WeeklyPlanService {
       });
     } catch (error) {
       logger.error('WeeklyPlanService.setWeeklyPlanActive failed', error);
-      throw new ServiceError('Nie udało się aktywować planu tygodniowego', error);
+      throw new ServiceError(
+        'Nie udało się aktywować planu tygodniowego',
+        error,
+      );
     }
   }
 
@@ -190,7 +203,10 @@ export class WeeklyPlanService {
       );
     } catch (error) {
       logger.error('WeeklyPlanService.updateWeeklyPlan failed', error);
-      throw new ServiceError('Nie udało się zaktualizować planu tygodniowego', error);
+      throw new ServiceError(
+        'Nie udało się zaktualizować planu tygodniowego',
+        error,
+      );
     }
   }
 

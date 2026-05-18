@@ -9,13 +9,7 @@ import { WorkoutRow, WorkoutExerciseWithSets } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function CurrentWorkoutScreen() {
   const [activeWorkout, setActiveWorkout] = useState<WorkoutRow | null>(null);
@@ -23,8 +17,13 @@ export default function CurrentWorkoutScreen() {
   const [workoutsCount, setWorkoutsCount] = useState(0);
   const [workoutLoading, setWorkoutLoading] = useState(true);
   const { workoutService } = useApp();
-  const { activePlan, planDays, selectedDay, setSelectedDay, loading: planLoading } =
-    useWeeklyPlanData();
+  const {
+    activePlan,
+    planDays,
+    selectedDay,
+    setSelectedDay,
+    loading: planLoading,
+  } = useWeeklyPlanData();
   const router = useRouter();
   const today = new Date().getDay();
 
@@ -132,13 +131,13 @@ export default function CurrentWorkoutScreen() {
             </ScrollView>
             <View style={styles.actions}>
               <Button
-                title='🏋️ Rozpocznij trening'
-                variant='primary'
+                title="🏋️ Rozpocznij trening"
+                variant="primary"
                 onPress={() => router.push('/active-workout')}
               />
               <Button
-                title='Anuluj plan'
-                variant='secondary'
+                title="Anuluj plan"
+                variant="secondary"
                 onPress={handleClearActive}
               />
             </View>
@@ -146,7 +145,7 @@ export default function CurrentWorkoutScreen() {
         ) : !activePlan ? (
           <View style={styles.emptyState}>
             <Ionicons
-              name='barbell-outline'
+              name="barbell-outline"
               size={64}
               color={colors.text.secondary}
               style={styles.emptyIcon}
@@ -158,14 +157,14 @@ export default function CurrentWorkoutScreen() {
 
             <View style={styles.emptyActions}>
               <Button
-                title='+ Stwórz nowy trening'
-                variant='primary'
+                title="+ Stwórz nowy trening"
+                variant="primary"
                 onPress={() => router.push('/create-workout')}
               />
               {workoutsCount > 0 && (
                 <Button
-                  title='📚 Wybierz z biblioteki'
-                  variant='secondary'
+                  title="📚 Wybierz z biblioteki"
+                  variant="secondary"
                   onPress={() => router.push('/(tabs)/workouts')}
                 />
               )}

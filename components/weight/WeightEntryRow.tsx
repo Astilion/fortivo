@@ -40,7 +40,7 @@ export const WeightEntryRow: React.FC<WeightEntryRowProps> = ({
         style={styles.deleteButton}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Ionicons name='trash-outline' size={16} color={colors.danger} />
+        <Ionicons name="trash-outline" size={16} color={colors.danger} />
       </Pressable>
     </View>
   </View>

@@ -295,7 +295,7 @@ export default function ActiveWorkoutScreen() {
       </View>
       {isResting && restTargetTime !== null && (
         <View style={styles.restBanner}>
-          <Ionicons name='timer-outline' size={18} color={colors.primary} />
+          <Ionicons name="timer-outline" size={18} color={colors.primary} />
           <Text style={styles.restBannerText}>
             Odpoczynek: {restTimeRemaining}s
           </Text>
@@ -305,7 +305,7 @@ export default function ActiveWorkoutScreen() {
               setRestTargetTime(null);
             }}
           >
-            <Ionicons name='close' size={18} color={colors.primary} />
+            <Ionicons name="close" size={18} color={colors.primary} />
           </Pressable>
         </View>
       )}
@@ -339,7 +339,7 @@ export default function ActiveWorkoutScreen() {
                 accessibilityLabel="Usuń ćwiczenie"
               >
                 <Ionicons
-                  name='trash-outline'
+                  name="trash-outline"
                   size={20}
                   color={colors.danger}
                 />
@@ -360,7 +360,7 @@ export default function ActiveWorkoutScreen() {
                         accessibilityLabel="Usuń serię"
                       >
                         <Ionicons
-                          name='close-circle'
+                          name="close-circle"
                           size={24}
                           color={colors.danger}
                         />
@@ -398,7 +398,7 @@ export default function ActiveWorkoutScreen() {
                           actualWeight: val,
                         });
                       }}
-                      keyboardType='decimal-pad'
+                      keyboardType="decimal-pad"
                     />
                   </View>
 
@@ -414,7 +414,7 @@ export default function ActiveWorkoutScreen() {
                           actualReps: val,
                         });
                       }}
-                      keyboardType='numeric'
+                      keyboardType="numeric"
                     />
                   </View>
                   {settings?.trackRPE && (
@@ -433,8 +433,8 @@ export default function ActiveWorkoutScreen() {
                             actualRpe: validated ?? undefined,
                           });
                         }}
-                        keyboardType='decimal-pad'
-                        placeholder='1-10'
+                        keyboardType="decimal-pad"
+                        placeholder="1-10"
                         placeholderTextColor={colors.muted}
                       />
                     </View>
@@ -455,7 +455,7 @@ export default function ActiveWorkoutScreen() {
                             tempo: validated ?? undefined,
                           });
                         }}
-                        placeholder='3-1-2'
+                        placeholder="3-1-2"
                         placeholderTextColor={colors.muted}
                       />
                     </View>
@@ -468,7 +468,7 @@ export default function ActiveWorkoutScreen() {
               onPress={() => addSet(item.id)}
             >
               <Ionicons
-                name='add-circle-outline'
+                name="add-circle-outline"
                 size={20}
                 color={colors.accent}
               />
@@ -477,15 +477,15 @@ export default function ActiveWorkoutScreen() {
           </View>
         ))}
         <Button
-          title='Dodaj ćwiczenie'
-          variant='primary'
+          title="Dodaj ćwiczenie"
+          variant="primary"
           onPress={() => router.push('/select-exercise?source=active-workout')}
         />
       </ScrollView>
       <View style={styles.footer}>
         <Button
-          title='Zakończ trening'
-          variant='primary'
+          title="Zakończ trening"
+          variant="primary"
           onPress={handleFinishWorkout}
         />
       </View>

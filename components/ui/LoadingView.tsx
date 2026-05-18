@@ -9,7 +9,7 @@ interface LoadingViewProps {
 export function LoadingView({ message, inline }: LoadingViewProps) {
   return (
     <View style={[styles.container, inline && styles.containerInline]}>
-      <ActivityIndicator size='large' color={colors.accent} />
+      <ActivityIndicator size="large" color={colors.accent} />
       {message && <Text style={styles.message}>{message}</Text>}
     </View>
   );

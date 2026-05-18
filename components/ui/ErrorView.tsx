@@ -12,11 +12,11 @@ interface ErrorViewProps {
 export function ErrorView({ error, onRetry, inline }: ErrorViewProps) {
   return (
     <View style={[styles.container, inline && styles.containerInline]}>
-      <Ionicons name='alert-circle-outline' size={48} color={colors.danger} />
+      <Ionicons name="alert-circle-outline" size={48} color={colors.danger} />
       <Text style={styles.title}>Wystąpił błąd</Text>
       <Text style={styles.errorText}>{error}</Text>
       {onRetry && (
-        <Button title='Spróbuj ponownie' onPress={onRetry} variant='primary' />
+        <Button title="Spróbuj ponownie" onPress={onRetry} variant="primary" />
       )}
     </View>
   );

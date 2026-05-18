@@ -2,7 +2,10 @@ import { ServiceError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
 import { useCallback, useState } from 'react';
 
-export const useAsyncLoader = <T>(loader: () => Promise<T>, initialValue: T) => {
+export const useAsyncLoader = <T>(
+  loader: () => Promise<T>,
+  initialValue: T,
+) => {
   const [data, setData] = useState<T>(initialValue);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

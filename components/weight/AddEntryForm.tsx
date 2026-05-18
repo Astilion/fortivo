@@ -37,8 +37,8 @@ export const AddEntryForm: React.FC<AddEntryFormProps> = ({
             style={styles.addFormInput}
             value={weightInput}
             onChangeText={setWeightInput}
-            keyboardType='decimal-pad'
-            placeholder='0.0'
+            keyboardType="decimal-pad"
+            placeholder="0.0"
             placeholderTextColor={colors.muted}
             maxLength={6}
           />
@@ -49,7 +49,7 @@ export const AddEntryForm: React.FC<AddEntryFormProps> = ({
           style={[styles.addFormInput, styles.addFormNotesInput]}
           value={notesInput}
           onChangeText={setNotesInput}
-          placeholder='Notatka (opcjonalnie)'
+          placeholder="Notatka (opcjonalnie)"
           placeholderTextColor={colors.muted}
           maxLength={50}
         />
@@ -61,7 +61,7 @@ export const AddEntryForm: React.FC<AddEntryFormProps> = ({
           ]}
           onPress={handleAdd}
         >
-          <Ionicons name='add' size={24} color={colors.primary} />
+          <Ionicons name="add" size={24} color={colors.primary} />
         </Pressable>
       </View>
       {error && <Text style={styles.addFormError}>{error}</Text>}

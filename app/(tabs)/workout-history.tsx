@@ -54,9 +54,9 @@ export default function WorkoutHistoryScreen() {
 
       {history.length === 0 ? (
         <EmptyState
-          icon='fitness-outline'
-          title='Brak ukończonych treningów'
-          subtitle='Rozpocznij swój pierwszy trening!'
+          icon="fitness-outline"
+          title="Brak ukończonych treningów"
+          subtitle="Rozpocznij swój pierwszy trening!"
         />
       ) : (
         <FlatList

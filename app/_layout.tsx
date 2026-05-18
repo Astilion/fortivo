@@ -81,7 +81,7 @@ export default function RootLayout() {
   return (
     <AppProvider>
       <ThemeProvider value={FortivoDarkTheme}>
-        <StatusBar style='light' backgroundColor={colors.primary} />
+        <StatusBar style="light" backgroundColor={colors.primary} />
         {showOnboarding && <Redirect href={'/onboarding' as Href} />}
         <Stack
           screenOptions={{
@@ -93,7 +93,7 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen
-            name='(tabs)'
+            name="(tabs)"
             options={{
               headerShown: false,
               title: '',
@@ -101,32 +101,32 @@ export default function RootLayout() {
           />
 
           <Stack.Screen
-            name='onboarding'
+            name="onboarding"
             options={{ headerShown: false, animation: 'fade' }}
           />
 
           <Stack.Screen
-            name='exercise-details'
+            name="exercise-details"
             options={{ ...commonScreenOptions, title: 'Szczegóły Ćwiczenia' }}
           />
 
           <Stack.Screen
-            name='create-workout'
+            name="create-workout"
             options={{ ...commonScreenOptions, title: 'Utwórz Nowy Trening' }}
           />
 
           <Stack.Screen
-            name='edit-workout'
+            name="edit-workout"
             options={{ ...commonScreenOptions, title: 'Edytuj Trening' }}
           />
 
           <Stack.Screen
-            name='select-exercise'
+            name="select-exercise"
             options={{ ...commonScreenOptions, title: 'Lista Ćwiczeń' }}
           />
 
           <Stack.Screen
-            name='active-workout'
+            name="active-workout"
             options={{
               ...commonScreenOptions,
               presentation: 'fullScreenModal',
@@ -136,32 +136,32 @@ export default function RootLayout() {
           />
 
           <Stack.Screen
-            name='workout-details'
+            name="workout-details"
             options={{ ...commonScreenOptions, title: 'Szczegóły Treningu' }}
           />
 
           <Stack.Screen
-            name='exercise-progress'
+            name="exercise-progress"
             options={{ ...commonScreenOptions, title: 'Historia Ćwiczenia' }}
           />
           <Stack.Screen
-            name='weight-tracking'
+            name="weight-tracking"
             options={{ ...commonScreenOptions, title: 'Śledzenie Wagi' }}
           />
           <Stack.Screen
-            name='body-measurements'
+            name="body-measurements"
             options={{ ...commonScreenOptions, title: 'Śledzenie Pomiarów' }}
           />
           <Stack.Screen
-            name='create-exercise'
+            name="create-exercise"
             options={{ ...commonScreenOptions, title: 'Nowe Ćwiczenie' }}
           />
           <Stack.Screen
-            name='create-weekly-plan'
+            name="create-weekly-plan"
             options={{ ...commonScreenOptions, title: 'Nowy Plan Tygodniowy' }}
           />
           <Stack.Screen
-            name='select-workout'
+            name="select-workout"
             options={{ ...commonScreenOptions, title: 'Wybierz trening' }}
           />
         </Stack>

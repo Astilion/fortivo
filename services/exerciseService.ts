@@ -41,7 +41,10 @@ export class ExerciseService {
       }
     } catch (error) {
       logger.error('ExerciseService.seedExercises failed', error);
-      throw new ServiceError('Nie udało się załadować biblioteki ćwiczeń', error);
+      throw new ServiceError(
+        'Nie udało się załadować biblioteki ćwiczeń',
+        error,
+      );
     } finally {
       await stmt.finalizeAsync();
     }

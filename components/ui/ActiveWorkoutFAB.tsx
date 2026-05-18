@@ -35,7 +35,7 @@ export const ActiveWorkoutFAB = ({
       onPress={() => router.push('/active-workout')}
       accessibilityLabel="Aktywny trening"
     >
-      <Ionicons name='barbell-outline' size={22} color={colors.primary} />
+      <Ionicons name="barbell-outline" size={22} color={colors.primary} />
       <View style={styles.timerBadge}>
         <Text style={styles.timerText}>{formatElapsed(elapsed)}</Text>
       </View>

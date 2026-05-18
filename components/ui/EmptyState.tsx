@@ -29,7 +29,7 @@ export const EmptyState = ({
       {action && (
         <Button
           onPress={action.onPress}
-          variant='primary'
+          variant="primary"
           title={action.label}
           style={{ marginTop: 16 }}
         />

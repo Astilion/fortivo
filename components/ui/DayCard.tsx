@@ -23,10 +23,7 @@ export function DayCard({ day, isToday, isSelected, onPress }: DayCardProps) {
       accessibilityLabel={day.dayName}
     >
       <Text
-        style={[
-          styles.planDayName,
-          isSelected && styles.planDayNameSelected,
-        ]}
+        style={[styles.planDayName, isSelected && styles.planDayNameSelected]}
       >
         {day.dayName.slice(0, 3)}
       </Text>
@@ -39,7 +36,7 @@ export function DayCard({ day, isToday, isSelected, onPress }: DayCardProps) {
       </Text>
       {day.status === 'on_plan' && (
         <Ionicons
-          name='checkmark-circle'
+          name="checkmark-circle"
           size={14}
           color={isSelected ? colors.primary : colors.accent}
           style={styles.planDayStatusIcon}
@@ -47,7 +44,7 @@ export function DayCard({ day, isToday, isSelected, onPress }: DayCardProps) {
       )}
       {day.status === 'off_plan' && (
         <Ionicons
-          name='checkmark'
+          name="checkmark"
           size={14}
           color={colors.text.secondary}
           style={styles.planDayStatusIcon}

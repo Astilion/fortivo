@@ -201,7 +201,7 @@ export default function CreateExerciseScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps='handled'
+      keyboardShouldPersistTaps="handled"
     >
       <View style={styles.section}>
         <Text style={styles.label}>
@@ -211,8 +211,8 @@ export default function CreateExerciseScreen() {
           style={styles.input}
           value={form.name}
           onChangeText={(text) => updateField('name', text)}
-          placeholder='np. Wyciskanie sztangi'
-          placeholderTextColor='#6C757D'
+          placeholder="np. Wyciskanie sztangi"
+          placeholderTextColor="#6C757D"
           maxLength={100}
         />
       </View>
@@ -264,11 +264,11 @@ export default function CreateExerciseScreen() {
           style={[styles.input, styles.textArea]}
           value={form.instructions}
           onChangeText={(text) => updateField('instructions', text)}
-          placeholder='Opisz technikę wykonania...'
-          placeholderTextColor='#6C757D'
+          placeholder="Opisz technikę wykonania..."
+          placeholderTextColor="#6C757D"
           multiline
           numberOfLines={4}
-          textAlignVertical='top'
+          textAlignVertical="top"
         />
       </View>
       <Pressable

@@ -1,0 +1,6 @@
+# Revisions to ignore in `git blame` (bulk reformat, no logic changes).
+# Enable locally with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: apply prettier formatting across codebase
+a7b60e96a68afd0909fbe59ffb9fdcf8830170a1

@@ -10,13 +10,7 @@ import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 import colors from '@/constants/Colors';
-import {
-  View,
-  ScrollView,
-  Text,
-  StyleSheet,
-  Pressable,
-} from 'react-native';
+import { View, ScrollView, Text, StyleSheet, Pressable } from 'react-native';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Ionicons } from '@expo/vector-icons';
@@ -187,7 +181,7 @@ export default function CreateWeeklyPlanScreen() {
         <Input
           value={planName}
           onChangeText={setPlanName}
-          placeholder='Nazwa planu'
+          placeholder="Nazwa planu"
         />
 
         <View style={styles.daysList}>
@@ -201,7 +195,7 @@ export default function CreateWeeklyPlanScreen() {
                     style={styles.addWorkoutBtn}
                     onPress={() => handleAddWorkout(index)}
                   >
-                    <Ionicons name='add' size={14} color={colors.primary} />
+                    <Ionicons name="add" size={14} color={colors.primary} />
                     <Text style={styles.addWorkoutText}>Trening</Text>
                   </Pressable>
                   <Pressable
@@ -209,7 +203,7 @@ export default function CreateWeeklyPlanScreen() {
                     onPress={() => handleToggleRestDay(index)}
                   >
                     <Ionicons
-                      name='moon-outline'
+                      name="moon-outline"
                       size={13}
                       color={colors.text.secondary}
                     />
@@ -228,7 +222,7 @@ export default function CreateWeeklyPlanScreen() {
                     hitSlop={8}
                   >
                     <Ionicons
-                      name='close'
+                      name="close"
                       size={16}
                       color={colors.text.secondary}
                     />
@@ -239,7 +233,7 @@ export default function CreateWeeklyPlanScreen() {
               {day.isRestDay && (
                 <View style={styles.assignedPill}>
                   <Ionicons
-                    name='moon-outline'
+                    name="moon-outline"
                     size={13}
                     color={colors.text.secondary}
                   />
@@ -249,7 +243,7 @@ export default function CreateWeeklyPlanScreen() {
                     hitSlop={8}
                   >
                     <Ionicons
-                      name='close'
+                      name="close"
                       size={16}
                       color={colors.text.secondary}
                     />
@@ -263,7 +257,7 @@ export default function CreateWeeklyPlanScreen() {
       <View style={styles.saveButton}>
         <Button
           title={isEditMode ? 'Zapisz zmiany' : 'Zapisz plan'}
-          variant='primary'
+          variant="primary"
           onPress={handleSave}
         />
       </View>
