@@ -49,12 +49,15 @@ export default function ActiveWorkoutScreen() {
   );
   const { showToast } = useToastStore();
 
+  // Load the active workout once per focus session; loadActiveWorkout is
+  // a stable Zustand action, intentionally guarded by `isLoaded`.
   useFocusEffect(
     useCallback(() => {
       if (!isLoaded) {
         loadActiveWorkout();
         setIsLoaded(true);
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoaded]),
   );
 
@@ -71,6 +74,9 @@ export default function ActiveWorkoutScreen() {
         setExercises((prev) => [...prev, newExercise]);
         clearPendingExercise();
       }
+      // Mailbox pattern: react to pendingExercise only; the setters and
+      // clearPendingExercise are stable.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pendingExercise]),
   );
 

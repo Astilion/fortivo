@@ -52,10 +52,16 @@ export default function EditWorkoutScreen() {
         showToast('Nie udało się załadować treningu', 'error');
       }
     }
+    // clearDraft / setters / showToast are all stable; loadWorkout only
+    // needs to change when the target workout (id / service) changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, workoutService]);
 
   useEffect(() => {
     loadWorkout();
+    // Re-run only when the target workout changes (matches loadWorkout's
+    // own dependency contract).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, workoutService]);
 
   const handleSaveWorkout = async () => {

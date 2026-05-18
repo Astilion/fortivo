@@ -33,8 +33,11 @@ export default function CreateWorkoutScreen() {
   } = useWorkoutStore();
   const { workoutService } = useApp();
 
+  // Reset the draft once when entering the create flow; clearDraft is a
+  // stable Zustand action.
   useEffect(() => {
     clearDraft();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const handleSaveWorkout = async () => {
     // Reset errors

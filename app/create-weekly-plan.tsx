@@ -53,6 +53,8 @@ export default function CreateWeeklyPlanScreen() {
       );
     };
     load();
+    // Load the edited plan when `id` changes; weeklyPlanService is stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useFocusEffect(
@@ -73,6 +75,9 @@ export default function CreateWeeklyPlanScreen() {
         clearPendingWorkout();
         setPendingDayIndex(null);
       }
+      // Mailbox pattern: react to the pending selection only; setters and
+      // clearPendingWorkout are stable.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pendingWorkout, pendingDayIndex]),
   );
 

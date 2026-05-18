@@ -94,6 +94,8 @@ export default function CreateExerciseScreen() {
     } finally {
       setIsInitializing(false);
     }
+    // showToast is a stable Zustand action; no need to re-create initialize.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isEditMode, exerciseService, router]);
 
   useEffect(() => {
