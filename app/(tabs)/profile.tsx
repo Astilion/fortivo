@@ -73,6 +73,9 @@ export default function ProfileScreen() {
         settings.goalWeight ? settings.goalWeight.toString() : '',
       );
     }
+    // Intentionally narrow: only re-sync the inputs when these two fields
+    // change, not on every `settings` object identity change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings?.defaultRestTime, settings?.goalWeight]);
 
   const handleWeightUnitChange = (unit: WeightUnit) => {

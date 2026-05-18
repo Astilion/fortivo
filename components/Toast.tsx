@@ -47,7 +47,7 @@ export function Toast() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [message]);
+  }, [message, type, dismiss, slideAnim]);
 
   const backgroundColor =
     displayType === 'error'

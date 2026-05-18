@@ -20,6 +20,8 @@ export default function SelectWorkoutScreen() {
         setWorkouts(all);
       };
       load();
+      // Fetch the list on each focus; workoutService is stable from context.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
 

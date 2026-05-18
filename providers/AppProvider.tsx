@@ -74,8 +74,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const loadFavorites = useExerciseStore((state) => state.loadFavorites);
   const setActivePlan = useWeeklyPlanStore((state) => state.setActivePlan);
 
+  // One-time app bootstrap on mount; initializeApp is a stable local
+  // async fn and must not re-run on every render.
   useEffect(() => {
     initializeApp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const initializeApp = async () => {

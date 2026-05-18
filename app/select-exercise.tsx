@@ -70,19 +70,24 @@ export default function SelectExerciseScreen() {
     [exercises, searchQuery, selectedCategory, favoriteExercises],
   );
 
-  const handleSelectExercise = (exerciseId: string) => {
-    const exercise = exercises.find((ex) => ex.id === exerciseId);
-    if (!exercise) return;
-    if (source === 'active-workout') {
-      setPendingExercise(exercise);
-      router.back();
-    } else {
-      addExercise(exercise);
-      router.back();
-    }
-  };
+  // Memoized so the `renderItem` useCallback below keeps a stable identity;
+  // otherwise FlatList re-renders every row on each parent render.
+  const handleSelectExercise = useCallback(
+    (exerciseId: string) => {
+      const exercise = exercises.find((ex) => ex.id === exerciseId);
+      if (!exercise) return;
+      if (source === 'active-workout') {
+        setPendingExercise(exercise);
+        router.back();
+      } else {
+        addExercise(exercise);
+        router.back();
+      }
+    },
+    [exercises, source, setPendingExercise, addExercise, router],
+  );
 
-  const toggleSelection = (id: string) => {
+  const toggleSelection = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
@@ -95,12 +100,15 @@ export default function SelectExerciseScreen() {
       }
       return newSet;
     });
-  };
+  }, []);
 
-  const enterMultiSelectMode = (id: string) => {
-    setIsMultiSelectMode(true);
-    toggleSelection(id);
-  };
+  const enterMultiSelectMode = useCallback(
+    (id: string) => {
+      setIsMultiSelectMode(true);
+      toggleSelection(id);
+    },
+    [toggleSelection],
+  );
 
   const exitMultiSelectMode = () => {
     setIsMultiSelectMode(false);
