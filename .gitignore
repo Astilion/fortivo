@@ -51,3 +51,4 @@ yarn-error.*
 # AI / internal docs
 CLAUDE.md
 /docs/
+.claude/
