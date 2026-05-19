@@ -16,6 +16,23 @@ export type DayConfig = {
   isRestDay: boolean;
 };
 
+/**
+ * Returns the local-midnight start of the week containing `date`, where the
+ * week begins on `weekStartsOn` (0 = Sunday … 6 = Saturday, matching
+ * `Date.getDay()` and `user_settings.week_starts_on`).
+ *
+ * If `date`'s weekday already equals `weekStartsOn`, the week starts that day;
+ * otherwise it walks back to the most recent occurrence of that weekday.
+ * Uses local time so the boundary is local midnight, not UTC.
+ */
+export const getWeekStart = (date: Date, weekStartsOn: number): Date => {
+  const start = new Date(date);
+  const diff = (start.getDay() - weekStartsOn + 7) % 7;
+  start.setDate(start.getDate() - diff);
+  start.setHours(0, 0, 0, 0);
+  return start;
+};
+
 export const createEmptyWeekDays = (): DayConfig[] =>
   DAYS_OF_WEEK.map((day) => ({
     dayOfWeek: day.dayOfWeek,

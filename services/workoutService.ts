@@ -1,6 +1,7 @@
 import { generateId } from '@/database/database';
 import { logger } from '@/utils/logger';
 import { ServiceError } from '@/utils/errors';
+import { getWeekStart } from '@/utils/days';
 import {
   Exercise,
   ExerciseProgressQueryRow,
@@ -504,11 +505,11 @@ export class WorkoutService {
     }));
   }
 
-  async getWorkoutsThisWeek(userId: string = LOCAL_USER_ID): Promise<number> {
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
+  async getWorkoutsThisWeek(
+    weekStartsOn: number,
+    userId: string = LOCAL_USER_ID,
+  ): Promise<number> {
+    const startOfWeek = getWeekStart(new Date(), weekStartsOn);
 
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 7);
@@ -599,12 +600,10 @@ export class WorkoutService {
   }
 
   async getCompletedWorkoutsThisWeek(
+    weekStartsOn: number,
     userId = LOCAL_USER_ID,
   ): Promise<WorkoutHistoryRow[]> {
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
+    const startOfWeek = getWeekStart(new Date(), weekStartsOn);
 
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 7);
