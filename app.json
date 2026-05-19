@@ -20,7 +20,6 @@
     },
     "android": {
       "package": "com.astilion.fortivo",
-      "versionCode": 12,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#1C2227"
