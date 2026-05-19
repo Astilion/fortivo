@@ -7,6 +7,7 @@ import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 import {
   ActivityIndicator,
+  Linking,
   ScrollView,
   StyleSheet,
   Switch,
@@ -18,6 +19,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/providers/AppProvider';
 import { logger } from '@/utils/logger';
+
+// Privacy policy hosted on GitHub Pages.
+const PRIVACY_POLICY_URL = 'https://astilion.github.io/fortivo-privacy/';
 
 type WeightUnit = 'kg' | 'lbs';
 
@@ -144,6 +148,14 @@ export default function ProfileScreen() {
       setSettings(updatedSettings);
       profileService.updateUserSettings(updatedSettings);
     };
+
+  const handleOpenPrivacyPolicy = async () => {
+    try {
+      await Linking.openURL(PRIVACY_POLICY_URL);
+    } catch (error) {
+      logger.error('Error opening privacy policy URL:', error);
+    }
+  };
 
   // ── Loading & Error states ─────────────────────────────────────────────────
 
@@ -340,6 +352,24 @@ export default function ProfileScreen() {
             <Text style={styles.rowLabelText}>Autor</Text>
             <Text style={styles.metaText}>Astilion</Text>
           </View>
+        </View>
+
+        {/* ── Sekcja: O aplikacji ── */}
+        <SectionHeader icon="document-text-outline" title="O APLIKACJI" />
+        <View style={styles.card}>
+          <Pressable
+            onPress={handleOpenPrivacyPolicy}
+            accessibilityLabel="Otwórz politykę prywatności"
+            hitSlop={8}
+          >
+            <SettingsRow label="Polityka prywatności" isLast>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.text.secondary}
+              />
+            </SettingsRow>
+          </Pressable>
         </View>
 
         <View style={styles.bottomPadding} />
