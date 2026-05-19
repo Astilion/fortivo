@@ -3,7 +3,6 @@ import { DB_NAME } from '@/database/database';
 import { useDbErrorStore } from '@/store/dbErrorStore';
 import { confirmAction } from '@/utils/confirm';
 import { logger } from '@/utils/logger';
-import { useFocusEffect } from 'expo-router';
 import * as SQLite from 'expo-sqlite';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -20,7 +19,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const RESET_WARNING =
   'Aktualizacja danych aplikacji nie powiodła się. Możesz zresetować bazę danych. Spowoduje to utratę wszystkich zapisanych treningów, planów i pomiarów.';
 
-export default function DbRecoveryScreen() {
+// Full-screen takeover rendered directly by AppProvider when a migration
+// fails. It is intentionally NOT a router route: there is no services
+// context during a DB error, so mounting the normal screen tree would
+// crash on useApp(). This component must not depend on the router context.
+export const DatabaseRecoveryScreen = () => {
   const insets = useSafeAreaInsets();
   const dbError = useDbErrorStore((state) => state.dbError);
   const requestReinit = useDbErrorStore((state) => state.requestReinit);
@@ -42,12 +45,10 @@ export default function DbRecoveryScreen() {
   }, [dbError]);
 
   // Block hardware back so the user cannot escape the gate into a broken app.
-  useFocusEffect(
-    useCallback(() => {
-      const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
-      return () => sub.remove();
-    }, []),
-  );
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => sub.remove();
+  }, []);
 
   const handleRetry = useCallback(() => {
     setBusy(true);
@@ -114,7 +115,7 @@ export default function DbRecoveryScreen() {
       )}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

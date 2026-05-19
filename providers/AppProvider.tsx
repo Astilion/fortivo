@@ -1,6 +1,7 @@
 import exercisesData from '@/assets/data/exercises.json';
 import { DatabaseMigrationError, initDatabase } from '@/database/database';
 import { useDbErrorStore } from '@/store/dbErrorStore';
+import { DatabaseRecoveryScreen } from '@/components/DatabaseRecoveryScreen';
 import { Exercise, ExerciseService } from '@/services/exerciseService';
 import { WorkoutService } from '@/services/workoutService';
 import { useExerciseStore } from '@/store/exerciseStore';
@@ -136,10 +137,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Render children (no services context) so the _layout gate to
-  // /db-recovery can mount instead of hanging on the splash.
+  // Take over the screen directly (bypassing the router) so the broken
+  // (tabs) tree never mounts and crashes on useApp() with no context.
   if (dbError) {
-    return <>{children}</>;
+    return <DatabaseRecoveryScreen />;
   }
 
   if (!isReady || !context) {
