@@ -1,4 +1,5 @@
 import { useProfileSettings } from '@/hooks/useProfileSettings';
+import Constants from 'expo-constants';
 import colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -20,8 +21,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/providers/AppProvider';
 import { logger } from '@/utils/logger';
 
-// Privacy policy hosted on GitHub Pages.
 const PRIVACY_POLICY_URL = 'https://astilion.github.io/fortivo-privacy/';
+
+const APP_VERSION = Constants.expoConfig?.version ?? '—';
 
 type WeightUnit = 'kg' | 'lbs';
 
@@ -346,7 +348,7 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <View style={[styles.row, styles.rowBorder]}>
             <Text style={styles.rowLabelText}>Wersja</Text>
-            <Text style={styles.metaText}>0.2.1-beta</Text>
+            <Text style={styles.metaText}>{APP_VERSION}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabelText}>Autor</Text>
