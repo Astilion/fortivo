@@ -2,6 +2,7 @@ import { useApp } from '@/providers/AppProvider';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 import { WeeklyPlanDay, WorkoutHistoryRow } from '@/types/training';
 import { DAYS_OF_WEEK } from '@/utils/days';
+import { LOCAL_USER_ID } from '@/constants/User';
 import { useCallback, useMemo, useState } from 'react';
 import { useRefreshOnFocus } from './useRefreshOnFocus';
 
@@ -15,7 +16,7 @@ export type PlanDay = {
 };
 
 export const useWeeklyPlanData = () => {
-  const { workoutService, weeklyPlanService } = useApp();
+  const { workoutService, weeklyPlanService, profileService } = useApp();
   const { activePlan, setActivePlan } = useWeeklyPlanStore();
   const [completedThisWeek, setCompletedThisWeek] = useState<
     WorkoutHistoryRow[]
@@ -26,16 +27,18 @@ export const useWeeklyPlanData = () => {
   const refreshPlan = useCallback(async () => {
     try {
       setLoading(true);
+      const { weekStartsOn } =
+        await profileService.getUserSettings(LOCAL_USER_ID);
       const [plan, completed] = await Promise.all([
         weeklyPlanService.getActivePlan(),
-        workoutService.getCompletedWorkoutsThisWeek(),
+        workoutService.getCompletedWorkoutsThisWeek(weekStartsOn),
       ]);
       setActivePlan(plan);
       setCompletedThisWeek(completed);
     } finally {
       setLoading(false);
     }
-  }, [weeklyPlanService, workoutService, setActivePlan]);
+  }, [weeklyPlanService, workoutService, profileService, setActivePlan]);
 
   useRefreshOnFocus(refreshPlan, [refreshPlan]);
 

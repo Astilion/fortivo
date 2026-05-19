@@ -1,6 +1,7 @@
 import { useApp } from '@/providers/AppProvider';
 import { useCallback, useState } from 'react';
 import { logger } from '@/utils/logger';
+import { LOCAL_USER_ID } from '@/constants/User';
 import { useRefreshOnFocus } from './useRefreshOnFocus';
 
 interface DashboardStats {
@@ -10,7 +11,7 @@ interface DashboardStats {
 }
 
 export const useDashboardStats = () => {
-  const { workoutService } = useApp();
+  const { workoutService, profileService } = useApp();
 
   const [stats, setStats] = useState<DashboardStats>({
     workoutsThisWeek: 0,
@@ -25,8 +26,11 @@ export const useDashboardStats = () => {
       setLoading(true);
       setError(null);
 
+      const { weekStartsOn } =
+        await profileService.getUserSettings(LOCAL_USER_ID);
+
       const [week, month, total] = await Promise.all([
-        workoutService.getWorkoutsThisWeek(),
+        workoutService.getWorkoutsThisWeek(weekStartsOn),
         workoutService.getWorkoutsThisMonth(),
         workoutService.getTotalWorkouts(),
       ]);
@@ -42,7 +46,7 @@ export const useDashboardStats = () => {
     } finally {
       setLoading(false);
     }
-  }, [workoutService]);
+  }, [workoutService, profileService]);
 
   useRefreshOnFocus(loadStats, [loadStats]);
 
