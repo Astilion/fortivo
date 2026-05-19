@@ -3,6 +3,7 @@ import { ActiveWorkoutFAB } from '@/components/ui/ActiveWorkoutFAB';
 import { Toast } from '@/components/Toast';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
+import { useDbErrorStore } from '@/store/dbErrorStore';
 import { AppProvider } from '@/providers/AppProvider';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
@@ -57,6 +58,7 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
   const showOnboarding = useOnboardingStore((state) => state.showOnboarding);
+  const dbError = useDbErrorStore((state) => state.dbError);
 
   const isReady = loaded && showOnboarding !== null;
 
@@ -82,7 +84,10 @@ export default function RootLayout() {
     <AppProvider>
       <ThemeProvider value={FortivoDarkTheme}>
         <StatusBar style="light" backgroundColor={colors.primary} />
-        {showOnboarding && <Redirect href={'/onboarding' as Href} />}
+        {dbError && <Redirect href={'/db-recovery' as Href} />}
+        {!dbError && showOnboarding && (
+          <Redirect href={'/onboarding' as Href} />
+        )}
         <Stack
           screenOptions={{
             headerShown: false,
@@ -102,6 +107,11 @@ export default function RootLayout() {
 
           <Stack.Screen
             name="onboarding"
+            options={{ headerShown: false, animation: 'fade' }}
+          />
+
+          <Stack.Screen
+            name="db-recovery"
             options={{ headerShown: false, animation: 'fade' }}
           />
 
