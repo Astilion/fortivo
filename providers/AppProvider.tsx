@@ -1,5 +1,6 @@
 import exercisesData from '@/assets/data/exercises.json';
-import { initDatabase } from '@/database/database';
+import { DatabaseMigrationError, initDatabase } from '@/database/database';
+import { useDbErrorStore } from '@/store/dbErrorStore';
 import { Exercise, ExerciseService } from '@/services/exerciseService';
 import { WorkoutService } from '@/services/workoutService';
 import { useExerciseStore } from '@/store/exerciseStore';
@@ -73,15 +74,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const loadCategories = useExerciseStore((state) => state.loadCategories);
   const loadFavorites = useExerciseStore((state) => state.loadFavorites);
   const setActivePlan = useWeeklyPlanStore((state) => state.setActivePlan);
+  const dbError = useDbErrorStore((state) => state.dbError);
+  const reinitNonce = useDbErrorStore((state) => state.reinitNonce);
+  const setDbError = useDbErrorStore((state) => state.setDbError);
+  const clearDbError = useDbErrorStore((state) => state.clearDbError);
 
-  // One-time app bootstrap on mount; initializeApp is a stable local
-  // async fn and must not re-run on every render.
+  // Bootstrap on mount; re-run on every recovery attempt (reinitNonce bump).
   useEffect(() => {
     initializeApp();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reinitNonce]);
 
   const initializeApp = async () => {
+    setIsReady(false);
     try {
       // Initialize database
       const database = await initDatabase();
@@ -120,11 +125,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         weeklyPlanService,
       });
 
+      clearDbError();
       setIsReady(true);
     } catch (error) {
       logger.error('Failed to initialize app:', error);
+      // Migration failures get the recovery screen; other errors stay logged.
+      if (error instanceof DatabaseMigrationError) {
+        setDbError(error);
+      }
     }
   };
+
+  // Render children (no services context) so the _layout gate to
+  // /db-recovery can mount instead of hanging on the splash.
+  if (dbError) {
+    return <>{children}</>;
+  }
 
   if (!isReady || !context) {
     return (
