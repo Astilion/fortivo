@@ -1,6 +1,18 @@
 import * as SQLite from 'expo-sqlite';
 import { logger } from '@/utils/logger';
-const DB_NAME = 'fortivo.db';
+
+export const DB_NAME = 'fortivo.db';
+
+// Migration failure on startup; AppProvider routes to the recovery screen.
+export class DatabaseMigrationError extends Error {
+  readonly cause?: unknown;
+
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'DatabaseMigrationError';
+    this.cause = cause;
+  }
+}
 
 const migrations: string[] = [
   // ─── v1: Full Schema ──────────────────────────────────────────────
@@ -286,20 +298,34 @@ const runMigrations = async (db: SQLite.SQLiteDatabase) => {
   for (let i = currentVersion; i < migrations.length; i++) {
     const version = i + 1;
 
-    await db.withTransactionAsync(async () => {
-      await db.execAsync(migrations[i]);
-    });
-    await db.execAsync(`PRAGMA user_version = ${version}`);
+    try {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(migrations[i]);
+      });
+      await db.execAsync(`PRAGMA user_version = ${version}`);
+    } catch (error) {
+      logger.error(`Migracja v${version} nie powiodła się`, error);
+      throw new DatabaseMigrationError(
+        `Migracja v${version} nie powiodła się`,
+        error,
+      );
+    }
 
     logger.db(`Migracja v${version} zakończona`);
   }
 };
 
-// ─── Public API ───────────────────────────────────────────────────────────────
-
 export const initDatabase = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
-  await runMigrations(db);
+  try {
+    await runMigrations(db);
+  } catch (error) {
+    // deleteDatabaseAsync (recovery reset) fails on an open connection.
+    if (error instanceof DatabaseMigrationError) {
+      await db.closeAsync().catch(() => {});
+    }
+    throw error;
+  }
   return db;
 };
 
