@@ -96,7 +96,10 @@ export class PresetService {
         }
       });
     } catch (error) {
-      logger.error('PresetService.copyPresetWorkoutToUserWorkouts failed', error);
+      logger.error(
+        'PresetService.copyPresetWorkoutToUserWorkouts failed',
+        error,
+      );
       throw new ServiceError(
         'Nie udało się dodać gotowego treningu do twoich treningów',
         error,

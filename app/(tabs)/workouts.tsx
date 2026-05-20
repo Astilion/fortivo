@@ -2,18 +2,20 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EmptyTabState } from '@/components/ui/EmptyTabState';
 import { LoadingView } from '@/components/ui/LoadingView';
+import { PresetWorkoutCard } from '@/components/ui/PresetWorkoutCard';
 import { WeeklyPlanCard } from '@/components/ui/WeeklyPlanCard';
 import { WorkoutCard } from '@/components/ui/WorkoutCard';
 import colors from '@/constants/Colors';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 import { useToastStore } from '@/store/toastStore';
 import { useApp } from '@/providers/AppProvider';
+import { PresetWorkout } from '@/types/presets';
 import { WorkoutWithCountRow } from '@/types/training';
 import { confirmAction } from '@/utils/confirm';
 import { ServiceError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -24,9 +26,10 @@ export default function WorkoutsScreen() {
   const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
   const [isLoading, setIsLoading] = useState(true);
   const { weeklyPlans, setWeeklyPlans, setActivePlan } = useWeeklyPlanStore();
-  const { workoutService, weeklyPlanService } = useApp();
+  const { workoutService, weeklyPlanService, presetService } = useApp();
   const { showToast } = useToastStore();
   const router = useRouter();
+  const presetWorkouts = presetService.getPresetWorkouts();
 
   useRefreshOnFocus(() => {
     const load = async () => {
@@ -148,6 +151,19 @@ export default function WorkoutsScreen() {
     setWeeklyPlans(plans);
     setActivePlan(activePlan);
   };
+
+  const renderPresetCard = useCallback(
+    (preset: PresetWorkout) => (
+      <PresetWorkoutCard
+        key={preset.id}
+        preset={preset}
+        onPress={() =>
+          router.push(`/preset-workout-details?presetId=${preset.id}`)
+        }
+      />
+    ),
+    [router],
+  );
 
   const handleClearActivePlan = () => {
     confirmAction(
@@ -300,7 +316,16 @@ export default function WorkoutsScreen() {
           </>
         )}
         {selectedTab === 'ready' && (
-          <EmptyTabState icon="hourglass-outline" title="Wkrótce dostępne" />
+          <>
+            {presetWorkouts.length === 0 ? (
+              <EmptyTabState
+                icon="hourglass-outline"
+                title="Wkrótce — gotowe treningi"
+              />
+            ) : (
+              presetWorkouts.map(renderPresetCard)
+            )}
+          </>
         )}
       </ScrollView>
     </View>

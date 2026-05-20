@@ -36,7 +36,9 @@ export const PresetWorkoutCard = ({
           {preset.name}
         </Text>
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{getCategoryLabel(preset.category)}</Text>
+          <Text style={styles.badgeText}>
+            {getCategoryLabel(preset.category)}
+          </Text>
         </View>
       </View>
 
@@ -53,7 +55,9 @@ export const PresetWorkoutCard = ({
         {preset.estimatedDurationMinutes !== undefined && (
           <>
             <Text style={styles.metaSeparator}>·</Text>
-            <Text style={styles.meta}>~{preset.estimatedDurationMinutes} min</Text>
+            <Text style={styles.meta}>
+              ~{preset.estimatedDurationMinutes} min
+            </Text>
           </>
         )}
       </View>

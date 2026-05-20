@@ -16,11 +16,14 @@ const formatSetsSummary = (sets: PresetWorkoutSet[]): string => {
   const reps = sets.map((s) => s.reps);
   const minReps = Math.min(...reps);
   const maxReps = Math.max(...reps);
-  const repsLabel = minReps === maxReps ? `${minReps}` : `${minReps}-${maxReps}`;
+  const repsLabel =
+    minReps === maxReps ? `${minReps}` : `${minReps}-${maxReps}`;
 
   const parts: string[] = [`${sets.length} × ${repsLabel}`];
 
-  const rpes = sets.map((s) => s.rpe).filter((v): v is number => v !== undefined);
+  const rpes = sets
+    .map((s) => s.rpe)
+    .filter((v): v is number => v !== undefined);
   if (rpes.length > 0) {
     const minRpe = Math.min(...rpes);
     const maxRpe = Math.max(...rpes);
