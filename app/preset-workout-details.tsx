@@ -125,6 +125,12 @@ export default function PresetWorkoutDetailsScreen() {
           )}
         </View>
 
+        {preset.coachingNotes && (
+          <View style={styles.coachingNotes}>
+            <Text style={styles.coachingNotesText}>{preset.coachingNotes}</Text>
+          </View>
+        )}
+
         {preset.exercises.map((presetExercise, index) => {
           const name =
             exerciseNameById.get(presetExercise.exerciseId) ??
@@ -210,6 +216,19 @@ const styles = StyleSheet.create({
   metaSeparator: {
     fontSize: 13,
     color: colors.text.secondary,
+  },
+  coachingNotes: {
+    backgroundColor: colors.secondary,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.accent,
+  },
+  coachingNotesText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    lineHeight: 20,
   },
   exerciseBlock: {
     backgroundColor: colors.secondary,
