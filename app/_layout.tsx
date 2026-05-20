@@ -164,6 +164,10 @@ export default function RootLayout() {
             name="select-workout"
             options={{ ...commonScreenOptions, title: 'Wybierz trening' }}
           />
+          <Stack.Screen
+            name="preset-workout-details"
+            options={{ ...commonScreenOptions, title: 'Gotowy Trening' }}
+          />
         </Stack>
         {activeWorkoutId &&
           workoutStartTime &&
