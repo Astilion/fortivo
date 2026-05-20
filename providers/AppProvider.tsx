@@ -11,6 +11,7 @@ import { WeightService } from '@/services/weightService';
 import { MeasurementService } from '@/services/measurementService';
 import { WeeklyPlanService } from '@/services/weeklyPlanService';
 import { PresetService } from '@/services/presetService';
+import { validatePresets } from '@/utils/validatePresets';
 import * as SQLite from 'expo-sqlite';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
@@ -129,6 +130,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         weeklyPlanService,
         presetService,
       });
+
+      validatePresets(exerciseService);
 
       clearDbError();
       setIsReady(true);
