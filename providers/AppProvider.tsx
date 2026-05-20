@@ -10,6 +10,7 @@ import { ProfileService } from '@/services/profileService';
 import { WeightService } from '@/services/weightService';
 import { MeasurementService } from '@/services/measurementService';
 import { WeeklyPlanService } from '@/services/weeklyPlanService';
+import { PresetService } from '@/services/presetService';
 import * as SQLite from 'expo-sqlite';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
@@ -24,6 +25,7 @@ interface AppContextType {
   weightService: WeightService;
   measurementService: MeasurementService;
   weeklyPlanService: WeeklyPlanService;
+  presetService: PresetService;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -99,6 +101,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       const weightService = new WeightService(database);
       const measurementService = new MeasurementService(database);
       const weeklyPlanService = new WeeklyPlanService(database);
+      const presetService = new PresetService(database);
 
       // Validate and seed exercises
       const validatedExercises = validateExerciseData(exercisesData);
@@ -124,6 +127,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         weightService,
         measurementService,
         weeklyPlanService,
+        presetService,
       });
 
       clearDbError();
