@@ -22,6 +22,18 @@ export async function validatePresets(
             `Preset "${preset.id}" references missing exercise "${presetExercise.exerciseId}"`,
           );
         }
+
+        for (const set of presetExercise.sets) {
+          const defined = [set.reps, set.duration, set.distance].filter(
+            (v) => v !== undefined,
+          ).length;
+          if (defined !== 1) {
+            issues += 1;
+            logger.warn(
+              `Preset "${preset.id}" exercise "${presetExercise.exerciseId}" set ${set.setOrder} has ${defined} measurements (expected exactly one of reps/duration/distance)`,
+            );
+          }
+        }
       }
     }
 
