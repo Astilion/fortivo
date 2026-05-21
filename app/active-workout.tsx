@@ -27,6 +27,50 @@ import { useWorkoutStore } from '@/store/workoutStore';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 
+type MeasurementType = 'reps' | 'time' | 'distance';
+
+// The active workout edits the *actual* value of each set, in the unit dictated
+// by the exercise's measurementType — reps, seconds, or meters. Mirrors the
+// labels/fields used by ExpandableExerciseCard in the editor.
+const getValueLabel = (measurementType?: MeasurementType): string => {
+  switch (measurementType) {
+    case 'time':
+      return 'Czas (s)';
+    case 'distance':
+      return 'Dyst. (m)';
+    default:
+      return 'Powt.';
+  }
+};
+
+const getActualValue = (
+  set: WorkoutSet,
+  measurementType?: MeasurementType,
+): number | undefined => {
+  switch (measurementType) {
+    case 'time':
+      return set.actualDuration;
+    case 'distance':
+      return set.actualDistance;
+    default:
+      return set.actualReps;
+  }
+};
+
+const buildActualUpdate = (
+  measurementType: MeasurementType | undefined,
+  value: number,
+): Partial<WorkoutSet> => {
+  switch (measurementType) {
+    case 'time':
+      return { actualDuration: value };
+    case 'distance':
+      return { actualDistance: value };
+    default:
+      return { actualReps: value };
+  }
+};
+
 export default function ActiveWorkoutScreen() {
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
@@ -121,6 +165,8 @@ export default function ActiveWorkoutScreen() {
         completed: false,
         actualReps: set.actualReps ?? set.reps,
         actualWeight: set.actualWeight ?? set.weight,
+        actualDuration: set.actualDuration ?? set.duration,
+        actualDistance: set.actualDistance ?? set.distance,
       })),
     }));
     if (workoutStartTime === null) {
@@ -160,9 +206,13 @@ export default function ActiveWorkoutScreen() {
       return prevExercises.map((ex) => {
         if (ex.id === exerciseId) {
           const lastSet = ex.sets[ex.sets.length - 1];
+          const measurementType = ex.exercise.measurementType;
+          const isTime = measurementType === 'time';
+          const isDistance = measurementType === 'distance';
 
           const newSet: WorkoutSet = {
             id: generateId('ws'),
+            // reps is required (NOT NULL); kept as a placeholder for time/distance sets.
             reps: lastSet?.actualReps || lastSet?.reps || 10,
             weight: lastSet?.actualWeight || lastSet?.weight || 0,
             rpe: lastSet?.actualRpe || lastSet?.rpe || undefined,
@@ -170,13 +220,20 @@ export default function ActiveWorkoutScreen() {
             restTime: lastSet?.restTime || undefined,
             completed: false,
             notes: undefined,
-            actualReps: lastSet?.actualReps || lastSet?.reps || 8,
+            actualReps:
+              isTime || isDistance
+                ? undefined
+                : lastSet?.actualReps || lastSet?.reps || 8,
             actualWeight: lastSet?.actualWeight || lastSet?.weight || 0,
             actualRpe: lastSet?.actualRpe || undefined,
-            duration: undefined,
-            actualDuration: undefined,
-            distance: undefined,
-            actualDistance: undefined,
+            duration: lastSet?.duration || undefined,
+            actualDuration: isTime
+              ? lastSet?.actualDuration || lastSet?.duration || undefined
+              : undefined,
+            distance: lastSet?.distance || undefined,
+            actualDistance: isDistance
+              ? lastSet?.actualDistance || lastSet?.distance || undefined
+              : undefined,
           };
 
           return {
@@ -412,18 +469,37 @@ export default function ActiveWorkoutScreen() {
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Powt.</Text>
+                    <Text style={styles.inputLabel}>
+                      {getValueLabel(item.exercise.measurementType)}
+                    </Text>
                     <TextInput
-                      key={`reps-${set.id}-${set.actualReps}`}
+                      key={`value-${set.id}-${getActualValue(
+                        set,
+                        item.exercise.measurementType,
+                      )}`}
                       style={styles.input}
-                      defaultValue={set.actualReps?.toString() || '0'}
+                      defaultValue={
+                        getActualValue(
+                          set,
+                          item.exercise.measurementType,
+                        )?.toString() || '0'
+                      }
                       onEndEditing={(e) => {
-                        const val = parseInteger(e.nativeEvent.text);
-                        updateSetValue(item.id, set.id, {
-                          actualReps: val,
-                        });
+                        const val =
+                          item.exercise.measurementType === 'distance'
+                            ? parseDecimal(e.nativeEvent.text)
+                            : parseInteger(e.nativeEvent.text);
+                        updateSetValue(
+                          item.id,
+                          set.id,
+                          buildActualUpdate(item.exercise.measurementType, val),
+                        );
                       }}
-                      keyboardType="numeric"
+                      keyboardType={
+                        item.exercise.measurementType === 'distance'
+                          ? 'decimal-pad'
+                          : 'numeric'
+                      }
                     />
                   </View>
                   {settings?.trackRPE && (
