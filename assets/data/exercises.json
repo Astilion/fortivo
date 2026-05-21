@@ -3226,5 +3226,41 @@
   "measurementType": "reps",
   "isCustom": false,
   "createdAt": "2025-01-18T12:00:00.000Z"
+},
+{
+  "id": "leg_curl_001",
+  "name": "Uginanie nóg leżąc na maszynie",
+  "nameEN": "Lying Leg Curl",
+  "categories": ["nogi", "dół"],
+  "muscleGroups": ["Nogi"],
+  "equipment": ["maszyna"],
+  "difficulty": "Początkujący",
+  "measurementType": "reps",
+  "isCustom": false,
+  "createdAt": "2025-01-18T12:00:00.000Z"
+},
+{
+  "id": "leg_curl_002",
+  "name": "Uginanie nóg siedząc na maszynie",
+  "nameEN": "Seated Leg Curl",
+  "categories": ["nogi", "dół"],
+  "muscleGroups": ["Nogi"],
+  "equipment": ["maszyna"],
+  "difficulty": "Początkujący",
+  "measurementType": "reps",
+  "isCustom": false,
+  "createdAt": "2025-01-18T12:00:00.000Z"
+},
+{
+  "id": "leg_curl_003",
+  "name": "Uginanie nóg na maszynie stojąc",
+  "nameEN": "Standing Leg Curl",
+  "categories": ["nogi", "dół"],
+  "muscleGroups": ["Nogi"],
+  "equipment": ["maszyna"],
+  "difficulty": "Początkujący",
+  "measurementType": "reps",
+  "isCustom": false,
+  "createdAt": "2025-01-18T12:00:00.000Z"
 }
 ]
