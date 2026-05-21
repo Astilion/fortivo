@@ -359,6 +359,13 @@ export class WorkoutService {
     try {
       await this.db.withTransactionAsync(async () => {
         for (const ex of exercises) {
+          // Progress is weight/reps based (max weight, volume = reps × weight).
+          // Time/distance exercises have no meaningful values here — skip them.
+          const measurementType = ex.exercise.measurementType;
+          if (measurementType === 'time' || measurementType === 'distance') {
+            continue;
+          }
+
           const completedSets = ex.sets.filter((s) => s.completed);
           if (completedSets.length === 0) continue;
 
