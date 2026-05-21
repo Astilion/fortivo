@@ -10,16 +10,34 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+// Picks the measurement a set is prescribed in, preferring reps, then duration, then
+// distance. Validation guarantees exactly one is set; this is the read-side fallback order.
+const getSetMeasurement = (
+  set: PresetWorkoutSet,
+): { value: number; unit: string } | null => {
+  if (set.reps !== undefined) return { value: set.reps, unit: '' };
+  if (set.duration !== undefined) return { value: set.duration, unit: ' sek' };
+  if (set.distance !== undefined) return { value: set.distance, unit: ' m' };
+  return null;
+};
+
 const formatSetsSummary = (sets: PresetWorkoutSet[]): string => {
   if (sets.length === 0) return 'Brak serii';
 
-  const reps = sets.map((s) => s.reps);
-  const minReps = Math.min(...reps);
-  const maxReps = Math.max(...reps);
-  const repsLabel =
-    minReps === maxReps ? `${minReps}` : `${minReps}-${maxReps}`;
+  const measurements = sets
+    .map(getSetMeasurement)
+    .filter((m): m is { value: number; unit: string } => m !== null);
 
-  const parts: string[] = [`${sets.length} × ${repsLabel}`];
+  if (measurements.length === 0) return `${sets.length} × ?`;
+
+  const values = measurements.map((m) => m.value);
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const unit = measurements[0].unit;
+  const valueLabel =
+    minValue === maxValue ? `${minValue}` : `${minValue}-${maxValue}`;
+
+  const parts: string[] = [`${sets.length} × ${valueLabel}${unit}`];
 
   const rpes = sets
     .map((s) => s.rpe)
