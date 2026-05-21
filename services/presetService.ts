@@ -76,7 +76,8 @@ export class PresetService {
                 generateId('ws'),
                 workoutExerciseId,
                 presetSet.setOrder,
-                presetSet.reps,
+                // reps is NOT NULL in the schema; time/distance sets fall back to 1.
+                presetSet.reps ?? 1,
                 null,
                 presetSet.rpe ?? null,
                 presetSet.tempo ?? null,
@@ -86,9 +87,9 @@ export class PresetService {
                 null,
                 null,
                 null,
+                presetSet.duration ?? null,
                 null,
-                null,
-                null,
+                presetSet.distance ?? null,
                 null,
               ],
             );
