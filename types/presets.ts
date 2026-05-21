@@ -1,8 +1,11 @@
 export type PresetCategory = 'basic' | 'premium';
 
+/** Exactly one of reps/duration/distance is set, matching the exercise's measurementType. */
 export interface PresetWorkoutSet {
   setOrder: number;
-  reps: number;
+  reps?: number;
+  duration?: number; // seconds
+  distance?: number; // meters
   rpe?: number;
   restTime?: number;
   tempo?: string;
