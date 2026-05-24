@@ -44,9 +44,6 @@ export class ProfileService {
 
   async updateUserSettings(settings: UserSettings): Promise<void> {
     try {
-      // INSERT OR REPLACE is safe here: no table has a foreign key referencing
-      // user_settings, so the REPLACE-internal DELETE triggers no ON DELETE
-      // CASCADE. (Contrast with exercises, where REPLACE wiped dependent rows.)
       await this.db.runAsync(
         `INSERT OR REPLACE INTO user_settings (user_id, preferred_weight_unit, default_rest_time, track_rpe, track_tempo, track_rest_time, week_starts_on, goal_weight)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,

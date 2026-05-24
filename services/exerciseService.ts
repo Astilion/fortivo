@@ -13,13 +13,6 @@ export class ExerciseService {
   }
 
   async seedExercises(exercises: Exercise[]) {
-    // True UPSERT (ON CONFLICT DO UPDATE), NOT INSERT OR REPLACE. REPLACE is a
-    // physical DELETE + INSERT, which fires ON DELETE CASCADE on every table
-    // referencing exercises (workout_exercises, template_exercises,
-    // exercise_progress, favorite_exercises) and wipes the user's history on
-    // each cold-start re-seed. DO UPDATE mutates the row in place — no DELETE,
-    // no cascade. is_custom/user_id/created_at are intentionally not updated,
-    // and WHERE is_custom = 0 guards user-created exercises from being touched.
     const stmt = await this.db.prepareAsync(
       `INSERT INTO exercises (
       id, name, name_en, categories, muscle_groups, instructions, equipment,
