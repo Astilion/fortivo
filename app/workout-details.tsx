@@ -121,7 +121,7 @@ export default function WorkoutDetailsScreen() {
               onPress={() =>
                 router.push({
                   pathname: '/exercise-progress',
-                  params: { exerciseId: item.id },
+                  params: { exerciseId: item.exercise.id },
                 })
               }
             >
