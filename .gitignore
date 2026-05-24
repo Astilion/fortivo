@@ -13,6 +13,7 @@ expo-env.d.ts
 .kotlin/
 *.orig.*
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
@@ -47,8 +48,15 @@ yarn-error.*
 
 # env files
 .env
+.env.*
+!.env.example
 
 # AI / internal docs
 CLAUDE.md
 /docs/
 .claude/
+
+# Service credentials (Firebase, EAS, etc.)
+google-services.json
+GoogleService-Info.plist
+credentials.json
