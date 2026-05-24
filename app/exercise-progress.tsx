@@ -102,8 +102,8 @@ export default function ExerciseProgressScreen() {
                 <Text style={styles.date}>{formatDate(item.date)}</Text>
                 {item.personalRecord && (
                   <View style={styles.prBadge}>
-                    <Ionicons name="trophy" size={18} color={colors.primary} />{' '}
-                    <Text style={styles.prText}>REKORD!</Text>{' '}
+                    <Ionicons name="trophy" size={18} color={colors.primary} />
+                    <Text style={styles.prText}>REKORD!</Text>
                   </View>
                 )}
               </View>
