@@ -2,7 +2,9 @@ import colors from '@/constants/Colors';
 import { WorkoutSet } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { parseDecimal, parseInteger } from '@/utils/numbers';
+import { validateRPE, validateTempo } from '@/utils/validation';
 import { confirmAction } from '@/utils/confirm';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface ExpandableExerciseCardProps {
@@ -10,6 +12,9 @@ interface ExpandableExerciseCardProps {
   exerciseCategories: string[];
   measurementType?: 'reps' | 'time' | 'distance';
   weightUnit?: 'kg' | 'lbs';
+  trackRPE?: boolean;
+  trackTempo?: boolean;
+  trackRestTime?: boolean;
   sets: WorkoutSet[];
   isExpanded: boolean;
   onToggleExpand: () => void;
@@ -28,6 +33,9 @@ export const ExpandableExerciseCard = ({
   exerciseCategories,
   measurementType = 'reps',
   weightUnit = 'kg',
+  trackRPE = false,
+  trackTempo = false,
+  trackRestTime = false,
   sets,
   isExpanded,
   onToggleExpand,
@@ -40,6 +48,10 @@ export const ExpandableExerciseCard = ({
   isFirst = false,
   isLast = false,
 }: ExpandableExerciseCardProps) => {
+  // Bumped to force RPE/tempo inputs to reset their defaultValue after an
+  // invalid entry (same pattern as active-workout).
+  const [validationKey, setValidationKey] = useState(0);
+
   const getLabel = () => {
     switch (measurementType) {
       case 'time':
@@ -152,90 +164,11 @@ export const ExpandableExerciseCard = ({
       {/* Sets Accordion */}
       {isExpanded && (
         <View style={styles.expandedContent}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderText, styles.setColumnHeader]}>
-              #
-            </Text>
-            <Text style={[styles.tableHeaderText, styles.weightColumnHeader]}>
-              {`Ciężar (${weightUnit})`}
-            </Text>
-            <Text style={[styles.tableHeaderText, styles.repsColumnHeader]}>
-              {getLabel()}
-            </Text>
-            <Text style={[styles.tableHeaderText, styles.restColumnHeader]}>
-              Przerwa (s)
-            </Text>
-            <View style={styles.actionColumnHeader} />
-          </View>
-
           {/* Sets list */}
           {sets.map((set, index) => (
             <View key={set.id} style={styles.setRow}>
-              {/* Set number */}
-              <View style={styles.setColumn}>
-                <Text style={styles.setText}>{index + 1}</Text>
-              </View>
-
-              <View style={styles.weightColumn}>
-                <TextInput
-                  key={`weight-${set.id}-${set.weight}`}
-                  style={styles.input}
-                  defaultValue={set.weight?.toString() || '0'}
-                  onEndEditing={(e) => {
-                    const weight = parseDecimal(e.nativeEvent.text);
-                    onUpdateSet(set.id, { weight });
-                  }}
-                  keyboardType="decimal-pad"
-                  placeholder="0"
-                  placeholderTextColor={colors.text.secondary}
-                />
-              </View>
-
-              <View style={styles.repsColumn}>
-                <TextInput
-                  key={`value-${set.id}-${getCurrentValue(set)}`}
-                  style={styles.input}
-                  defaultValue={getCurrentValue(set)?.toString() || ''}
-                  onEndEditing={(e) => {
-                    const value =
-                      measurementType === 'distance'
-                        ? parseDecimal(e.nativeEvent.text)
-                        : parseInteger(e.nativeEvent.text);
-
-                    const updates: Partial<WorkoutSet> =
-                      measurementType === 'time'
-                        ? { duration: value }
-                        : measurementType === 'distance'
-                          ? { distance: value }
-                          : { reps: value };
-
-                    onUpdateSet(set.id, updates);
-                  }}
-                  keyboardType={
-                    measurementType === 'distance' ? 'decimal-pad' : 'numeric'
-                  }
-                  placeholder={getPlaceholder()}
-                  placeholderTextColor={colors.text.secondary}
-                />
-              </View>
-
-              <View style={styles.restColumn}>
-                <TextInput
-                  style={styles.input}
-                  defaultValue={set.restTime?.toString() || ''}
-                  onEndEditing={(e) => {
-                    const restTime =
-                      parseInteger(e.nativeEvent.text) || undefined;
-                    onUpdateSet(set.id, { restTime });
-                  }}
-                  keyboardType="numeric"
-                  placeholder="90"
-                  placeholderTextColor={colors.text.secondary}
-                />
-              </View>
-
-              {/* Delete set */}
-              <View style={styles.actionColumn}>
+              <View style={styles.setRowHeader}>
+                <Text style={styles.setNumberText}>{`Seria ${index + 1}`}</Text>
                 {sets.length > 1 && (
                   <Pressable
                     onPress={() =>
@@ -245,6 +178,8 @@ export const ExpandableExerciseCard = ({
                         () => onRemoveSet(set.id),
                       )
                     }
+                    hitSlop={4}
+                    accessibilityLabel="Usuń serię"
                   >
                     <Ionicons
                       name="close-circle"
@@ -252,6 +187,120 @@ export const ExpandableExerciseCard = ({
                       color={colors.danger}
                     />
                   </Pressable>
+                )}
+              </View>
+
+              <View style={styles.inputsRow}>
+                {/* Weight */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>
+                    {`Ciężar (${weightUnit})`}
+                  </Text>
+                  <TextInput
+                    key={`weight-${set.id}-${set.weight}`}
+                    style={styles.input}
+                    defaultValue={set.weight?.toString() || '0'}
+                    onEndEditing={(e) => {
+                      const weight = parseDecimal(e.nativeEvent.text);
+                      onUpdateSet(set.id, { weight });
+                    }}
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    placeholderTextColor={colors.text.secondary}
+                  />
+                </View>
+
+                {/* Reps / Time / Distance */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>{getLabel()}</Text>
+                  <TextInput
+                    key={`value-${set.id}-${getCurrentValue(set)}`}
+                    style={styles.input}
+                    defaultValue={getCurrentValue(set)?.toString() || ''}
+                    onEndEditing={(e) => {
+                      const value =
+                        measurementType === 'distance'
+                          ? parseDecimal(e.nativeEvent.text)
+                          : parseInteger(e.nativeEvent.text);
+
+                      const updates: Partial<WorkoutSet> =
+                        measurementType === 'time'
+                          ? { duration: value }
+                          : measurementType === 'distance'
+                            ? { distance: value }
+                            : { reps: value };
+
+                      onUpdateSet(set.id, updates);
+                    }}
+                    keyboardType={
+                      measurementType === 'distance' ? 'decimal-pad' : 'numeric'
+                    }
+                    placeholder={getPlaceholder()}
+                    placeholderTextColor={colors.text.secondary}
+                  />
+                </View>
+
+                {/* RPE — planned value, gated by trackRPE */}
+                {trackRPE && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>RPE</Text>
+                    <TextInput
+                      key={`rpe-${set.id}-${set.rpe}-${validationKey}`}
+                      style={styles.input}
+                      defaultValue={set.rpe?.toString() || ''}
+                      onEndEditing={(e) => {
+                        const validated = validateRPE(e.nativeEvent.text);
+                        if (validated === null && e.nativeEvent.text.trim()) {
+                          setValidationKey((prev) => prev + 1);
+                        }
+                        onUpdateSet(set.id, { rpe: validated ?? undefined });
+                      }}
+                      keyboardType="decimal-pad"
+                      placeholder="1-10"
+                      placeholderTextColor={colors.text.secondary}
+                    />
+                  </View>
+                )}
+
+                {/* Tempo — planned value, gated by trackTempo */}
+                {trackTempo && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Tempo</Text>
+                    <TextInput
+                      key={`tempo-${set.id}-${set.tempo}-${validationKey}`}
+                      style={styles.input}
+                      defaultValue={set.tempo || ''}
+                      onEndEditing={(e) => {
+                        const validated = validateTempo(e.nativeEvent.text);
+                        if (validated === null && e.nativeEvent.text.trim()) {
+                          setValidationKey((prev) => prev + 1);
+                        }
+                        onUpdateSet(set.id, { tempo: validated ?? undefined });
+                      }}
+                      placeholder="3-1-2"
+                      placeholderTextColor={colors.text.secondary}
+                    />
+                  </View>
+                )}
+
+                {/* Rest time — gated by trackRestTime */}
+                {trackRestTime && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Przerwa (s)</Text>
+                    <TextInput
+                      key={`rest-${set.id}-${set.restTime}`}
+                      style={styles.input}
+                      defaultValue={set.restTime?.toString() || ''}
+                      onEndEditing={(e) => {
+                        const restTime =
+                          parseInteger(e.nativeEvent.text) || undefined;
+                        onUpdateSet(set.id, { restTime });
+                      }}
+                      keyboardType="numeric"
+                      placeholder="90"
+                      placeholderTextColor={colors.text.secondary}
+                    />
+                  </View>
                 )}
               </View>
             </View>
@@ -344,85 +393,50 @@ const styles = StyleSheet.create({
     borderTopColor: colors.background,
   },
 
-  // ===== Table Header =====
-  tableHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    marginBottom: 4,
+  // ===== Set rows (wrap layout, consistent with active-workout) =====
+  setRow: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.background,
   },
-  tableHeaderText: {
-    fontSize: 10,
+  setRowHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  setNumberText: {
+    fontSize: 13,
     fontWeight: '600',
     color: colors.text.secondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  setColumnHeader: {
-    width: 45,
-    textAlign: 'center',
-  },
-  weightColumnHeader: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  repsColumnHeader: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  actionColumnHeader: {
-    width: 40,
-  },
-
-  // ==== Table Rows =====
-  setRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.background,
-  },
-  setColumn: {
-    width: 45,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  weightColumn: {
-    flex: 1,
-    paddingHorizontal: 4,
-  },
-  repsColumn: {
-    flex: 1,
-    paddingHorizontal: 4,
-  },
-  restColumn: {
-    flex: 1,
-    paddingHorizontal: 4,
-  },
-  actionColumn: {
-    width: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 
   // ===== Inputs =====
-  setText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.text.primary,
+  inputsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  inputGroup: {
+    minWidth: 60,
+    flexGrow: 1,
+    flexBasis: '20%',
+  },
+  inputLabel: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    marginBottom: 6,
+    textAlign: 'center',
   },
   input: {
-    flex: 1,
     backgroundColor: colors.background,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 15,
+    borderRadius: 8,
+    padding: 6,
+    fontSize: 14,
     color: colors.text.primary,
     textAlign: 'center',
-    minWidth: 50,
   },
 
   addSetButton: {
@@ -442,9 +456,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.accent,
-  },
-  restColumnHeader: {
-    flex: 1,
-    textAlign: 'center',
   },
 });

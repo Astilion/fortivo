@@ -119,6 +119,8 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
               id: `temp_${Date.now()}_${newSetOrder}_${Math.random()}`,
               reps: lastSet ? lastSet.reps : 8,
               weight: lastSet ? lastSet.weight : 0,
+              rpe: lastSet ? lastSet.rpe : undefined,
+              tempo: lastSet ? lastSet.tempo : undefined,
               restTime: lastSet ? lastSet.restTime : undefined,
               completed: false,
             };

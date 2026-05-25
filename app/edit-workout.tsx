@@ -137,6 +137,9 @@ export default function EditWorkoutScreen() {
               exerciseCategories={item.exercise.categories}
               measurementType={item.exercise.measurementType}
               weightUnit={settings?.preferredWeightUnit ?? 'kg'}
+              trackRPE={settings?.trackRPE ?? false}
+              trackTempo={settings?.trackTempo ?? false}
+              trackRestTime={settings?.trackRestTime ?? false}
               sets={item.sets}
               isExpanded={item.isExpanded || false}
               onToggleExpand={() => toggleExpanded(item.id)}
