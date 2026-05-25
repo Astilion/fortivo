@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/Input';
 import { commonStyles } from '@/constants/Styles';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
+import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
@@ -34,6 +35,7 @@ export default function CreateWorkoutScreen() {
     moveExerciseUp,
   } = useWorkoutStore();
   const { workoutService } = useApp();
+  const { settings } = useProfileSettings();
 
   // Reset the draft once when entering the create flow; clearDraft is a
   // stable Zustand action.
@@ -125,6 +127,7 @@ export default function CreateWorkoutScreen() {
               exerciseName={item.exercise.name}
               exerciseCategories={item.exercise.categories}
               measurementType={item.exercise.measurementType}
+              weightUnit={settings?.preferredWeightUnit ?? 'kg'}
               sets={item.sets}
               isExpanded={item.isExpanded || false}
               onToggleExpand={() => toggleExpanded(item.id)}

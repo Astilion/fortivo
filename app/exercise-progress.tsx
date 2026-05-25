@@ -2,6 +2,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
+import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { ExerciseProgressWithWorkout } from '@/types/training';
 import { formatDate } from '@/utils/date';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,8 @@ export default function ExerciseProgressScreen() {
     exerciseName?: string;
   }>();
   const { workoutService } = useApp();
+  const { settings } = useProfileSettings();
+  const weightUnit = settings?.preferredWeightUnit ?? 'kg';
   const router = useRouter();
 
   const [progress, setProgress] = useState<ExerciseProgressWithWorkout[]>([]);
@@ -66,7 +69,10 @@ export default function ExerciseProgressScreen() {
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{bestPR}kg</Text>
+          <Text style={styles.statValue}>
+            {bestPR}
+            {weightUnit}
+          </Text>
           <Text style={styles.statLabel}>Best PR</Text>
         </View>
 
@@ -76,7 +82,10 @@ export default function ExerciseProgressScreen() {
         </View>
 
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{formatNumber(totalVolume)}kg</Text>
+          <Text style={styles.statValue}>
+            {formatNumber(totalVolume)}
+            {weightUnit}
+          </Text>
           <Text style={styles.statLabel}>Total Volume</Text>
         </View>
       </View>
@@ -111,12 +120,18 @@ export default function ExerciseProgressScreen() {
               <View style={styles.cardContent}>
                 <View style={styles.stat}>
                   <Text style={styles.statLabel}>Max ciężar</Text>
-                  <Text style={styles.statValue}>{item.maxWeight}kg</Text>
+                  <Text style={styles.statValue}>
+                    {item.maxWeight}
+                    {weightUnit}
+                  </Text>
                 </View>
 
                 <View style={styles.stat}>
                   <Text style={styles.statLabel}>Volume</Text>
-                  <Text style={styles.statValue}>{item.totalVolume}kg</Text>
+                  <Text style={styles.statValue}>
+                    {item.totalVolume}
+                    {weightUnit}
+                  </Text>
                 </View>
               </View>
 
