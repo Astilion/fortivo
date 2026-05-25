@@ -12,9 +12,11 @@ import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { confirmAction } from '@/utils/confirm';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CreateWorkoutScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { showToast } = useToastStore();
   const [showNameError, setShowNameError] = useState(false);
   const [showExercisesError, setShowExercisesError] = useState(false);
@@ -87,7 +89,7 @@ export default function CreateWorkoutScreen() {
   return (
     <ScrollView
       style={commonStyles.container}
-      contentContainerStyle={{ gap: 16, paddingBottom: 80 }}
+      contentContainerStyle={{ gap: 16, paddingBottom: insets.bottom + 80 }}
     >
       <View>
         <Input

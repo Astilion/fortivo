@@ -13,11 +13,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { confirmAction } from '@/utils/confirm';
 import { generateId } from '@/database/database';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function EditWorkoutScreen() {
   const [showNameError, setShowNameError] = useState(false);
   const [showExercisesError, setShowExercisesError] = useState(false);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { showToast } = useToastStore();
   const {
     draft,
@@ -96,7 +98,7 @@ export default function EditWorkoutScreen() {
   return (
     <ScrollView
       style={commonStyles.container}
-      contentContainerStyle={{ gap: 16, paddingBottom: 80 }}
+      contentContainerStyle={{ gap: 16, paddingBottom: insets.bottom + 80 }}
     >
       <View>
         <Input

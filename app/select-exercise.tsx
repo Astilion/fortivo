@@ -19,6 +19,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { capitalize } from '@/utils/capitalize';
 import { matchesSearch } from '@/utils/search';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SelectExerciseScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,6 +27,7 @@ export default function SelectExerciseScreen() {
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const exercises = useExerciseStore((state) => state.exercises);
   const loading = useExerciseStore((state) => state.loading);
   const source = useLocalSearchParams().source as string | undefined;
@@ -250,14 +252,17 @@ export default function SelectExerciseScreen() {
       {!isMultiSelectMode && (
         <Pressable
           onPress={() => router.push('/create-exercise')}
-          style={[styles.fab, { bottom: activeWorkoutId ? 170 : 34 }]}
+          style={[
+            styles.fab,
+            { bottom: insets.bottom + (activeWorkoutId ? 170 : 34) },
+          ]}
         >
           <Ionicons name="add" size={28} color="#1C2227" />
         </Pressable>
       )}
 
       {isMultiSelectMode && (
-        <View style={styles.floatingBar}>
+        <View style={[styles.floatingBar, { bottom: insets.bottom + 24 }]}>
           <Button
             title="Anuluj"
             onPress={exitMultiSelectMode}
