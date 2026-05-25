@@ -1,5 +1,6 @@
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
+import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { WorkoutHistoryDetails } from '@/types/training';
 import { formatDate } from '@/utils/date';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,8 @@ import { logger } from '@/utils/logger';
 export default function WorkoutDetailsScreen() {
   const { historyId } = useLocalSearchParams<{ historyId: string }>();
   const { workoutService } = useApp();
+  const { settings } = useProfileSettings();
+  const weightUnit = settings?.preferredWeightUnit ?? 'kg';
   const router = useRouter();
   const [details, setDetails] = useState<WorkoutHistoryDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -96,7 +99,7 @@ export default function WorkoutDetailsScreen() {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{details.stats.totalVolume}</Text>
-          <Text style={styles.statLabel}>Volume (kg)</Text>
+          <Text style={styles.statLabel}>{`Volume (${weightUnit})`}</Text>
         </View>
 
         <View style={styles.statCard}>
@@ -150,7 +153,7 @@ export default function WorkoutDetailsScreen() {
                   <View style={styles.dataItem}>
                     <Text style={styles.dataLabel}>Ciężar</Text>
                     <Text style={styles.dataValue}>
-                      {set.actualWeight || set.weight || 0} kg
+                      {set.actualWeight || set.weight || 0} {weightUnit}
                     </Text>
                   </View>
 
@@ -179,7 +182,8 @@ export default function WorkoutDetailsScreen() {
                     set.actualReps !== set.reps) && (
                     <View style={styles.plannedData}>
                       <Text style={styles.plannedLabel}>
-                        Planowane: {set.weight}kg × {set.reps}
+                        Planowane: {set.weight}
+                        {weightUnit} × {set.reps}
                       </Text>
                     </View>
                   )}

@@ -9,6 +9,7 @@ interface ExpandableExerciseCardProps {
   exerciseName: string;
   exerciseCategories: string[];
   measurementType?: 'reps' | 'time' | 'distance';
+  weightUnit?: 'kg' | 'lbs';
   sets: WorkoutSet[];
   isExpanded: boolean;
   onToggleExpand: () => void;
@@ -26,6 +27,7 @@ export const ExpandableExerciseCard = ({
   exerciseName,
   exerciseCategories,
   measurementType = 'reps',
+  weightUnit = 'kg',
   sets,
   isExpanded,
   onToggleExpand,
@@ -155,7 +157,7 @@ export const ExpandableExerciseCard = ({
               #
             </Text>
             <Text style={[styles.tableHeaderText, styles.weightColumnHeader]}>
-              Ciężar (kg)
+              {`Ciężar (${weightUnit})`}
             </Text>
             <Text style={[styles.tableHeaderText, styles.repsColumnHeader]}>
               {getLabel()}

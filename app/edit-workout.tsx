@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/Input';
 import { commonStyles } from '@/constants/Styles';
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
+import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
@@ -35,6 +36,7 @@ export default function EditWorkoutScreen() {
     moveExerciseUp,
   } = useWorkoutStore();
   const { workoutService } = useApp();
+  const { settings } = useProfileSettings();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const loadWorkout = useCallback(async () => {
@@ -134,6 +136,7 @@ export default function EditWorkoutScreen() {
               exerciseName={item.exercise.name}
               exerciseCategories={item.exercise.categories}
               measurementType={item.exercise.measurementType}
+              weightUnit={settings?.preferredWeightUnit ?? 'kg'}
               sets={item.sets}
               isExpanded={item.isExpanded || false}
               onToggleExpand={() => toggleExpanded(item.id)}
