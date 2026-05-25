@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { logger } from '@/utils/logger';
 import { DayConfig, createEmptyWeekDays } from '@/utils/days';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CreateWeeklyPlanScreen() {
   const [planName, setPlanName] = useState('');
@@ -23,6 +24,7 @@ export default function CreateWeeklyPlanScreen() {
   const [days, setDays] = useState<DayConfig[]>(createEmptyWeekDays);
   const { weeklyPlanService } = useApp();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { pendingWorkout, clearPendingWorkout } = useWeeklyPlanStore();
   const { showToast } = useToastStore();
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -259,7 +261,7 @@ export default function CreateWeeklyPlanScreen() {
           ))}
         </View>
       </ScrollView>
-      <View style={styles.saveButton}>
+      <View style={[styles.saveButton, { paddingBottom: insets.bottom + 20 }]}>
         <Button
           title={isEditMode ? 'Zapisz zmiany' : 'Zapisz plan'}
           variant="primary"
@@ -344,7 +346,6 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     padding: 20,
-    paddingBottom: 40,
     borderTopWidth: 1,
     borderTopColor: colors.secondary,
   },

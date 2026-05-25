@@ -26,6 +26,7 @@ import { confirmAction } from '@/utils/confirm';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type MeasurementType = 'reps' | 'time' | 'distance';
 
@@ -82,6 +83,7 @@ export default function ActiveWorkoutScreen() {
   const exercisesRef = useRef<WorkoutExerciseWithSets[]>([]);
   const { workoutService } = useApp();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { settings } = useProfileSettings();
   const workoutStartTime = useWorkoutStore((state) => state.workoutStartTime);
   const startActiveWorkout = useWorkoutStore(
@@ -567,7 +569,7 @@ export default function ActiveWorkoutScreen() {
           onPress={() => router.push('/select-exercise?source=active-workout')}
         />
       </ScrollView>
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <Button
           title="Zakończ trening"
           variant="primary"
@@ -689,7 +691,6 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 20,
-    paddingBottom: 40,
     backgroundColor: colors.primary,
     borderTopWidth: 2,
     borderTopColor: colors.secondary,

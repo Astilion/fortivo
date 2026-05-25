@@ -14,6 +14,7 @@ import { LOCAL_USER_ID } from '@/constants/User';
 import { logger } from '@/utils/logger';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ExerciseForm {
   name: string;
@@ -59,6 +60,7 @@ export default function CreateExerciseScreen() {
   const [isInitializing, setIsInitializing] = useState(true);
   const { exerciseService } = useApp();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { showToast } = useToastStore();
 
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -202,7 +204,10 @@ export default function CreateExerciseScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[
+        styles.content,
+        { paddingBottom: insets.bottom + 40 },
+      ]}
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.section}>

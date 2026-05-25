@@ -9,6 +9,7 @@ import { logger } from '@/utils/logger';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Picks the measurement a set is prescribed in, preferring reps, then duration, then
 // distance. Validation guarantees exactly one is set; this is the read-side fallback order.
@@ -77,6 +78,7 @@ export default function PresetWorkoutDetailsScreen() {
   const { showToast } = useToastStore();
   const exercises = useExerciseStore((state) => state.exercises);
   const [isCopying, setIsCopying] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const preset: PresetWorkout | null = useMemo(
     () => (presetId ? presetService.getPresetWorkoutById(presetId) : null),
@@ -173,7 +175,7 @@ export default function PresetWorkoutDetailsScreen() {
         })}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <Button
           title={isCopying ? 'Dodawanie...' : 'Dodaj do moich treningów'}
           variant="primary"
