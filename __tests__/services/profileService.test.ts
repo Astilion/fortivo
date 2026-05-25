@@ -49,7 +49,7 @@ describe('updateUserSettings', () => {
     };
     await service.updateUserSettings(settings);
     expect(mockDb.runAsync).toHaveBeenCalledWith(
-      expect.stringContaining('INSERT OR REPLACE'),
+      expect.stringContaining('ON CONFLICT(user_id) DO UPDATE SET'),
       expect.arrayContaining([1, 0]),
     );
   });
