@@ -45,8 +45,16 @@ export class ProfileService {
   async updateUserSettings(settings: UserSettings): Promise<void> {
     try {
       await this.db.runAsync(
-        `INSERT OR REPLACE INTO user_settings (user_id, preferred_weight_unit, default_rest_time, track_rpe, track_tempo, track_rest_time, week_starts_on, goal_weight)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO user_settings (user_id, preferred_weight_unit, default_rest_time, track_rpe, track_tempo, track_rest_time, week_starts_on, goal_weight)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(user_id) DO UPDATE SET
+           preferred_weight_unit = excluded.preferred_weight_unit,
+           default_rest_time = excluded.default_rest_time,
+           track_rpe = excluded.track_rpe,
+           track_tempo = excluded.track_tempo,
+           track_rest_time = excluded.track_rest_time,
+           week_starts_on = excluded.week_starts_on,
+           goal_weight = excluded.goal_weight`,
         [
           settings.userId,
           settings.preferredWeightUnit,
