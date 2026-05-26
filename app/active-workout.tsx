@@ -8,7 +8,7 @@ import {
 } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { generateId } from '@/database/database';
 import {
   Pressable,
@@ -25,6 +25,7 @@ import { logger } from '@/utils/logger';
 import { confirmAction } from '@/utils/confirm';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
+import { useActiveWorkoutAutosave } from '@/hooks/useActiveWorkoutAutosave';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -75,34 +76,27 @@ const buildActualUpdate = (
 
 export default function ActiveWorkoutScreen() {
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
-  const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
-  const [restTargetTime, setRestTargetTime] = useState<number | null>(null);
   const [validationKey, setValidationKey] = useState(0);
-  const [isResting, setIsResting] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [, setTick] = useState(0);
-  const exercisesRef = useRef<WorkoutExerciseWithSets[]>([]);
   const { workoutService } = useApp();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { settings } = useProfileSettings();
-  const workoutStartTime = useActiveWorkoutStore(
-    (state) => state.workoutStartTime,
-  );
-  const startActiveWorkout = useActiveWorkoutStore(
-    (state) => state.startActiveWorkout,
-  );
-  const finishActiveWorkout = useActiveWorkoutStore(
-    (state) => state.finishActiveWorkout,
-  );
+  const exercises = useActiveWorkoutStore((state) => state.exercises);
+  const isResting = useActiveWorkoutStore((state) => state.isResting);
+  const restTargetTime = useActiveWorkoutStore((state) => state.restTargetTime);
   const pendingExercise = useWorkoutStore((state) => state.pendingExercise);
   const clearPendingExercise = useWorkoutStore(
     (state) => state.clearPendingExercise,
   );
   const { showToast } = useToastStore();
+  const exerciseList = exercises ?? [];
 
-  // Load the active workout once per focus session; loadActiveWorkout is
-  // a stable Zustand action, intentionally guarded by `isLoaded`.
+  useActiveWorkoutAutosave();
+
+  // Load once per mount; loadActiveWorkout reconciles DB against the store
+  // (keeps live state on in-app nav, hydrates on cold start).
   useFocusEffect(
     useCallback(() => {
       if (!isLoaded) {
@@ -123,7 +117,7 @@ export default function ActiveWorkoutScreen() {
             { id: generateId('ws'), reps: 8, weight: 0, completed: false },
           ],
         };
-        setExercises((prev) => [...prev, newExercise]);
+        useActiveWorkoutStore.getState().addExercise(newExercise);
         clearPendingExercise();
       }
       // Mailbox pattern: react to pendingExercise only; the setters and
@@ -138,8 +132,7 @@ export default function ActiveWorkoutScreen() {
     const interval = setInterval(() => {
       const remaining = Math.ceil((restTargetTime - Date.now()) / 1000);
       if (remaining <= 0) {
-        setIsResting(false);
-        setRestTargetTime(null);
+        useActiveWorkoutStore.getState().stopRestTimer();
       } else {
         setTick((prev) => prev + 1);
       }
@@ -148,123 +141,99 @@ export default function ActiveWorkoutScreen() {
     return () => clearInterval(interval);
   }, [isResting, restTargetTime]);
 
-  useEffect(() => {
-    exercisesRef.current = exercises;
-  }, [exercises]);
-
   const loadActiveWorkout = async () => {
-    const workout = await workoutService.getActiveWorkout();
+    const dbWorkout = await workoutService.getActiveWorkout();
 
-    if (!workout) {
-      router.back();
+    if (!dbWorkout) {
+      router.replace('/(tabs)/current-workout');
       return;
     }
-    setWorkout(workout);
-    const ex = await workoutService.getWorkoutExercises(workout.id);
+    setWorkout(dbWorkout);
 
-    const exercisesWithDefaults = ex.map((item) => ({
-      ...item,
-      id: generateId('we'),
-      sets: item.sets.map((set) => ({
+    // Store already holds live state for this workout (in-app navigation) — keep it.
+    const store = useActiveWorkoutStore.getState();
+    if (store.workoutId === dbWorkout.id && store.exercises !== null) return;
+
+    // Cold start / kill recovery — hydrate from DB. completed is read as-is;
+    // actual_* falls back to planned per field only when NULL (M1.6 prefill).
+    const dbExercises = await workoutService.getWorkoutExercises(dbWorkout.id);
+    const hydrated = dbExercises.map((ex) => ({
+      ...ex,
+      sets: ex.sets.map((set) => ({
         ...set,
-        completed: false,
         actualReps: set.actualReps ?? set.reps,
         actualWeight: set.actualWeight ?? set.weight,
+        actualRpe: set.actualRpe ?? set.rpe,
         actualDuration: set.actualDuration ?? set.duration,
         actualDistance: set.actualDistance ?? set.distance,
       })),
     }));
-    if (workoutStartTime === null) {
-      startActiveWorkout(workout.id);
+    useActiveWorkoutStore.getState().setExercises(hydrated);
+
+    if (store.workoutStartTime === null && dbWorkout.started_at) {
+      useActiveWorkoutStore
+        .getState()
+        .startActiveWorkout(dbWorkout.id, Date.parse(dbWorkout.started_at));
     }
-    setExercises(exercisesWithDefaults);
   };
 
   const toggleSetCompleted = (exerciseId: string, setId: string) => {
-    setExercises((prevExercises) => {
-      const newExercises = prevExercises.map((ex) => {
-        if (ex.id === exerciseId) {
-          return {
-            ...ex,
-            sets: ex.sets.map((s) => {
-              if (s.id === setId) {
-                const nowCompleted = !s.completed;
-                if (nowCompleted && settings?.trackRestTime) {
-                  const restTime = s.restTime ?? settings.defaultRestTime ?? 90;
-                  setRestTargetTime(Date.now() + restTime * 1000);
-                  setIsResting(true);
-                }
-                return { ...s, completed: nowCompleted };
-              }
-              return s;
-            }),
-          };
-        }
-        return ex;
-      });
-      return newExercises;
-    });
+    const store = useActiveWorkoutStore.getState();
+    const nowCompleted = store.toggleSetCompleted(exerciseId, setId);
+    if (nowCompleted && settings?.trackRestTime) {
+      const set = store.exercises
+        ?.find((ex) => ex.id === exerciseId)
+        ?.sets.find((s) => s.id === setId);
+      const restTime = set?.restTime ?? settings.defaultRestTime ?? 90;
+      store.startRestTimer(Date.now() + restTime * 1000);
+    }
   };
 
   const addSet = (exerciseId: string) => {
-    setExercises((prevExercises) => {
-      return prevExercises.map((ex) => {
-        if (ex.id === exerciseId) {
-          const lastSet = ex.sets[ex.sets.length - 1];
-          const measurementType = ex.exercise.measurementType;
-          const isTime = measurementType === 'time';
-          const isDistance = measurementType === 'distance';
+    const ex = exerciseList.find((e) => e.id === exerciseId);
+    if (!ex) return;
 
-          const newSet: WorkoutSet = {
-            id: generateId('ws'),
-            // reps is required (NOT NULL); kept as a placeholder for time/distance sets.
-            reps: lastSet?.actualReps || lastSet?.reps || 10,
-            weight: lastSet?.actualWeight || lastSet?.weight || 0,
-            rpe: lastSet?.actualRpe || lastSet?.rpe || undefined,
-            tempo: lastSet?.tempo || undefined,
-            restTime: lastSet?.restTime || undefined,
-            completed: false,
-            notes: undefined,
-            actualReps:
-              isTime || isDistance
-                ? undefined
-                : lastSet?.actualReps || lastSet?.reps || 8,
-            actualWeight: lastSet?.actualWeight || lastSet?.weight || 0,
-            actualRpe: lastSet?.actualRpe || undefined,
-            duration: lastSet?.duration || undefined,
-            actualDuration: isTime
-              ? lastSet?.actualDuration || lastSet?.duration || undefined
-              : undefined,
-            distance: lastSet?.distance || undefined,
-            actualDistance: isDistance
-              ? lastSet?.actualDistance || lastSet?.distance || undefined
-              : undefined,
-          };
+    const lastSet = ex.sets[ex.sets.length - 1];
+    const measurementType = ex.exercise.measurementType;
+    const isTime = measurementType === 'time';
+    const isDistance = measurementType === 'distance';
 
-          return {
-            ...ex,
-            sets: [...ex.sets, newSet],
-          };
-        }
-        return ex;
-      });
-    });
+    const newSet: WorkoutSet = {
+      id: generateId('ws'),
+      // reps is required (NOT NULL); kept as a placeholder for time/distance sets.
+      reps: lastSet?.actualReps || lastSet?.reps || 10,
+      weight: lastSet?.actualWeight || lastSet?.weight || 0,
+      rpe: lastSet?.actualRpe || lastSet?.rpe || undefined,
+      tempo: lastSet?.tempo || undefined,
+      restTime: lastSet?.restTime || undefined,
+      completed: false,
+      notes: undefined,
+      actualReps:
+        isTime || isDistance
+          ? undefined
+          : lastSet?.actualReps || lastSet?.reps || 8,
+      actualWeight: lastSet?.actualWeight || lastSet?.weight || 0,
+      actualRpe: lastSet?.actualRpe || undefined,
+      duration: lastSet?.duration || undefined,
+      actualDuration: isTime
+        ? lastSet?.actualDuration || lastSet?.duration || undefined
+        : undefined,
+      distance: lastSet?.distance || undefined,
+      actualDistance: isDistance
+        ? lastSet?.actualDistance || lastSet?.distance || undefined
+        : undefined,
+    };
+
+    useActiveWorkoutStore.getState().addSet(exerciseId, newSet);
   };
 
   const removeSet = (exerciseId: string, setId: string) => {
-    const ex = exercises.find((e) => e.id === exerciseId);
+    const ex = exerciseList.find((e) => e.id === exerciseId);
     if (!ex || ex.sets.length <= 1) return;
 
-    confirmAction('Usuń serię', 'Czy na pewno chcesz usunąć tę serię?', () => {
-      setExercises((prevExercises) =>
-        prevExercises.map((e) => {
-          if (e.id === exerciseId) {
-            return { ...e, sets: e.sets.filter((s) => s.id !== setId) };
-          }
-          return e;
-        }),
-      );
-    });
+    confirmAction('Usuń serię', 'Czy na pewno chcesz usunąć tę serię?', () =>
+      useActiveWorkoutStore.getState().removeSet(exerciseId, setId),
+    );
   };
 
   const updateSetValue = (
@@ -272,22 +241,7 @@ export default function ActiveWorkoutScreen() {
     setId: string,
     updates: Partial<WorkoutSet>,
   ) => {
-    setExercises((prevExercises) => {
-      return prevExercises.map((ex) => {
-        if (ex.id === exerciseId) {
-          return {
-            ...ex,
-            sets: ex.sets.map((s) => {
-              if (s.id === setId) {
-                return { ...s, ...updates };
-              }
-              return s;
-            }),
-          };
-        }
-        return ex;
-      });
-    });
+    useActiveWorkoutStore.getState().updateSetValue(exerciseId, setId, updates);
   };
 
   const handleFinishWorkout = () => {
@@ -295,29 +249,22 @@ export default function ActiveWorkoutScreen() {
       'Zakończ trening',
       'Czy na pewno chcesz zakończyć trening?',
       async () => {
-        if (!workout || workoutStartTime === null) return;
+        const { workoutId, workoutStartTime, exercises } =
+          useActiveWorkoutStore.getState();
+        if (!workoutId || workoutStartTime === null || !exercises) return;
 
-        const endTime = Date.now();
         const durationMinutes = Math.max(
           0,
-          Math.round((endTime - workoutStartTime) / 60000),
+          Math.round((Date.now() - workoutStartTime) / 60000),
         );
 
         try {
-          await workoutService.saveWorkoutExercises(
-            workout.id,
-            exercisesRef.current,
-          );
-
-          await workoutService.saveWorkoutHistory(workout.id, durationMinutes);
-
-          await workoutService.saveExerciseProgress(
-            workout.id,
-            exercisesRef.current,
-          );
+          await workoutService.saveActiveWorkoutSnapshot(workoutId, exercises);
+          await workoutService.saveWorkoutHistory(workoutId, durationMinutes);
+          await workoutService.saveExerciseProgress(workoutId, exercises);
 
           await workoutService.clearActiveWorkout();
-          finishActiveWorkout();
+          useActiveWorkoutStore.getState().finishActiveWorkout();
           showToast('Trening zakończony!', 'success');
           router.replace('/(tabs)/workout-history');
         } catch (error) {
@@ -334,20 +281,20 @@ export default function ActiveWorkoutScreen() {
   };
 
   const removeExercise = (exerciseId: string, exerciseName: string) => {
-    if (exercises.length <= 1) {
+    if (exerciseList.length <= 1) {
       showToast('Nie możesz usunąć ostatniego ćwiczenia', 'info');
       return;
     }
     confirmAction(
       'Usuń ćwiczenie',
       `Czy na pewno chcesz usunąć "${exerciseName}" z treningu?`,
-      () => setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId)),
+      () => useActiveWorkoutStore.getState().removeExercise(exerciseId),
     );
   };
 
-  const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
+  const totalSets = exerciseList.reduce((sum, ex) => sum + ex.sets.length, 0);
 
-  const completedSets = exercises.reduce(
+  const completedSets = exerciseList.reduce(
     (sum, ex) => sum + ex.sets.filter((s) => s.completed).length,
     0,
   );
@@ -371,10 +318,7 @@ export default function ActiveWorkoutScreen() {
             Odpoczynek: {restTimeRemaining}s
           </Text>
           <Pressable
-            onPress={() => {
-              setIsResting(false);
-              setRestTargetTime(null);
-            }}
+            onPress={() => useActiveWorkoutStore.getState().stopRestTimer()}
           >
             <Ionicons name="close" size={18} color={colors.primary} />
           </Pressable>
@@ -397,7 +341,7 @@ export default function ActiveWorkoutScreen() {
         style={styles.content}
         contentContainerStyle={{ paddingBottom: 22 }}
       >
-        {exercises.map((item, exIndex) => (
+        {exerciseList.map((item, exIndex) => (
           <View key={item.id} style={styles.exerciseBlock}>
             <View style={styles.exerciseHeader}>
               <Text style={styles.exerciseName}>
