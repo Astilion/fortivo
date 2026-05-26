@@ -13,8 +13,6 @@ interface WorkoutDraft {
 
 interface WorkoutStore {
   draft: WorkoutDraft;
-  activeWorkoutId: string | null;
-  workoutStartTime: number | null;
   pendingExercise: Exercise | null;
 
   setWorkoutName: (name: string) => void;
@@ -35,8 +33,6 @@ interface WorkoutStore {
 
   moveExerciseUp: (exerciseId: string) => void;
   moveExerciseDown: (exerciseId: string) => void;
-  startActiveWorkout: (workoutId: string) => void;
-  finishActiveWorkout: () => void;
   setPendingExercise: (exercise: Exercise | null) => void;
   clearPendingExercise: () => void;
 }
@@ -53,8 +49,6 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
     name: '',
     exercises: [],
   },
-  activeWorkoutId: null,
-  workoutStartTime: null,
   pendingExercise: null,
   setWorkoutName: (name: string) =>
     set((state) => ({
@@ -213,12 +207,6 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
         draft: { ...state.draft, exercises: newExercises },
       };
     }),
-  startActiveWorkout: (workoutId: string) =>
-    set({ activeWorkoutId: workoutId, workoutStartTime: Date.now() }),
-
-  finishActiveWorkout: () =>
-    set({ activeWorkoutId: null, workoutStartTime: null }),
-
   setPendingExercise: (exercise: Exercise | null) =>
     set({ pendingExercise: exercise }),
   clearPendingExercise: () => set({ pendingExercise: null }),

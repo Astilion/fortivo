@@ -24,6 +24,7 @@ import { validateRPE, validateTempo } from '@/utils/validation';
 import { logger } from '@/utils/logger';
 import { confirmAction } from '@/utils/confirm';
 import { useWorkoutStore } from '@/store/workoutStore';
+import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -85,11 +86,13 @@ export default function ActiveWorkoutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { settings } = useProfileSettings();
-  const workoutStartTime = useWorkoutStore((state) => state.workoutStartTime);
-  const startActiveWorkout = useWorkoutStore(
+  const workoutStartTime = useActiveWorkoutStore(
+    (state) => state.workoutStartTime,
+  );
+  const startActiveWorkout = useActiveWorkoutStore(
     (state) => state.startActiveWorkout,
   );
-  const finishActiveWorkout = useWorkoutStore(
+  const finishActiveWorkout = useActiveWorkoutStore(
     (state) => state.finishActiveWorkout,
   );
   const pendingExercise = useWorkoutStore((state) => state.pendingExercise);

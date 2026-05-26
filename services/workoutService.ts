@@ -268,10 +268,16 @@ export class WorkoutService {
   }
 
   async setActiveWorkout(id: string): Promise<void> {
-    await this.db.runAsync('UPDATE workouts SET is_active = 0');
-    await this.db.runAsync('UPDATE workouts SET is_active = 1 WHERE id = ?', [
-      id,
-    ]);
+    // Wrap both writes so we never end up with zero or two active rows if
+    // interrupted between them. started_at marks the activation moment, used
+    // to compute workout duration and survive a process kill.
+    await this.db.withTransactionAsync(async () => {
+      await this.db.runAsync('UPDATE workouts SET is_active = 0');
+      await this.db.runAsync(
+        'UPDATE workouts SET is_active = 1, started_at = ? WHERE id = ?',
+        [new Date().toISOString(), id],
+      );
+    });
   }
 
   async getActiveWorkout(): Promise<WorkoutRow | null> {
@@ -282,7 +288,9 @@ export class WorkoutService {
   }
 
   async clearActiveWorkout(): Promise<void> {
-    await this.db.runAsync('UPDATE workouts SET is_active = 0');
+    await this.db.runAsync(
+      'UPDATE workouts SET is_active = 0, started_at = NULL',
+    );
   }
 
   async saveActualValues(

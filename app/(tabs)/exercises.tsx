@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useExerciseStore } from '@/store/exerciseStore';
-import { useWorkoutStore } from '@/store/workoutStore';
+import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 import { useRouter } from 'expo-router';
@@ -28,7 +28,7 @@ export default function ExercisesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
   const router = useRouter();
-  const activeWorkoutId = useWorkoutStore((state) => state.activeWorkoutId);
+  const activeWorkoutId = useActiveWorkoutStore((state) => state.workoutId);
   const { showToast } = useToastStore();
   const exercises = useExerciseStore((state) => state.exercises);
   const loading = useExerciseStore((state) => state.loading);

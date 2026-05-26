@@ -5,6 +5,7 @@ import colors from '@/constants/Colors';
 import { commonStyles } from '@/constants/Styles';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useWorkoutStore } from '@/store/workoutStore';
+import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useCallback, useMemo } from 'react';
 import {
@@ -35,7 +36,7 @@ export default function SelectExerciseScreen() {
   const setPendingExercise = useWorkoutStore(
     (state) => state.setPendingExercise,
   );
-  const activeWorkoutId = useWorkoutStore((state) => state.activeWorkoutId);
+  const activeWorkoutId = useActiveWorkoutStore((state) => state.workoutId);
   const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
   const isFavorite = useExerciseStore((state) => state.isFavorite);
 

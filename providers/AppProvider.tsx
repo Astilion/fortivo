@@ -6,6 +6,7 @@ import { Exercise, ExerciseService } from '@/services/exerciseService';
 import { WorkoutService } from '@/services/workoutService';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
+import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { ProfileService } from '@/services/profileService';
 import { WeightService } from '@/services/weightService';
 import { MeasurementService } from '@/services/measurementService';
@@ -78,6 +79,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const loadCategories = useExerciseStore((state) => state.loadCategories);
   const loadFavorites = useExerciseStore((state) => state.loadFavorites);
   const setActivePlan = useWeeklyPlanStore((state) => state.setActivePlan);
+  const hydrateActiveWorkout = useActiveWorkoutStore(
+    (state) => state.startActiveWorkout,
+  );
   const dbError = useDbErrorStore((state) => state.dbError);
   const reinitNonce = useDbErrorStore((state) => state.reinitNonce);
   const setDbError = useDbErrorStore((state) => state.setDbError);
@@ -112,13 +116,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       initializeService(exerciseService);
 
       // Load initial data
-      const [activePlan] = await Promise.all([
+      const [activePlan, activeWorkout] = await Promise.all([
         weeklyPlanService.getActivePlan(),
+        workoutService.getActiveWorkout(),
         loadExercises(),
         loadCategories(),
         loadFavorites(),
       ]);
       setActivePlan(activePlan);
+
+      // Hydrate the in-memory active-workout store from the DB so the FAB and
+      // duration survive a process kill. Legacy rows (pre-v7) have no
+      // started_at — fall back to now, accepting a one-off wrong duration.
+      if (activeWorkout) {
+        const parsed = activeWorkout.started_at
+          ? Date.parse(activeWorkout.started_at)
+          : NaN;
+        hydrateActiveWorkout(
+          activeWorkout.id,
+          Number.isNaN(parsed) ? Date.now() : parsed,
+        );
+      }
 
       setContext({
         db: database,
