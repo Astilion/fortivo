@@ -695,8 +695,7 @@ export class WorkoutService {
     );
   }
 
-  /** Deletes rows of `table` matching `parentColumn = parentId` whose id is not
-   *  in `keepIds` — the diff-aware prune for saveActiveWorkoutSnapshot. */
+  // Diff-aware prune for saveActiveWorkoutSnapshot: drops rows no longer present.
   private async deleteRowsNotIn(
     table: 'workout_exercises' | 'workout_sets',
     parentColumn: string,

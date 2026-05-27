@@ -22,7 +22,6 @@ interface WorkoutStore {
   setExercises: (exercises: WorkoutExerciseWithSets[]) => void;
   toggleExpanded: (exerciseId: string) => void;
 
-  // Set management
   addSet: (exerciseId: string) => void;
   removeSet: (exerciseId: string, setId: string) => void;
   updateSet: (
@@ -173,12 +172,11 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
         (ex) => ex.id === exerciseId,
       );
 
-      // If already first, do nothing
       if (currentIndex <= 0) return state;
 
       const newExercises = [...state.draft.exercises];
-      const [item] = newExercises.splice(currentIndex, 1); // Remove from current position
-      newExercises.splice(currentIndex - 1, 0, item); // Insert one position up
+      const [item] = newExercises.splice(currentIndex, 1);
+      newExercises.splice(currentIndex - 1, 0, item);
 
       return {
         draft: { ...state.draft, exercises: newExercises },
@@ -191,7 +189,6 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
         (ex) => ex.id === exerciseId,
       );
 
-      // If already last, do nothing
       if (
         currentIndex === -1 ||
         currentIndex >= state.draft.exercises.length - 1
@@ -200,8 +197,8 @@ export const useWorkoutStore = create<WorkoutStore>((set) => ({
       }
 
       const newExercises = [...state.draft.exercises];
-      const [item] = newExercises.splice(currentIndex, 1); // Remove from current position
-      newExercises.splice(currentIndex + 1, 0, item); // Insert one position down
+      const [item] = newExercises.splice(currentIndex, 1);
+      newExercises.splice(currentIndex + 1, 0, item);
 
       return {
         draft: { ...state.draft, exercises: newExercises },

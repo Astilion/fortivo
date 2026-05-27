@@ -40,10 +40,8 @@ export const useApp = () => {
   return context;
 };
 
-// Helper function to validate and transform exercise data
 const validateExerciseData = (data: any[]): Exercise[] => {
   return data.map((exercise) => {
-    // Validate difficulty field
     const validDifficulties = [
       'Początkujący',
       'Średniozaawansowany',
@@ -96,10 +94,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const initializeApp = async () => {
     setIsReady(false);
     try {
-      // Initialize database
       const database = await initDatabase();
 
-      // Initialize services
       const exerciseService = new ExerciseService(database);
       const workoutService = new WorkoutService(database);
       const profileService = new ProfileService(database);
@@ -108,14 +104,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       const weeklyPlanService = new WeeklyPlanService(database);
       const presetService = new PresetService(database);
 
-      // Validate and seed exercises
       const validatedExercises = validateExerciseData(exercisesData);
       await exerciseService.seedExercises(validatedExercises);
 
-      // Initialize Zustand store
       initializeService(exerciseService);
 
-      // Load initial data
       const [activePlan, activeWorkout] = await Promise.all([
         weeklyPlanService.getActivePlan(),
         workoutService.getActiveWorkout(),

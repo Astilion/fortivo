@@ -6,15 +6,15 @@ import { WorkoutExerciseWithSets, WorkoutSet } from '@/types/training';
 // workout survives a process kill.
 interface ActiveWorkoutState {
   workoutId: string | null;
-  workoutStartTime: number | null; // ms from epoch (Date.now())
+  workoutStartTime: number | null;
   exercises: WorkoutExerciseWithSets[] | null;
-  restTargetTime: number | null; // absolute target, Date.now()-based
+  restTargetTime: number | null;
   isResting: boolean;
 
   // startTime omitted = fresh start (Date.now()); passed = hydration from DB.
   startActiveWorkout: (workoutId: string, startTime?: number) => void;
   finishActiveWorkout: () => void;
-  reset: () => void; // alias to finishActiveWorkout (timeout cleanup, later commit)
+  reset: () => void; // alias to finishActiveWorkout, for the inactivity-timeout cleanup
 
   setExercises: (exercises: WorkoutExerciseWithSets[]) => void;
   updateSetValue: (

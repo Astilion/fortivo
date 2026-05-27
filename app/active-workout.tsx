@@ -32,9 +32,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type MeasurementType = 'reps' | 'time' | 'distance';
 
-// The active workout edits the *actual* value of each set, in the unit dictated
-// by the exercise's measurementType — reps, seconds, or meters. Mirrors the
-// labels/fields used by ExpandableExerciseCard in the editor.
+// Active workout edits each set's *actual* value; field & label depend on the
+// exercise's measurementType (reps / seconds / meters).
 const getValueLabel = (measurementType?: MeasurementType): string => {
   switch (measurementType) {
     case 'time':
@@ -120,8 +119,7 @@ export default function ActiveWorkoutScreen() {
         useActiveWorkoutStore.getState().addExercise(newExercise);
         clearPendingExercise();
       }
-      // Mailbox pattern: react to pendingExercise only; the setters and
-      // clearPendingExercise are stable.
+      // Mailbox: depend on pendingExercise only (other refs are stable).
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pendingExercise]),
   );
