@@ -131,7 +131,7 @@ export default function CurrentWorkoutScreen() {
             </ScrollView>
             <View style={styles.actions}>
               <Button
-                title="🏋️ Rozpocznij trening"
+                title="Rozpocznij trening"
                 variant="primary"
                 onPress={() => router.push('/active-workout')}
               />
@@ -163,7 +163,7 @@ export default function CurrentWorkoutScreen() {
               />
               {workoutsCount > 0 && (
                 <Button
-                  title="📚 Wybierz z biblioteki"
+                  title="Wybierz z biblioteki"
                   variant="secondary"
                   onPress={() => router.push('/(tabs)/workouts')}
                 />

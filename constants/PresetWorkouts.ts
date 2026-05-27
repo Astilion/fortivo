@@ -6,12 +6,12 @@ export const PRESET_WORKOUTS: PresetWorkout[] = [
     id: 'preset_workout_fbw_basic',
     name: 'FBW',
     description:
-      'Trening całego ciała dla początkujących. Idealny do 2-3× w tygodniu z dniem przerwy między sesjami.',
+      'Trening całego ciała dla początkujących. Idealny do 2-3 razy w tygodniu z dniem przerwy między sesjami.',
     category: 'basic',
     tags: ['fbw', 'początkujący', 'pełne ciało'],
     estimatedDurationMinutes: 60,
     coachingNotes:
-      'Pierwsze 3 ćwiczenia (przysiad, wyciskanie, wiosłowanie) to ciężkie wielostawowe — daj sobie pełne 3 minuty lub więcej przerwy między seriami. Technika ważniejsza niż ciężar. RPE 7 oznacza „mogłem zrobić jeszcze 3 powtórzenia" — zostawiaj zapas, jesteś na początku drogi. Hip thrust, wyciskanie hantli i plank to akcesoria - krótsze przerwy.\n\nZakresy powtórzeń do progresu: główne wielostawowe 8-10 powtórzeń, hip thrust 10-12, wyciskanie hantli 8-12, plank 30+ sekund. Plan ma dolne granice — dodawaj powtórzenia/sekundy, zanim zwiększysz ciężar.',
+      'Pierwsze 3 ćwiczenia (przysiad, wyciskanie, wiosłowanie) to ciężkie wielostawowe — daj sobie pełne 3 minuty lub więcej przerwy między seriami. Technika ważniejsza niż ciężar. RPE 7 oznacza „mogłem zrobić jeszcze 3 powtórzenia" — zostawiaj zapas, jesteś na początku drogi. Hip thrust, wyciskanie hantli i plank to akcesoria - krótsze przerwy.\n\nZakresy powtórzeń do progresu: główne wielostawowe 8-10 powtórzeń, hip thrust 10-12, wyciskanie hantli 8-12, plank minimum 30 sekund. Plan ma dolne granice — dodawaj powtórzenia/sekundy, zanim zwiększysz ciężar.',
     exercises: [
       {
         exerciseId: 'squat_001', // Przysiad Klasyczny
@@ -83,7 +83,7 @@ export const PRESET_WORKOUTS: PresetWorkout[] = [
     tags: ['push', 'początkujący', 'klatka', 'barki', 'triceps'],
     estimatedDurationMinutes: 50,
     coachingNotes:
-      'Kolejność celowa — najcięższe wielostawowe (wyciskanie sztangi) z największą rezerwą siły, potem wyciskanie nad głowę, potem izolacje. Na obu wyciskaniach nie spiesz się z przerwą — minimum 3 minuty, lepiej dłużej jeśli nie czujesz powrotu. Na wznosach bokiem i pushdown utrzymuj tempo: krótka przerwa, świadoma kontrola, czujesz mięsień zamiast go szarpać.\n\nZakresy do progresu: wyciskanie sztangi 6-10, wyciskanie hantli nad głowę 8-10, wyciskanie skośne hantli 10-12, wznosy bokiem 12-15, pushdown 10-12. Dodawaj powtórzenia w zakresie, zanim zwiększysz ciężar.',
+      'Kolejność celowa — najcięższe wielostawowe (wyciskanie sztangi) z największą rezerwą siły, potem wyciskanie nad głowę, potem izolacje. Na obu wyciskaniach nie spiesz się z przerwą — minimum 3 minuty, jeśli nie czujesz powrotu sił zastosuj dłuższą przerwę. Na wznosach bokiem i pushdown utrzymuj tempo: krótka przerwa, świadoma kontrola, czujesz mięsień zamiast go szarpać.\n\nZakresy do progresu: wyciskanie sztangi 6-10, wyciskanie hantli nad głowę 8-10, wyciskanie skośne hantli 10-12, wznosy bokiem 12-15, pushdown 10-12. Przed zwiększeniem ciężaru, w pierwszej kolejności zwiększ ilość powtórzeń.',
     exercises: [
       {
         exerciseId: 'bench_press_013', // Wyciskanie Sztangi na Ławce Płaskiej
@@ -144,7 +144,7 @@ export const PRESET_WORKOUTS: PresetWorkout[] = [
     tags: ['pull', 'początkujący', 'plecy', 'biceps'],
     estimatedDurationMinutes: 60,
     coachingNotes:
-      'Martwy ciąg na początku, gdy jesteś świeży — to najbardziej wymagające ćwiczenie w całym splicie. Trzymaj niskie powtórzenia, długą przerwę (4 minuty), pełen fokus na technikę plecy/biodra. Jeśli technika się sypie — zakończ serię. Wiosłowanie sztangi później — dół pleców już rozgrzany, bądź ostrożny z ciężarem. Akcesoria (face pull, uginanie hantli) lecą szybko z krótkimi przerwami i wysoim czuciem. Zakresy do progresu: martwy ciąg 5-8 (trzymaj niskie, na technikę), lat ściąganie drążka 8-10, wiosłowanie sztangi 8-10, wiosłowanie hantlą 10-12, face pull 12-15, uginanie hantli 10-12. Dodawaj powtórzenia, zanim zwiększysz ciężar.',
+      'Martwy ciąg na początku, gdy jesteś świeży — to najbardziej wymagające ćwiczenie w całym splicie. Trzymaj niskie powtórzenia, długą przerwę (4 minuty), pełen fokus na technikę plecy/biodra. Jeśli technika się sypie — zakończ serię. Wiosłowanie sztangi później — dół pleców już rozgrzany, bądź ostrożny z ciężarem. Akcesoria (face pull, uginanie hantli) lecą szybko z krótkimi przerwami i wysokim czuciem. Zakresy do progresu: martwy ciąg 5-8 (trzymaj niskie, na technikę), lat ściąganie drążka 8-10, wiosłowanie sztangi 8-10, wiosłowanie hantlą 10-12, face pull 12-15, uginanie hantli 10-12. Dodawaj powtórzenia, zanim zwiększysz ciężar.',
     exercises: [
       {
         exerciseId: 'deadlift_001', // Martwy Ciąg klasyczny
@@ -214,7 +214,7 @@ export const PRESET_WORKOUTS: PresetWorkout[] = [
     tags: ['góra', 'początkujący', 'upper'],
     estimatedDurationMinutes: 55,
     coachingNotes:
-      'Push i Pull idą naprzemiennie, żeby jedna grupa odpoczywała podczas pracy drugiej. To pozwala utrzymać intensywność bez przedłużania treningu. Na wszystkich ćwiczeniach wielostawowych (1-4) zostawiaj sobie zapas — RPE 7 oznacza świadomą rezerwę. Izolacje (uginanie hantli, pushdown) na koniec, krótkie przerwy, maksymalna pompa.\n\nZakresy do progresu: wszystkie wielostawowe 8-10, izolacje 10-12. Dodawaj powtórzenia w zakresie, zanim zwiększysz ciężar.',
+      'Push i Pull wykonuje się naprzemiennie, żeby jedna grupa mięśniowa odpoczywała podczas pracy drugiej. To pozwala utrzymać intensywność bez przedłużania treningu. Na wszystkich ćwiczeniach wielostawowych (1-4) zostawiaj sobie zapas — RPE 7 oznacza świadomą rezerwę. Izolacje (uginanie hantli, pushdown) na koniec, krótkie przerwy, maksymalna pompa.\n\nZakresy do progresu: wszystkie wielostawowe 8-10, izolacje 10-12. Dodawaj powtórzenia w zakresie, zanim zwiększysz ciężar.',
     exercises: [
       {
         exerciseId: 'bench_press_013', // Wyciskanie Sztangi na Ławce Płaskiej
