@@ -8,7 +8,7 @@ import {
 } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { generateId } from '@/database/database';
 import {
   Pressable,
@@ -28,6 +28,7 @@ import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { useActiveWorkoutAutosave } from '@/hooks/useActiveWorkoutAutosave';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
+import { ACTIVE_WORKOUT_TIMEOUT_MS } from '@/constants/activeWorkout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type MeasurementType = 'reps' | 'time' | 'distance';
@@ -92,6 +93,19 @@ export default function ActiveWorkoutScreen() {
   const { showToast } = useToastStore();
   const exerciseList = exercises ?? [];
 
+  // Latest raw text per input, stashed via onChangeText (no re-render — inputs
+  // stay uncontrolled). onBlur's event carries no text, so commit handlers read
+  // from here. Consumed on commit so a no-op blur (user never typed) is skipped.
+  const pendingText = useRef<Record<string, string>>({});
+  const stashText = (key: string, text: string) => {
+    pendingText.current[key] = text;
+  };
+  const takeText = (key: string): string | undefined => {
+    const text = pendingText.current[key];
+    delete pendingText.current[key];
+    return text;
+  };
+
   useActiveWorkoutAutosave();
 
   // Load once per mount; loadActiveWorkout reconciles DB against the store
@@ -124,6 +138,14 @@ export default function ActiveWorkoutScreen() {
     }, [pendingExercise]),
   );
 
+  // Force-blur on unmount so a value typed but not submitted (no Enter, no
+  // tap-out) still fires its onBlur handler into the store before navigation.
+  useEffect(() => {
+    return () => {
+      TextInput.State.currentlyFocusedInput()?.blur();
+    };
+  }, []);
+
   useEffect(() => {
     if (!isResting || restTargetTime === null) return;
 
@@ -146,6 +168,21 @@ export default function ActiveWorkoutScreen() {
       router.replace('/(tabs)/current-workout');
       return;
     }
+
+    if (dbWorkout.started_at) {
+      const startedAt = Date.parse(dbWorkout.started_at);
+      if (Date.now() - startedAt > ACTIVE_WORKOUT_TIMEOUT_MS) {
+        await workoutService.clearStaleActiveWorkout(dbWorkout.id);
+        useActiveWorkoutStore.getState().reset();
+        showToast(
+          'Poprzedni trening wygasł (po 12h). Możesz zacząć nowy.',
+          'info',
+        );
+        router.replace('/(tabs)/current-workout');
+        return;
+      }
+    }
+
     setWorkout(dbWorkout);
 
     // Store already holds live state for this workout (in-app navigation) — keep it.
@@ -359,142 +396,173 @@ export default function ActiveWorkoutScreen() {
               </Pressable>
             </View>
 
-            {item.sets.map((set, setIndex) => (
-              <View key={set.id} style={styles.setCard}>
-                <View style={styles.setHeader}>
-                  <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
+            {item.sets.map((set, setIndex) => {
+              const weightKey = `weight-${set.id}`;
+              const valueKey = `value-${set.id}`;
+              const rpeKey = `rpe-${set.id}`;
+              const tempoKey = `tempo-${set.id}`;
 
-                  <View style={styles.setActions}>
-                    {item.sets.length > 1 && (
+              const commitWeight = () => {
+                const text = takeText(weightKey);
+                if (text === undefined) return;
+                updateSetValue(item.id, set.id, {
+                  actualWeight: parseDecimal(text),
+                });
+              };
+              const commitValue = () => {
+                const text = takeText(valueKey);
+                if (text === undefined) return;
+                const val =
+                  item.exercise.measurementType === 'distance'
+                    ? parseDecimal(text)
+                    : parseInteger(text);
+                updateSetValue(
+                  item.id,
+                  set.id,
+                  buildActualUpdate(item.exercise.measurementType, val),
+                );
+              };
+              const commitRpe = () => {
+                const text = takeText(rpeKey);
+                if (text === undefined) return;
+                const validated = validateRPE(text);
+                if (validated === null && text.trim()) {
+                  setValidationKey((prev) => prev + 1);
+                }
+                updateSetValue(item.id, set.id, {
+                  actualRpe: validated ?? undefined,
+                });
+              };
+              const commitTempo = () => {
+                const text = takeText(tempoKey);
+                if (text === undefined) return;
+                const validated = validateTempo(text);
+                if (validated === null && text.trim()) {
+                  setValidationKey((prev) => prev + 1);
+                }
+                updateSetValue(item.id, set.id, {
+                  tempo: validated ?? undefined,
+                });
+              };
+
+              return (
+                <View key={set.id} style={styles.setCard}>
+                  <View style={styles.setHeader}>
+                    <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
+
+                    <View style={styles.setActions}>
+                      {item.sets.length > 1 && (
+                        <Pressable
+                          onPress={() => removeSet(item.id, set.id)}
+                          style={styles.deleteButton}
+                          hitSlop={6}
+                          accessibilityLabel="Usuń serię"
+                        >
+                          <Ionicons
+                            name="close-circle"
+                            size={24}
+                            color={colors.danger}
+                          />
+                        </Pressable>
+                      )}
                       <Pressable
-                        onPress={() => removeSet(item.id, set.id)}
-                        style={styles.deleteButton}
-                        hitSlop={6}
-                        accessibilityLabel="Usuń serię"
+                        onPress={() => toggleSetCompleted(item.id, set.id)}
+                        style={styles.checkboxButton}
                       >
                         <Ionicons
-                          name="close-circle"
-                          size={24}
-                          color={colors.danger}
+                          name={
+                            set.completed
+                              ? 'checkmark-circle'
+                              : 'ellipse-outline'
+                          }
+                          size={28}
+                          color={
+                            set.completed
+                              ? colors.accent
+                              : colors.text.secondary
+                          }
                         />
                       </Pressable>
-                    )}
-                    <Pressable
-                      onPress={() => toggleSetCompleted(item.id, set.id)}
-                      style={styles.checkboxButton}
-                    >
-                      <Ionicons
-                        name={
-                          set.completed ? 'checkmark-circle' : 'ellipse-outline'
-                        }
-                        size={28}
-                        color={
-                          set.completed ? colors.accent : colors.text.secondary
-                        }
+                    </View>
+                  </View>
+
+                  <View style={styles.inputsRow}>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>
+                        {`Ciężar (${settings?.preferredWeightUnit ?? 'kg'})`}
+                      </Text>
+                      <TextInput
+                        key={`weight-${set.id}-${set.actualWeight}`}
+                        style={styles.input}
+                        defaultValue={set.actualWeight?.toString() || '0'}
+                        onChangeText={(t) => stashText(weightKey, t)}
+                        onEndEditing={commitWeight}
+                        onBlur={commitWeight}
+                        keyboardType="decimal-pad"
                       />
-                    </Pressable>
-                  </View>
-                </View>
+                    </View>
 
-                <View style={styles.inputsRow}>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>
-                      {`Ciężar (${settings?.preferredWeightUnit ?? 'kg'})`}
-                    </Text>
-                    <TextInput
-                      key={`weight-${set.id}-${set.actualWeight}`}
-                      style={styles.input}
-                      defaultValue={set.actualWeight?.toString() || '0'}
-                      onEndEditing={(e) => {
-                        const val = parseDecimal(e.nativeEvent.text);
-                        updateSetValue(item.id, set.id, {
-                          actualWeight: val,
-                        });
-                      }}
-                      keyboardType="decimal-pad"
-                    />
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>
-                      {getValueLabel(item.exercise.measurementType)}
-                    </Text>
-                    <TextInput
-                      key={`value-${set.id}-${getActualValue(
-                        set,
-                        item.exercise.measurementType,
-                      )}`}
-                      style={styles.input}
-                      defaultValue={
-                        getActualValue(
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>
+                        {getValueLabel(item.exercise.measurementType)}
+                      </Text>
+                      <TextInput
+                        key={`value-${set.id}-${getActualValue(
                           set,
                           item.exercise.measurementType,
-                        )?.toString() || '0'
-                      }
-                      onEndEditing={(e) => {
-                        const val =
+                        )}`}
+                        style={styles.input}
+                        defaultValue={
+                          getActualValue(
+                            set,
+                            item.exercise.measurementType,
+                          )?.toString() || '0'
+                        }
+                        onChangeText={(t) => stashText(valueKey, t)}
+                        onEndEditing={commitValue}
+                        onBlur={commitValue}
+                        keyboardType={
                           item.exercise.measurementType === 'distance'
-                            ? parseDecimal(e.nativeEvent.text)
-                            : parseInteger(e.nativeEvent.text);
-                        updateSetValue(
-                          item.id,
-                          set.id,
-                          buildActualUpdate(item.exercise.measurementType, val),
-                        );
-                      }}
-                      keyboardType={
-                        item.exercise.measurementType === 'distance'
-                          ? 'decimal-pad'
-                          : 'numeric'
-                      }
-                    />
+                            ? 'decimal-pad'
+                            : 'numeric'
+                        }
+                      />
+                    </View>
+                    {settings?.trackRPE && (
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>RPE</Text>
+                        <TextInput
+                          key={`rpe-${set.id}-${set.actualRpe}-${validationKey}`}
+                          style={styles.input}
+                          defaultValue={set.actualRpe?.toString() || ''}
+                          onChangeText={(t) => stashText(rpeKey, t)}
+                          onEndEditing={commitRpe}
+                          onBlur={commitRpe}
+                          keyboardType="decimal-pad"
+                          placeholder="1-10"
+                          placeholderTextColor={colors.muted}
+                        />
+                      </View>
+                    )}
+                    {settings?.trackTempo && (
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>Tempo</Text>
+                        <TextInput
+                          key={`tempo-${set.id}-${set.tempo}-${validationKey}`}
+                          style={styles.input}
+                          defaultValue={set.tempo || ''}
+                          onChangeText={(t) => stashText(tempoKey, t)}
+                          onEndEditing={commitTempo}
+                          onBlur={commitTempo}
+                          placeholder="3-1-2"
+                          placeholderTextColor={colors.muted}
+                        />
+                      </View>
+                    )}
                   </View>
-                  {settings?.trackRPE && (
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>RPE</Text>
-                      <TextInput
-                        key={`rpe-${set.id}-${set.actualRpe}-${validationKey}`}
-                        style={styles.input}
-                        defaultValue={set.actualRpe?.toString() || ''}
-                        onEndEditing={(e) => {
-                          const validated = validateRPE(e.nativeEvent.text);
-                          if (validated === null && e.nativeEvent.text.trim()) {
-                            setValidationKey((prev) => prev + 1);
-                          }
-                          updateSetValue(item.id, set.id, {
-                            actualRpe: validated ?? undefined,
-                          });
-                        }}
-                        keyboardType="decimal-pad"
-                        placeholder="1-10"
-                        placeholderTextColor={colors.muted}
-                      />
-                    </View>
-                  )}
-                  {settings?.trackTempo && (
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>Tempo</Text>
-                      <TextInput
-                        key={`tempo-${set.id}-${set.tempo}-${validationKey}`}
-                        style={styles.input}
-                        defaultValue={set.tempo || ''}
-                        onEndEditing={(e) => {
-                          const validated = validateTempo(e.nativeEvent.text);
-                          if (validated === null && e.nativeEvent.text.trim()) {
-                            setValidationKey((prev) => prev + 1);
-                          }
-                          updateSetValue(item.id, set.id, {
-                            tempo: validated ?? undefined,
-                          });
-                        }}
-                        placeholder="3-1-2"
-                        placeholderTextColor={colors.muted}
-                      />
-                    </View>
-                  )}
                 </View>
-              </View>
-            ))}
+              );
+            })}
             <Pressable
               style={styles.addSetButton}
               onPress={() => addSet(item.id)}

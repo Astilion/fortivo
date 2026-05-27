@@ -293,6 +293,32 @@ export class WorkoutService {
     );
   }
 
+  async clearStaleActiveWorkout(workoutId: string): Promise<void> {
+    try {
+      await this.db.withTransactionAsync(async () => {
+        await this.db.runAsync(
+          `UPDATE workout_sets
+           SET actual_reps = NULL, actual_weight = NULL, actual_rpe = NULL,
+               actual_duration = NULL, actual_distance = NULL, completed = 0
+           WHERE workout_exercise_id IN (
+             SELECT id FROM workout_exercises WHERE workout_id = ?
+           )`,
+          [workoutId],
+        );
+        await this.db.runAsync(
+          'UPDATE workouts SET is_active = 0, started_at = NULL WHERE id = ?',
+          [workoutId],
+        );
+      });
+    } catch (error) {
+      logger.error('WorkoutService.clearStaleActiveWorkout failed', error);
+      throw new ServiceError(
+        'Nie udało się wyczyścić wygasłego treningu',
+        error,
+      );
+    }
+  }
+
   async saveActualValues(
     workoutId: string,
     exercises: WorkoutExerciseWithSets[],

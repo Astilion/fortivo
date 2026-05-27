@@ -13,6 +13,7 @@ import { MeasurementService } from '@/services/measurementService';
 import { WeeklyPlanService } from '@/services/weeklyPlanService';
 import { PresetService } from '@/services/presetService';
 import { validatePresets } from '@/utils/validatePresets';
+import { ACTIVE_WORKOUT_TIMEOUT_MS } from '@/constants/activeWorkout';
 import * as SQLite from 'expo-sqlite';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
@@ -121,14 +122,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       // Hydrate the in-memory active-workout store from the DB so the FAB and
       // duration survive a process kill. Legacy rows (pre-v7) have no
       // started_at — fall back to now, accepting a one-off wrong duration.
+      // A session older than the timeout is abandoned: clear it silently
+      // (no toast — the user has no context for it at boot).
       if (activeWorkout) {
         const parsed = activeWorkout.started_at
           ? Date.parse(activeWorkout.started_at)
           : NaN;
-        hydrateActiveWorkout(
-          activeWorkout.id,
-          Number.isNaN(parsed) ? Date.now() : parsed,
-        );
+        const isStale =
+          !Number.isNaN(parsed) &&
+          Date.now() - parsed > ACTIVE_WORKOUT_TIMEOUT_MS;
+
+        if (isStale) {
+          await workoutService.clearStaleActiveWorkout(activeWorkout.id);
+        } else {
+          hydrateActiveWorkout(
+            activeWorkout.id,
+            Number.isNaN(parsed) ? Date.now() : parsed,
+          );
+        }
       }
 
       setContext({
