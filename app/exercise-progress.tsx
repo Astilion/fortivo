@@ -66,7 +66,6 @@ export default function ExerciseProgressScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>
@@ -90,7 +89,6 @@ export default function ExerciseProgressScreen() {
         </View>
       </View>
 
-      {/* History List */}
       {progress.length === 0 ? (
         <EmptyState
           icon="barbell-outline"

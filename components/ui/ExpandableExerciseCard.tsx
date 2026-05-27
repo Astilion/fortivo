@@ -87,7 +87,6 @@ export const ExpandableExerciseCard = ({
 
   return (
     <View style={styles.card}>
-      {/* Header */}
       <Pressable onPress={onToggleExpand} style={styles.header}>
         <View style={styles.headerLeft}>
           <Ionicons
@@ -107,9 +106,7 @@ export const ExpandableExerciseCard = ({
           </View>
         </View>
 
-        {/* Reorder & Delete buttons */}
         <View style={styles.headerActions}>
-          {/* Move Up button */}
           {onMoveUp && (
             <Pressable
               onPress={onMoveUp}
@@ -129,7 +126,6 @@ export const ExpandableExerciseCard = ({
             </Pressable>
           )}
 
-          {/* Move Down button */}
           {onMoveDown && (
             <Pressable
               onPress={onMoveDown}
@@ -149,7 +145,6 @@ export const ExpandableExerciseCard = ({
             </Pressable>
           )}
 
-          {/* Delete button */}
           <Pressable
             onPress={onRemoveExercise}
             style={styles.deleteButton}
@@ -161,10 +156,8 @@ export const ExpandableExerciseCard = ({
         </View>
       </Pressable>
 
-      {/* Sets Accordion */}
       {isExpanded && (
         <View style={styles.expandedContent}>
-          {/* Sets list */}
           {sets.map((set, index) => (
             <View key={set.id} style={styles.setRow}>
               <View style={styles.setRowHeader}>
@@ -191,7 +184,6 @@ export const ExpandableExerciseCard = ({
               </View>
 
               <View style={styles.inputsRow}>
-                {/* Weight */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>
                     {`Ciężar (${weightUnit})`}
@@ -210,7 +202,6 @@ export const ExpandableExerciseCard = ({
                   />
                 </View>
 
-                {/* Reps / Time / Distance */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>{getLabel()}</Text>
                   <TextInput
@@ -240,7 +231,6 @@ export const ExpandableExerciseCard = ({
                   />
                 </View>
 
-                {/* RPE — planned value, gated by trackRPE */}
                 {trackRPE && (
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>RPE</Text>
@@ -262,7 +252,6 @@ export const ExpandableExerciseCard = ({
                   </View>
                 )}
 
-                {/* Tempo — planned value, gated by trackTempo */}
                 {trackTempo && (
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Tempo</Text>
@@ -283,7 +272,6 @@ export const ExpandableExerciseCard = ({
                   </View>
                 )}
 
-                {/* Rest time — gated by trackRestTime */}
                 {trackRestTime && (
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Przerwa (s)</Text>
@@ -306,7 +294,6 @@ export const ExpandableExerciseCard = ({
             </View>
           ))}
 
-          {/* Add set */}
           <Pressable style={styles.addSetButton} onPress={onAddSet}>
             <Ionicons
               name="add-circle-outline"
@@ -393,7 +380,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.background,
   },
 
-  // ===== Set rows (wrap layout, consistent with active-workout) =====
+  // ===== Set rows =====
   setRow: {
     paddingVertical: 12,
     borderBottomWidth: 1,

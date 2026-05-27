@@ -68,7 +68,6 @@ export default function WorkoutDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{details.workoutName}</Text>
         <View style={styles.headerInfo}>
@@ -95,7 +94,6 @@ export default function WorkoutDetailsScreen() {
         </View>
       </View>
 
-      {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{details.stats.totalVolume}</Text>
@@ -115,11 +113,9 @@ export default function WorkoutDetailsScreen() {
         </View>
       </View>
 
-      {/* Exercises List */}
       <ScrollView style={styles.content}>
         {details.exercises.map((item, exIndex) => (
           <View key={item.id} style={styles.exerciseBlock}>
-            {/* Exercise name */}
             <Pressable
               onPress={() =>
                 router.push({
@@ -133,13 +129,11 @@ export default function WorkoutDetailsScreen() {
               </Text>
             </Pressable>
 
-            {/* Sets */}
             {item.sets.map((set, setIndex) => (
               <View key={set.id} style={styles.setCard}>
                 <View style={styles.setHeader}>
                   <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
 
-                  {/* Completed indicator */}
                   {set.completed && (
                     <Ionicons
                       name="checkmark-circle"

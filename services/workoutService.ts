@@ -268,10 +268,16 @@ export class WorkoutService {
   }
 
   async setActiveWorkout(id: string): Promise<void> {
-    await this.db.runAsync('UPDATE workouts SET is_active = 0');
-    await this.db.runAsync('UPDATE workouts SET is_active = 1 WHERE id = ?', [
-      id,
-    ]);
+    // Wrap both writes so we never end up with zero or two active rows if
+    // interrupted between them. started_at marks the activation moment, used
+    // to compute workout duration and survive a process kill.
+    await this.db.withTransactionAsync(async () => {
+      await this.db.runAsync('UPDATE workouts SET is_active = 0');
+      await this.db.runAsync(
+        'UPDATE workouts SET is_active = 1, started_at = ? WHERE id = ?',
+        [new Date().toISOString(), id],
+      );
+    });
   }
 
   async getActiveWorkout(): Promise<WorkoutRow | null> {
@@ -282,7 +288,35 @@ export class WorkoutService {
   }
 
   async clearActiveWorkout(): Promise<void> {
-    await this.db.runAsync('UPDATE workouts SET is_active = 0');
+    await this.db.runAsync(
+      'UPDATE workouts SET is_active = 0, started_at = NULL',
+    );
+  }
+
+  async clearStaleActiveWorkout(workoutId: string): Promise<void> {
+    try {
+      await this.db.withTransactionAsync(async () => {
+        await this.db.runAsync(
+          `UPDATE workout_sets
+           SET actual_reps = NULL, actual_weight = NULL, actual_rpe = NULL,
+               actual_duration = NULL, actual_distance = NULL, completed = 0
+           WHERE workout_exercise_id IN (
+             SELECT id FROM workout_exercises WHERE workout_id = ?
+           )`,
+          [workoutId],
+        );
+        await this.db.runAsync(
+          'UPDATE workouts SET is_active = 0, started_at = NULL WHERE id = ?',
+          [workoutId],
+        );
+      });
+    } catch (error) {
+      logger.error('WorkoutService.clearStaleActiveWorkout failed', error);
+      throw new ServiceError(
+        'Nie udało się wyczyścić wygasłego treningu',
+        error,
+      );
+    }
   }
 
   async saveActualValues(
@@ -319,6 +353,52 @@ export class WorkoutService {
     } catch (error) {
       logger.error('WorkoutService.saveActualValues failed', error);
       throw new ServiceError('Nie udało się zapisać wyników treningu', error);
+    }
+  }
+
+  // Incremental persistence for the in-progress active workout. UPSERTs on the
+  // stable ids supplied by the store (no DELETE+reinsert, so refs/ids survive),
+  // then prunes exercises/sets the user removed.
+  async saveActiveWorkoutSnapshot(
+    workoutId: string,
+    exercises: WorkoutExerciseWithSets[],
+  ): Promise<void> {
+    try {
+      await this.db.withTransactionAsync(async () => {
+        for (let i = 0; i < exercises.length; i++) {
+          const { id, exercise, sets } = exercises[i];
+
+          await this.db.runAsync(
+            `INSERT INTO workout_exercises (
+              id, workout_id, exercise_id, exercise_order, superset_group, notes
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET exercise_order = excluded.exercise_order`,
+            [id, workoutId, exercise.id, i, null, null],
+          );
+
+          for (let j = 0; j < sets.length; j++) {
+            await this.upsertSet(sets[j].id, id, j, sets[j]);
+          }
+
+          await this.deleteRowsNotIn(
+            'workout_sets',
+            'workout_exercise_id',
+            id,
+            sets.map((s) => s.id),
+          );
+        }
+
+        // CASCADE clears the sets of any pruned exercise.
+        await this.deleteRowsNotIn(
+          'workout_exercises',
+          'workout_id',
+          workoutId,
+          exercises.map((e) => e.id),
+        );
+      });
+    } catch (error) {
+      logger.error('WorkoutService.saveActiveWorkoutSnapshot failed', error);
+      throw new ServiceError('Nie udało się zapisać postępu treningu', error);
     }
   }
 
@@ -586,6 +666,81 @@ export class WorkoutService {
       ],
     );
   }
+
+  /** Like insertSet but UPSERTs on id — used by saveActiveWorkoutSnapshot.
+   *  Uses `?? null` (not `|| null`) so a legit 0 (failed set, bodyweight) is
+   *  stored as 0 rather than collapsing to NULL. */
+  private async upsertSet(
+    setId: string,
+    workoutExerciseId: string,
+    order: number,
+    set: WorkoutSet,
+  ): Promise<void> {
+    await this.db.runAsync(
+      `INSERT INTO workout_sets (
+        id, workout_exercise_id, set_order, reps, weight, rpe,
+        tempo, rest_time, completed, notes, actual_reps, actual_weight, actual_rpe,
+        duration, actual_duration, distance, actual_distance
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        workout_exercise_id = excluded.workout_exercise_id,
+        set_order = excluded.set_order,
+        reps = excluded.reps,
+        weight = excluded.weight,
+        rpe = excluded.rpe,
+        tempo = excluded.tempo,
+        rest_time = excluded.rest_time,
+        completed = excluded.completed,
+        notes = excluded.notes,
+        actual_reps = excluded.actual_reps,
+        actual_weight = excluded.actual_weight,
+        actual_rpe = excluded.actual_rpe,
+        duration = excluded.duration,
+        actual_duration = excluded.actual_duration,
+        distance = excluded.distance,
+        actual_distance = excluded.actual_distance`,
+      [
+        setId,
+        workoutExerciseId,
+        order,
+        set.reps,
+        set.weight ?? null,
+        set.rpe ?? null,
+        set.tempo ?? null,
+        set.restTime ?? null,
+        set.completed ? 1 : 0,
+        set.notes ?? null,
+        set.actualReps ?? null,
+        set.actualWeight ?? null,
+        set.actualRpe ?? null,
+        set.duration ?? null,
+        set.actualDuration ?? null,
+        set.distance ?? null,
+        set.actualDistance ?? null,
+      ],
+    );
+  }
+
+  // Diff-aware prune for saveActiveWorkoutSnapshot: drops rows no longer present.
+  private async deleteRowsNotIn(
+    table: 'workout_exercises' | 'workout_sets',
+    parentColumn: string,
+    parentId: string,
+    keepIds: string[],
+  ): Promise<void> {
+    if (keepIds.length === 0) {
+      await this.db.runAsync(`DELETE FROM ${table} WHERE ${parentColumn} = ?`, [
+        parentId,
+      ]);
+      return;
+    }
+    const placeholders = keepIds.map(() => '?').join(', ');
+    await this.db.runAsync(
+      `DELETE FROM ${table} WHERE ${parentColumn} = ? AND id NOT IN (${placeholders})`,
+      [parentId, ...keepIds],
+    );
+  }
+
   async toggleFavoriteWorkout(id: string): Promise<boolean> {
     const workout = await this.getWorkoutById(id);
     if (!workout) return false;

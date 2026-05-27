@@ -44,11 +44,9 @@ export default function CreateWorkoutScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const handleSaveWorkout = async () => {
-    // Reset errors
     setShowNameError(false);
     setShowExercisesError(false);
 
-    // Validation
     if (!draft.name.trim()) {
       setShowNameError(true);
       return;

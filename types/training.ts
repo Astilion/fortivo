@@ -279,6 +279,7 @@ export interface WorkoutRow {
   display_order: number;
   is_active: number;
   is_favorite: number;
+  started_at: string | null;
   created_at: string;
 }
 

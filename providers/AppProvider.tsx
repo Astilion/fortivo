@@ -6,12 +6,14 @@ import { Exercise, ExerciseService } from '@/services/exerciseService';
 import { WorkoutService } from '@/services/workoutService';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
+import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { ProfileService } from '@/services/profileService';
 import { WeightService } from '@/services/weightService';
 import { MeasurementService } from '@/services/measurementService';
 import { WeeklyPlanService } from '@/services/weeklyPlanService';
 import { PresetService } from '@/services/presetService';
 import { validatePresets } from '@/utils/validatePresets';
+import { ACTIVE_WORKOUT_TIMEOUT_MS } from '@/constants/activeWorkout';
 import * as SQLite from 'expo-sqlite';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
@@ -39,10 +41,8 @@ export const useApp = () => {
   return context;
 };
 
-// Helper function to validate and transform exercise data
 const validateExerciseData = (data: any[]): Exercise[] => {
   return data.map((exercise) => {
-    // Validate difficulty field
     const validDifficulties = [
       'Początkujący',
       'Średniozaawansowany',
@@ -78,6 +78,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const loadCategories = useExerciseStore((state) => state.loadCategories);
   const loadFavorites = useExerciseStore((state) => state.loadFavorites);
   const setActivePlan = useWeeklyPlanStore((state) => state.setActivePlan);
+  const hydrateActiveWorkout = useActiveWorkoutStore(
+    (state) => state.startActiveWorkout,
+  );
   const dbError = useDbErrorStore((state) => state.dbError);
   const reinitNonce = useDbErrorStore((state) => state.reinitNonce);
   const setDbError = useDbErrorStore((state) => state.setDbError);
@@ -92,10 +95,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const initializeApp = async () => {
     setIsReady(false);
     try {
-      // Initialize database
       const database = await initDatabase();
 
-      // Initialize services
       const exerciseService = new ExerciseService(database);
       const workoutService = new WorkoutService(database);
       const profileService = new ProfileService(database);
@@ -104,21 +105,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       const weeklyPlanService = new WeeklyPlanService(database);
       const presetService = new PresetService(database);
 
-      // Validate and seed exercises
       const validatedExercises = validateExerciseData(exercisesData);
       await exerciseService.seedExercises(validatedExercises);
 
-      // Initialize Zustand store
       initializeService(exerciseService);
 
-      // Load initial data
-      const [activePlan] = await Promise.all([
+      const [activePlan, activeWorkout] = await Promise.all([
         weeklyPlanService.getActivePlan(),
+        workoutService.getActiveWorkout(),
         loadExercises(),
         loadCategories(),
         loadFavorites(),
       ]);
       setActivePlan(activePlan);
+
+      // Hydrate the in-memory active-workout store from the DB so the FAB and
+      // duration survive a process kill. Legacy rows (pre-v7) have no
+      // started_at — fall back to now, accepting a one-off wrong duration.
+      // A session older than the timeout is abandoned: clear it silently
+      // (no toast — the user has no context for it at boot).
+      if (activeWorkout) {
+        const parsed = activeWorkout.started_at
+          ? Date.parse(activeWorkout.started_at)
+          : NaN;
+        const isStale =
+          !Number.isNaN(parsed) &&
+          Date.now() - parsed > ACTIVE_WORKOUT_TIMEOUT_MS;
+
+        if (isStale) {
+          await workoutService.clearStaleActiveWorkout(activeWorkout.id);
+        } else {
+          hydrateActiveWorkout(
+            activeWorkout.id,
+            Number.isNaN(parsed) ? Date.now() : parsed,
+          );
+        }
+      }
 
       setContext({
         db: database,

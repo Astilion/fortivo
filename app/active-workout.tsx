@@ -24,15 +24,17 @@ import { validateRPE, validateTempo } from '@/utils/validation';
 import { logger } from '@/utils/logger';
 import { confirmAction } from '@/utils/confirm';
 import { useWorkoutStore } from '@/store/workoutStore';
+import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
+import { useActiveWorkoutAutosave } from '@/hooks/useActiveWorkoutAutosave';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
+import { ACTIVE_WORKOUT_TIMEOUT_MS } from '@/constants/activeWorkout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type MeasurementType = 'reps' | 'time' | 'distance';
 
-// The active workout edits the *actual* value of each set, in the unit dictated
-// by the exercise's measurementType — reps, seconds, or meters. Mirrors the
-// labels/fields used by ExpandableExerciseCard in the editor.
+// Active workout edits each set's *actual* value; field & label depend on the
+// exercise's measurementType (reps / seconds / meters).
 const getValueLabel = (measurementType?: MeasurementType): string => {
   switch (measurementType) {
     case 'time':
@@ -74,32 +76,40 @@ const buildActualUpdate = (
 
 export default function ActiveWorkoutScreen() {
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
-  const [exercises, setExercises] = useState<WorkoutExerciseWithSets[]>([]);
-  const [restTargetTime, setRestTargetTime] = useState<number | null>(null);
   const [validationKey, setValidationKey] = useState(0);
-  const [isResting, setIsResting] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [, setTick] = useState(0);
-  const exercisesRef = useRef<WorkoutExerciseWithSets[]>([]);
   const { workoutService } = useApp();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { settings } = useProfileSettings();
-  const workoutStartTime = useWorkoutStore((state) => state.workoutStartTime);
-  const startActiveWorkout = useWorkoutStore(
-    (state) => state.startActiveWorkout,
-  );
-  const finishActiveWorkout = useWorkoutStore(
-    (state) => state.finishActiveWorkout,
-  );
+  const exercises = useActiveWorkoutStore((state) => state.exercises);
+  const isResting = useActiveWorkoutStore((state) => state.isResting);
+  const restTargetTime = useActiveWorkoutStore((state) => state.restTargetTime);
   const pendingExercise = useWorkoutStore((state) => state.pendingExercise);
   const clearPendingExercise = useWorkoutStore(
     (state) => state.clearPendingExercise,
   );
   const { showToast } = useToastStore();
+  const exerciseList = exercises ?? [];
 
-  // Load the active workout once per focus session; loadActiveWorkout is
-  // a stable Zustand action, intentionally guarded by `isLoaded`.
+  // Latest raw text per input, stashed via onChangeText (no re-render — inputs
+  // stay uncontrolled). onBlur's event carries no text, so commit handlers read
+  // from here. Consumed on commit so a no-op blur (user never typed) is skipped.
+  const pendingText = useRef<Record<string, string>>({});
+  const stashText = (key: string, text: string) => {
+    pendingText.current[key] = text;
+  };
+  const takeText = (key: string): string | undefined => {
+    const text = pendingText.current[key];
+    delete pendingText.current[key];
+    return text;
+  };
+
+  useActiveWorkoutAutosave();
+
+  // Load once per mount; loadActiveWorkout reconciles DB against the store
+  // (keeps live state on in-app nav, hydrates on cold start).
   useFocusEffect(
     useCallback(() => {
       if (!isLoaded) {
@@ -120,14 +130,21 @@ export default function ActiveWorkoutScreen() {
             { id: generateId('ws'), reps: 8, weight: 0, completed: false },
           ],
         };
-        setExercises((prev) => [...prev, newExercise]);
+        useActiveWorkoutStore.getState().addExercise(newExercise);
         clearPendingExercise();
       }
-      // Mailbox pattern: react to pendingExercise only; the setters and
-      // clearPendingExercise are stable.
+      // Mailbox: depend on pendingExercise only (other refs are stable).
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pendingExercise]),
   );
+
+  // Force-blur on unmount so a value typed but not submitted (no Enter, no
+  // tap-out) still fires its onBlur handler into the store before navigation.
+  useEffect(() => {
+    return () => {
+      TextInput.State.currentlyFocusedInput()?.blur();
+    };
+  }, []);
 
   useEffect(() => {
     if (!isResting || restTargetTime === null) return;
@@ -135,8 +152,7 @@ export default function ActiveWorkoutScreen() {
     const interval = setInterval(() => {
       const remaining = Math.ceil((restTargetTime - Date.now()) / 1000);
       if (remaining <= 0) {
-        setIsResting(false);
-        setRestTargetTime(null);
+        useActiveWorkoutStore.getState().stopRestTimer();
       } else {
         setTick((prev) => prev + 1);
       }
@@ -145,123 +161,114 @@ export default function ActiveWorkoutScreen() {
     return () => clearInterval(interval);
   }, [isResting, restTargetTime]);
 
-  useEffect(() => {
-    exercisesRef.current = exercises;
-  }, [exercises]);
-
   const loadActiveWorkout = async () => {
-    const workout = await workoutService.getActiveWorkout();
+    const dbWorkout = await workoutService.getActiveWorkout();
 
-    if (!workout) {
-      router.back();
+    if (!dbWorkout) {
+      router.replace('/(tabs)/current-workout');
       return;
     }
-    setWorkout(workout);
-    const ex = await workoutService.getWorkoutExercises(workout.id);
 
-    const exercisesWithDefaults = ex.map((item) => ({
-      ...item,
-      id: generateId('we'),
-      sets: item.sets.map((set) => ({
+    if (dbWorkout.started_at) {
+      const startedAt = Date.parse(dbWorkout.started_at);
+      if (Date.now() - startedAt > ACTIVE_WORKOUT_TIMEOUT_MS) {
+        await workoutService.clearStaleActiveWorkout(dbWorkout.id);
+        useActiveWorkoutStore.getState().reset();
+        showToast(
+          'Poprzedni trening wygasł (po 12h). Możesz zacząć nowy.',
+          'info',
+        );
+        router.replace('/(tabs)/current-workout');
+        return;
+      }
+    }
+
+    setWorkout(dbWorkout);
+
+    // Store already holds live state for this workout (in-app navigation) — keep it.
+    const store = useActiveWorkoutStore.getState();
+    if (store.workoutId === dbWorkout.id && store.exercises !== null) return;
+
+    // Cold start / kill recovery — hydrate from DB. completed is read as-is;
+    // actual_* falls back to planned per field only when NULL (M1.6 prefill).
+    const dbExercises = await workoutService.getWorkoutExercises(dbWorkout.id);
+    const hydrated = dbExercises.map((ex) => ({
+      ...ex,
+      sets: ex.sets.map((set) => ({
         ...set,
-        completed: false,
         actualReps: set.actualReps ?? set.reps,
         actualWeight: set.actualWeight ?? set.weight,
+        actualRpe: set.actualRpe ?? set.rpe,
         actualDuration: set.actualDuration ?? set.duration,
         actualDistance: set.actualDistance ?? set.distance,
       })),
     }));
-    if (workoutStartTime === null) {
-      startActiveWorkout(workout.id);
+    useActiveWorkoutStore.getState().setExercises(hydrated);
+
+    if (store.workoutStartTime === null && dbWorkout.started_at) {
+      useActiveWorkoutStore
+        .getState()
+        .startActiveWorkout(dbWorkout.id, Date.parse(dbWorkout.started_at));
     }
-    setExercises(exercisesWithDefaults);
   };
 
   const toggleSetCompleted = (exerciseId: string, setId: string) => {
-    setExercises((prevExercises) => {
-      const newExercises = prevExercises.map((ex) => {
-        if (ex.id === exerciseId) {
-          return {
-            ...ex,
-            sets: ex.sets.map((s) => {
-              if (s.id === setId) {
-                const nowCompleted = !s.completed;
-                if (nowCompleted && settings?.trackRestTime) {
-                  const restTime = s.restTime ?? settings.defaultRestTime ?? 90;
-                  setRestTargetTime(Date.now() + restTime * 1000);
-                  setIsResting(true);
-                }
-                return { ...s, completed: nowCompleted };
-              }
-              return s;
-            }),
-          };
-        }
-        return ex;
-      });
-      return newExercises;
-    });
+    const store = useActiveWorkoutStore.getState();
+    const nowCompleted = store.toggleSetCompleted(exerciseId, setId);
+    if (nowCompleted && settings?.trackRestTime) {
+      const set = store.exercises
+        ?.find((ex) => ex.id === exerciseId)
+        ?.sets.find((s) => s.id === setId);
+      const restTime = set?.restTime ?? settings.defaultRestTime ?? 90;
+      store.startRestTimer(Date.now() + restTime * 1000);
+    }
   };
 
   const addSet = (exerciseId: string) => {
-    setExercises((prevExercises) => {
-      return prevExercises.map((ex) => {
-        if (ex.id === exerciseId) {
-          const lastSet = ex.sets[ex.sets.length - 1];
-          const measurementType = ex.exercise.measurementType;
-          const isTime = measurementType === 'time';
-          const isDistance = measurementType === 'distance';
+    const ex = exerciseList.find((e) => e.id === exerciseId);
+    if (!ex) return;
 
-          const newSet: WorkoutSet = {
-            id: generateId('ws'),
-            // reps is required (NOT NULL); kept as a placeholder for time/distance sets.
-            reps: lastSet?.actualReps || lastSet?.reps || 10,
-            weight: lastSet?.actualWeight || lastSet?.weight || 0,
-            rpe: lastSet?.actualRpe || lastSet?.rpe || undefined,
-            tempo: lastSet?.tempo || undefined,
-            restTime: lastSet?.restTime || undefined,
-            completed: false,
-            notes: undefined,
-            actualReps:
-              isTime || isDistance
-                ? undefined
-                : lastSet?.actualReps || lastSet?.reps || 8,
-            actualWeight: lastSet?.actualWeight || lastSet?.weight || 0,
-            actualRpe: lastSet?.actualRpe || undefined,
-            duration: lastSet?.duration || undefined,
-            actualDuration: isTime
-              ? lastSet?.actualDuration || lastSet?.duration || undefined
-              : undefined,
-            distance: lastSet?.distance || undefined,
-            actualDistance: isDistance
-              ? lastSet?.actualDistance || lastSet?.distance || undefined
-              : undefined,
-          };
+    const lastSet = ex.sets[ex.sets.length - 1];
+    const measurementType = ex.exercise.measurementType;
+    const isTime = measurementType === 'time';
+    const isDistance = measurementType === 'distance';
 
-          return {
-            ...ex,
-            sets: [...ex.sets, newSet],
-          };
-        }
-        return ex;
-      });
-    });
+    const newSet: WorkoutSet = {
+      id: generateId('ws'),
+      // reps is required (NOT NULL); kept as a placeholder for time/distance sets.
+      reps: lastSet?.actualReps || lastSet?.reps || 10,
+      weight: lastSet?.actualWeight || lastSet?.weight || 0,
+      rpe: lastSet?.actualRpe || lastSet?.rpe || undefined,
+      tempo: lastSet?.tempo || undefined,
+      restTime: lastSet?.restTime || undefined,
+      completed: false,
+      notes: undefined,
+      actualReps:
+        isTime || isDistance
+          ? undefined
+          : lastSet?.actualReps || lastSet?.reps || 8,
+      actualWeight: lastSet?.actualWeight || lastSet?.weight || 0,
+      actualRpe: lastSet?.actualRpe || undefined,
+      duration: lastSet?.duration || undefined,
+      actualDuration: isTime
+        ? lastSet?.actualDuration || lastSet?.duration || undefined
+        : undefined,
+      distance: lastSet?.distance || undefined,
+      actualDistance: isDistance
+        ? lastSet?.actualDistance || lastSet?.distance || undefined
+        : undefined,
+    };
+
+    useActiveWorkoutStore.getState().addSet(exerciseId, newSet);
   };
 
   const removeSet = (exerciseId: string, setId: string) => {
-    const ex = exercises.find((e) => e.id === exerciseId);
+    const ex = exerciseList.find((e) => e.id === exerciseId);
     if (!ex || ex.sets.length <= 1) return;
 
-    confirmAction('Usuń serię', 'Czy na pewno chcesz usunąć tę serię?', () => {
-      setExercises((prevExercises) =>
-        prevExercises.map((e) => {
-          if (e.id === exerciseId) {
-            return { ...e, sets: e.sets.filter((s) => s.id !== setId) };
-          }
-          return e;
-        }),
-      );
-    });
+    confirmAction('Usuń serię', 'Czy na pewno chcesz usunąć tę serię?', () =>
+      useActiveWorkoutStore.getState().removeSet(exerciseId, setId),
+    );
   };
 
   const updateSetValue = (
@@ -269,22 +276,7 @@ export default function ActiveWorkoutScreen() {
     setId: string,
     updates: Partial<WorkoutSet>,
   ) => {
-    setExercises((prevExercises) => {
-      return prevExercises.map((ex) => {
-        if (ex.id === exerciseId) {
-          return {
-            ...ex,
-            sets: ex.sets.map((s) => {
-              if (s.id === setId) {
-                return { ...s, ...updates };
-              }
-              return s;
-            }),
-          };
-        }
-        return ex;
-      });
-    });
+    useActiveWorkoutStore.getState().updateSetValue(exerciseId, setId, updates);
   };
 
   const handleFinishWorkout = () => {
@@ -292,29 +284,22 @@ export default function ActiveWorkoutScreen() {
       'Zakończ trening',
       'Czy na pewno chcesz zakończyć trening?',
       async () => {
-        if (!workout || workoutStartTime === null) return;
+        const { workoutId, workoutStartTime, exercises } =
+          useActiveWorkoutStore.getState();
+        if (!workoutId || workoutStartTime === null || !exercises) return;
 
-        const endTime = Date.now();
         const durationMinutes = Math.max(
           0,
-          Math.round((endTime - workoutStartTime) / 60000),
+          Math.round((Date.now() - workoutStartTime) / 60000),
         );
 
         try {
-          await workoutService.saveWorkoutExercises(
-            workout.id,
-            exercisesRef.current,
-          );
-
-          await workoutService.saveWorkoutHistory(workout.id, durationMinutes);
-
-          await workoutService.saveExerciseProgress(
-            workout.id,
-            exercisesRef.current,
-          );
+          await workoutService.saveActiveWorkoutSnapshot(workoutId, exercises);
+          await workoutService.saveWorkoutHistory(workoutId, durationMinutes);
+          await workoutService.saveExerciseProgress(workoutId, exercises);
 
           await workoutService.clearActiveWorkout();
-          finishActiveWorkout();
+          useActiveWorkoutStore.getState().finishActiveWorkout();
           showToast('Trening zakończony!', 'success');
           router.replace('/(tabs)/workout-history');
         } catch (error) {
@@ -331,20 +316,20 @@ export default function ActiveWorkoutScreen() {
   };
 
   const removeExercise = (exerciseId: string, exerciseName: string) => {
-    if (exercises.length <= 1) {
+    if (exerciseList.length <= 1) {
       showToast('Nie możesz usunąć ostatniego ćwiczenia', 'info');
       return;
     }
     confirmAction(
       'Usuń ćwiczenie',
       `Czy na pewno chcesz usunąć "${exerciseName}" z treningu?`,
-      () => setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId)),
+      () => useActiveWorkoutStore.getState().removeExercise(exerciseId),
     );
   };
 
-  const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
+  const totalSets = exerciseList.reduce((sum, ex) => sum + ex.sets.length, 0);
 
-  const completedSets = exercises.reduce(
+  const completedSets = exerciseList.reduce(
     (sum, ex) => sum + ex.sets.filter((s) => s.completed).length,
     0,
   );
@@ -368,10 +353,7 @@ export default function ActiveWorkoutScreen() {
             Odpoczynek: {restTimeRemaining}s
           </Text>
           <Pressable
-            onPress={() => {
-              setIsResting(false);
-              setRestTargetTime(null);
-            }}
+            onPress={() => useActiveWorkoutStore.getState().stopRestTimer()}
           >
             <Ionicons name="close" size={18} color={colors.primary} />
           </Pressable>
@@ -394,7 +376,7 @@ export default function ActiveWorkoutScreen() {
         style={styles.content}
         contentContainerStyle={{ paddingBottom: 22 }}
       >
-        {exercises.map((item, exIndex) => (
+        {exerciseList.map((item, exIndex) => (
           <View key={item.id} style={styles.exerciseBlock}>
             <View style={styles.exerciseHeader}>
               <Text style={styles.exerciseName}>
@@ -414,142 +396,173 @@ export default function ActiveWorkoutScreen() {
               </Pressable>
             </View>
 
-            {item.sets.map((set, setIndex) => (
-              <View key={set.id} style={styles.setCard}>
-                <View style={styles.setHeader}>
-                  <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
+            {item.sets.map((set, setIndex) => {
+              const weightKey = `weight-${set.id}`;
+              const valueKey = `value-${set.id}`;
+              const rpeKey = `rpe-${set.id}`;
+              const tempoKey = `tempo-${set.id}`;
 
-                  <View style={styles.setActions}>
-                    {item.sets.length > 1 && (
+              const commitWeight = () => {
+                const text = takeText(weightKey);
+                if (text === undefined) return;
+                updateSetValue(item.id, set.id, {
+                  actualWeight: parseDecimal(text),
+                });
+              };
+              const commitValue = () => {
+                const text = takeText(valueKey);
+                if (text === undefined) return;
+                const val =
+                  item.exercise.measurementType === 'distance'
+                    ? parseDecimal(text)
+                    : parseInteger(text);
+                updateSetValue(
+                  item.id,
+                  set.id,
+                  buildActualUpdate(item.exercise.measurementType, val),
+                );
+              };
+              const commitRpe = () => {
+                const text = takeText(rpeKey);
+                if (text === undefined) return;
+                const validated = validateRPE(text);
+                if (validated === null && text.trim()) {
+                  setValidationKey((prev) => prev + 1);
+                }
+                updateSetValue(item.id, set.id, {
+                  actualRpe: validated ?? undefined,
+                });
+              };
+              const commitTempo = () => {
+                const text = takeText(tempoKey);
+                if (text === undefined) return;
+                const validated = validateTempo(text);
+                if (validated === null && text.trim()) {
+                  setValidationKey((prev) => prev + 1);
+                }
+                updateSetValue(item.id, set.id, {
+                  tempo: validated ?? undefined,
+                });
+              };
+
+              return (
+                <View key={set.id} style={styles.setCard}>
+                  <View style={styles.setHeader}>
+                    <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
+
+                    <View style={styles.setActions}>
+                      {item.sets.length > 1 && (
+                        <Pressable
+                          onPress={() => removeSet(item.id, set.id)}
+                          style={styles.deleteButton}
+                          hitSlop={6}
+                          accessibilityLabel="Usuń serię"
+                        >
+                          <Ionicons
+                            name="close-circle"
+                            size={24}
+                            color={colors.danger}
+                          />
+                        </Pressable>
+                      )}
                       <Pressable
-                        onPress={() => removeSet(item.id, set.id)}
-                        style={styles.deleteButton}
-                        hitSlop={6}
-                        accessibilityLabel="Usuń serię"
+                        onPress={() => toggleSetCompleted(item.id, set.id)}
+                        style={styles.checkboxButton}
                       >
                         <Ionicons
-                          name="close-circle"
-                          size={24}
-                          color={colors.danger}
+                          name={
+                            set.completed
+                              ? 'checkmark-circle'
+                              : 'ellipse-outline'
+                          }
+                          size={28}
+                          color={
+                            set.completed
+                              ? colors.accent
+                              : colors.text.secondary
+                          }
                         />
                       </Pressable>
-                    )}
-                    <Pressable
-                      onPress={() => toggleSetCompleted(item.id, set.id)}
-                      style={styles.checkboxButton}
-                    >
-                      <Ionicons
-                        name={
-                          set.completed ? 'checkmark-circle' : 'ellipse-outline'
-                        }
-                        size={28}
-                        color={
-                          set.completed ? colors.accent : colors.text.secondary
-                        }
+                    </View>
+                  </View>
+
+                  <View style={styles.inputsRow}>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>
+                        {`Ciężar (${settings?.preferredWeightUnit ?? 'kg'})`}
+                      </Text>
+                      <TextInput
+                        key={`weight-${set.id}-${set.actualWeight}`}
+                        style={styles.input}
+                        defaultValue={set.actualWeight?.toString() || '0'}
+                        onChangeText={(t) => stashText(weightKey, t)}
+                        onEndEditing={commitWeight}
+                        onBlur={commitWeight}
+                        keyboardType="decimal-pad"
                       />
-                    </Pressable>
-                  </View>
-                </View>
+                    </View>
 
-                <View style={styles.inputsRow}>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>
-                      {`Ciężar (${settings?.preferredWeightUnit ?? 'kg'})`}
-                    </Text>
-                    <TextInput
-                      key={`weight-${set.id}-${set.actualWeight}`}
-                      style={styles.input}
-                      defaultValue={set.actualWeight?.toString() || '0'}
-                      onEndEditing={(e) => {
-                        const val = parseDecimal(e.nativeEvent.text);
-                        updateSetValue(item.id, set.id, {
-                          actualWeight: val,
-                        });
-                      }}
-                      keyboardType="decimal-pad"
-                    />
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>
-                      {getValueLabel(item.exercise.measurementType)}
-                    </Text>
-                    <TextInput
-                      key={`value-${set.id}-${getActualValue(
-                        set,
-                        item.exercise.measurementType,
-                      )}`}
-                      style={styles.input}
-                      defaultValue={
-                        getActualValue(
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>
+                        {getValueLabel(item.exercise.measurementType)}
+                      </Text>
+                      <TextInput
+                        key={`value-${set.id}-${getActualValue(
                           set,
                           item.exercise.measurementType,
-                        )?.toString() || '0'
-                      }
-                      onEndEditing={(e) => {
-                        const val =
+                        )}`}
+                        style={styles.input}
+                        defaultValue={
+                          getActualValue(
+                            set,
+                            item.exercise.measurementType,
+                          )?.toString() || '0'
+                        }
+                        onChangeText={(t) => stashText(valueKey, t)}
+                        onEndEditing={commitValue}
+                        onBlur={commitValue}
+                        keyboardType={
                           item.exercise.measurementType === 'distance'
-                            ? parseDecimal(e.nativeEvent.text)
-                            : parseInteger(e.nativeEvent.text);
-                        updateSetValue(
-                          item.id,
-                          set.id,
-                          buildActualUpdate(item.exercise.measurementType, val),
-                        );
-                      }}
-                      keyboardType={
-                        item.exercise.measurementType === 'distance'
-                          ? 'decimal-pad'
-                          : 'numeric'
-                      }
-                    />
+                            ? 'decimal-pad'
+                            : 'numeric'
+                        }
+                      />
+                    </View>
+                    {settings?.trackRPE && (
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>RPE</Text>
+                        <TextInput
+                          key={`rpe-${set.id}-${set.actualRpe}-${validationKey}`}
+                          style={styles.input}
+                          defaultValue={set.actualRpe?.toString() || ''}
+                          onChangeText={(t) => stashText(rpeKey, t)}
+                          onEndEditing={commitRpe}
+                          onBlur={commitRpe}
+                          keyboardType="decimal-pad"
+                          placeholder="1-10"
+                          placeholderTextColor={colors.muted}
+                        />
+                      </View>
+                    )}
+                    {settings?.trackTempo && (
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>Tempo</Text>
+                        <TextInput
+                          key={`tempo-${set.id}-${set.tempo}-${validationKey}`}
+                          style={styles.input}
+                          defaultValue={set.tempo || ''}
+                          onChangeText={(t) => stashText(tempoKey, t)}
+                          onEndEditing={commitTempo}
+                          onBlur={commitTempo}
+                          placeholder="3-1-2"
+                          placeholderTextColor={colors.muted}
+                        />
+                      </View>
+                    )}
                   </View>
-                  {settings?.trackRPE && (
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>RPE</Text>
-                      <TextInput
-                        key={`rpe-${set.id}-${set.actualRpe}-${validationKey}`}
-                        style={styles.input}
-                        defaultValue={set.actualRpe?.toString() || ''}
-                        onEndEditing={(e) => {
-                          const validated = validateRPE(e.nativeEvent.text);
-                          if (validated === null && e.nativeEvent.text.trim()) {
-                            setValidationKey((prev) => prev + 1);
-                          }
-                          updateSetValue(item.id, set.id, {
-                            actualRpe: validated ?? undefined,
-                          });
-                        }}
-                        keyboardType="decimal-pad"
-                        placeholder="1-10"
-                        placeholderTextColor={colors.muted}
-                      />
-                    </View>
-                  )}
-                  {settings?.trackTempo && (
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>Tempo</Text>
-                      <TextInput
-                        key={`tempo-${set.id}-${set.tempo}-${validationKey}`}
-                        style={styles.input}
-                        defaultValue={set.tempo || ''}
-                        onEndEditing={(e) => {
-                          const validated = validateTempo(e.nativeEvent.text);
-                          if (validated === null && e.nativeEvent.text.trim()) {
-                            setValidationKey((prev) => prev + 1);
-                          }
-                          updateSetValue(item.id, set.id, {
-                            tempo: validated ?? undefined,
-                          });
-                        }}
-                        placeholder="3-1-2"
-                        placeholderTextColor={colors.muted}
-                      />
-                    </View>
-                  )}
                 </View>
-              </View>
-            ))}
+              );
+            })}
             <Pressable
               style={styles.addSetButton}
               onPress={() => addSet(item.id)}

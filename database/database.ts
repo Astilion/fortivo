@@ -280,6 +280,11 @@ CREATE INDEX IF NOT EXISTS idx_workouts_favorite ON workouts(is_favorite);
   `ALTER TABLE weekly_plans ADD COLUMN is_active INTEGER DEFAULT 0;
  CREATE INDEX IF NOT EXISTS idx_weekly_plans_active ON weekly_plans(is_active);
 `,
+
+  // ─── v7: Active workout started_at timestamp ──────────────────────
+  `
+  ALTER TABLE workouts ADD COLUMN started_at TEXT;
+  `,
 ];
 
 // ─── Migration runner ─────────────────────────────────────────────────────────

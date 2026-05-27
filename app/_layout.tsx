@@ -1,7 +1,7 @@
 import colors from '@/constants/Colors';
 import { ActiveWorkoutFAB } from '@/components/ui/ActiveWorkoutFAB';
 import { Toast } from '@/components/Toast';
-import { useWorkoutStore } from '@/store/workoutStore';
+import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { AppProvider } from '@/providers/AppProvider';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -49,8 +49,10 @@ const commonScreenOptions: NativeStackNavigationOptions = {
 };
 
 export default function RootLayout() {
-  const activeWorkoutId = useWorkoutStore((state) => state.activeWorkoutId);
-  const workoutStartTime = useWorkoutStore((state) => state.workoutStartTime);
+  const activeWorkoutId = useActiveWorkoutStore((state) => state.workoutId);
+  const workoutStartTime = useActiveWorkoutStore(
+    (state) => state.workoutStartTime,
+  );
   const pathname = usePathname();
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
