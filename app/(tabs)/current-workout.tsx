@@ -59,7 +59,8 @@ export default function CurrentWorkoutScreen() {
           text: 'Tak',
           style: 'destructive',
           onPress: async () => {
-            await workoutService.clearActiveWorkout();
+            if (!activeWorkout) return;
+            await workoutService.clearActiveWorkout(activeWorkout.id);
             setActiveWorkout(null);
             setSelectedDay(null);
             setExercises([]);
