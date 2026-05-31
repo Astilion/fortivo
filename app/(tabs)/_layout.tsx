@@ -45,7 +45,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="workouts"
         options={{
-          title: 'Plany Treningowe',
+          title: 'Plany',
           tabBarIcon: ({ color }) => (
             <Ionicons name="clipboard-outline" size={24} color={color} />
           ),
@@ -54,7 +54,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="current-workout"
         options={{
-          title: 'Mój Trening',
+          title: 'Trening',
           tabBarIcon: ({ color }) => (
             <Ionicons name="barbell-sharp" size={24} color={color} />
           ),
@@ -63,7 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="exercises"
         options={{
-          title: 'Lista ćwiczeń',
+          title: 'Ćwiczenia',
           tabBarIcon: ({ color }) => (
             <Ionicons name="list-outline" size={24} color={color} />
           ),
