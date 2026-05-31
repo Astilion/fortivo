@@ -298,7 +298,7 @@ export default function ActiveWorkoutScreen() {
           await workoutService.saveWorkoutHistory(workoutId, durationMinutes);
           await workoutService.saveExerciseProgress(workoutId, exercises);
 
-          await workoutService.clearActiveWorkout();
+          await workoutService.clearActiveWorkout(workoutId);
           useActiveWorkoutStore.getState().finishActiveWorkout();
           showToast('Trening zakończony!', 'success');
           router.replace('/(tabs)/workout-history');
