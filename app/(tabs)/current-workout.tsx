@@ -62,7 +62,7 @@ export default function CurrentWorkoutScreen() {
           style: 'destructive',
           onPress: async () => {
             if (!activeWorkout) return;
-            await workoutService.clearActiveWorkout(activeWorkout.id);
+            await workoutService.discardActiveWorkout(activeWorkout.id);
             setActiveWorkout(null);
             setSelectedDay(null);
             setExercises([]);

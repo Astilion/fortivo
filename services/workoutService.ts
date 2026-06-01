@@ -289,6 +289,18 @@ export class WorkoutService {
           'UPDATE workouts SET is_active = 1, started_at = ? WHERE id = ?',
           [new Date().toISOString(), id],
         );
+        // Starting a workout begins a fresh session — clear the values logged
+        // the last time this workout was performed so it doesn't open
+        // pre-filled and pre-checked.
+        await this.db.runAsync(
+          `UPDATE workout_sets
+           SET actual_reps = NULL, actual_weight = NULL, actual_rpe = NULL,
+               actual_duration = NULL, actual_distance = NULL, completed = 0
+           WHERE workout_exercise_id IN (
+             SELECT id FROM workout_exercises WHERE workout_id = ?
+           )`,
+          [id],
+        );
       });
     } catch (error) {
       logger.error('WorkoutService.setActiveWorkout failed', error);
@@ -321,13 +333,20 @@ export class WorkoutService {
     });
   }
 
-  async clearActiveWorkout(workoutId: string): Promise<void> {
+  async deactivateActiveWorkout(workoutId: string): Promise<void> {
     try {
-      await this._resetActiveWorkoutDB(workoutId);
+      await this.db.runAsync(
+        'UPDATE workouts SET is_active = 0, started_at = NULL WHERE id = ?',
+        [workoutId],
+      );
     } catch (error) {
-      logger.error('WorkoutService.clearActiveWorkout failed', error);
+      logger.error('WorkoutService.deactivateActiveWorkout failed', error);
       throw new ServiceError('Nie udało się zakończyć treningu', error);
     }
+  }
+
+  async clearActiveWorkout(workoutId: string): Promise<void> {
+    await this.deactivateActiveWorkout(workoutId);
   }
 
   async clearStaleActiveWorkout(workoutId: string): Promise<void> {
