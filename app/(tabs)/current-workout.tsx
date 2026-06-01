@@ -4,6 +4,7 @@ import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useWeeklyPlanData } from '@/hooks/useWeeklyPlanData';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
+import { useStartWorkout } from '@/hooks/useStartWorkout';
 import { useApp } from '@/providers/AppProvider';
 import { WorkoutRow, WorkoutExerciseWithSets } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +18,7 @@ export default function CurrentWorkoutScreen() {
   const [workoutsCount, setWorkoutsCount] = useState(0);
   const [workoutLoading, setWorkoutLoading] = useState(true);
   const { workoutService } = useApp();
+  const startWorkout = useStartWorkout();
   const {
     activePlan,
     planDays,
@@ -60,7 +62,7 @@ export default function CurrentWorkoutScreen() {
           style: 'destructive',
           onPress: async () => {
             if (!activeWorkout) return;
-            await workoutService.clearActiveWorkout(activeWorkout.id);
+            await workoutService.discardActiveWorkout(activeWorkout.id);
             setActiveWorkout(null);
             setSelectedDay(null);
             setExercises([]);
@@ -70,10 +72,9 @@ export default function CurrentWorkoutScreen() {
     );
   };
 
-  const handleStartFromPlan = async (workoutId: string, dayOfWeek: number) => {
+  const handleStartFromPlan = (workoutId: string, dayOfWeek: number) => {
     setSelectedDay(dayOfWeek);
-    await workoutService.setActiveWorkout(workoutId);
-    await loadActiveWorkout();
+    startWorkout(workoutId, loadActiveWorkout);
   };
 
   if (planLoading || workoutLoading) {

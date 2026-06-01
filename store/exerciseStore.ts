@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import { Exercise, ExerciseService } from '../services/exerciseService';
 import { LOCAL_USER_ID } from '@/constants/User';
 import { logger } from '@/utils/logger';
+import { ServiceError } from '@/utils/errors';
+import { useToastStore } from '@/store/toastStore';
+
+const toUserMessage = (error: unknown, fallback: string): string =>
+  error instanceof ServiceError ? error.userMessage : fallback;
 
 interface ExerciseState {
   exercises: Exercise[];
@@ -61,11 +66,10 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       const exercises = await exerciseService.getAllExercises(userId);
       set({ exercises, loading: false });
     } catch (error) {
-      set({
-        error:
-          error instanceof Error ? error.message : 'Failed to load exercises',
-        loading: false,
-      });
+      logger.error('Failed to load exercises', error);
+      const message = toUserMessage(error, 'Nie udało się załadować ćwiczeń');
+      useToastStore.getState().showToast(message, 'error');
+      set({ error: message, loading: false });
     }
   },
 
@@ -94,10 +98,10 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
         set({ exercises, loading: false });
       }
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Search failed',
-        loading: false,
-      });
+      logger.error('Failed to search exercises', error);
+      const message = toUserMessage(error, 'Nie udało się wyszukać ćwiczeń');
+      useToastStore.getState().showToast(message, 'error');
+      set({ error: message, loading: false });
     }
   },
 
@@ -117,10 +121,10 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
         set({ exercises, loading: false });
       }
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Filter failed',
-        loading: false,
-      });
+      logger.error('Failed to filter exercises', error);
+      const message = toUserMessage(error, 'Nie udało się odfiltrować ćwiczeń');
+      useToastStore.getState().showToast(message, 'error');
+      set({ error: message, loading: false });
     }
   },
 
@@ -141,8 +145,7 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       });
     } catch (error) {
       set({
-        error:
-          error instanceof Error ? error.message : 'Failed to create exercise',
+        error: toUserMessage(error, 'Nie udało się utworzyć ćwiczenia'),
         loading: false,
       });
       throw error;
@@ -160,8 +163,7 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       await get().loadExercises();
     } catch (error) {
       set({
-        error:
-          error instanceof Error ? error.message : 'Failed to update exercise',
+        error: toUserMessage(error, 'Nie udało się zaktualizować ćwiczenia'),
         loading: false,
       });
       throw error;
@@ -182,8 +184,7 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       });
     } catch (error) {
       set({
-        error:
-          error instanceof Error ? error.message : 'Failed to delete exercise',
+        error: toUserMessage(error, 'Nie udało się usunąć ćwiczenia'),
         loading: false,
       });
       throw error;

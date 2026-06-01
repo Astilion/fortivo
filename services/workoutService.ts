@@ -259,10 +259,21 @@ export class WorkoutService {
   }
 
   async reorderWorkouts(workoutIds: string[]): Promise<void> {
-    for (let i = 0; i < workoutIds.length; i++) {
-      await this.db.runAsync(
-        'UPDATE workouts SET display_order = ? WHERE id = ?',
-        [i, workoutIds[i]],
+    // Wrap the per-row UPDATEs so an interruption can't leave a partial ordering.
+    try {
+      await this.db.withTransactionAsync(async () => {
+        for (let i = 0; i < workoutIds.length; i++) {
+          await this.db.runAsync(
+            'UPDATE workouts SET display_order = ? WHERE id = ?',
+            [i, workoutIds[i]],
+          );
+        }
+      });
+    } catch (error) {
+      logger.error('WorkoutService.reorderWorkouts failed', error);
+      throw new ServiceError(
+        'Nie udało się zmienić kolejności treningów',
+        error,
       );
     }
   }
@@ -271,13 +282,30 @@ export class WorkoutService {
     // Wrap both writes so we never end up with zero or two active rows if
     // interrupted between them. started_at marks the activation moment, used
     // to compute workout duration and survive a process kill.
-    await this.db.withTransactionAsync(async () => {
-      await this.db.runAsync('UPDATE workouts SET is_active = 0');
-      await this.db.runAsync(
-        'UPDATE workouts SET is_active = 1, started_at = ? WHERE id = ?',
-        [new Date().toISOString(), id],
-      );
-    });
+    try {
+      await this.db.withTransactionAsync(async () => {
+        await this.db.runAsync('UPDATE workouts SET is_active = 0');
+        await this.db.runAsync(
+          'UPDATE workouts SET is_active = 1, started_at = ? WHERE id = ?',
+          [new Date().toISOString(), id],
+        );
+        // Starting a workout begins a fresh session — clear the values logged
+        // the last time this workout was performed so it doesn't open
+        // pre-filled and pre-checked.
+        await this.db.runAsync(
+          `UPDATE workout_sets
+           SET actual_reps = NULL, actual_weight = NULL, actual_rpe = NULL,
+               actual_duration = NULL, actual_distance = NULL, completed = 0
+           WHERE workout_exercise_id IN (
+             SELECT id FROM workout_exercises WHERE workout_id = ?
+           )`,
+          [id],
+        );
+      });
+    } catch (error) {
+      logger.error('WorkoutService.setActiveWorkout failed', error);
+      throw new ServiceError('Nie udało się ustawić aktywnego treningu', error);
+    }
   }
 
   async getActiveWorkout(): Promise<WorkoutRow | null> {
@@ -305,13 +333,20 @@ export class WorkoutService {
     });
   }
 
-  async clearActiveWorkout(workoutId: string): Promise<void> {
+  async deactivateActiveWorkout(workoutId: string): Promise<void> {
     try {
-      await this._resetActiveWorkoutDB(workoutId);
+      await this.db.runAsync(
+        'UPDATE workouts SET is_active = 0, started_at = NULL WHERE id = ?',
+        [workoutId],
+      );
     } catch (error) {
-      logger.error('WorkoutService.clearActiveWorkout failed', error);
+      logger.error('WorkoutService.deactivateActiveWorkout failed', error);
       throw new ServiceError('Nie udało się zakończyć treningu', error);
     }
+  }
+
+  async clearActiveWorkout(workoutId: string): Promise<void> {
+    await this.deactivateActiveWorkout(workoutId);
   }
 
   async clearStaleActiveWorkout(workoutId: string): Promise<void> {
@@ -326,40 +361,12 @@ export class WorkoutService {
     }
   }
 
-  async saveActualValues(
-    workoutId: string,
-    exercises: WorkoutExerciseWithSets[],
-  ): Promise<void> {
+  async discardActiveWorkout(workoutId: string): Promise<void> {
     try {
-      await this.db.withTransactionAsync(async () => {
-        for (const ex of exercises) {
-          const workoutExerciseRow = await this.db.getFirstAsync<{
-            id: string;
-          }>(
-            'SELECT id FROM workout_exercises WHERE workout_id = ? AND exercise_id = ?',
-            [workoutId, ex.exercise.id],
-          );
-
-          if (!workoutExerciseRow) continue;
-
-          await this.db.runAsync(
-            'DELETE FROM workout_sets WHERE workout_exercise_id = ?',
-            [workoutExerciseRow.id],
-          );
-
-          for (let i = 0; i < ex.sets.length; i++) {
-            await this.insertSet(
-              ex.sets[i].id,
-              workoutExerciseRow.id,
-              i,
-              ex.sets[i],
-            );
-          }
-        }
-      });
+      await this._resetActiveWorkoutDB(workoutId);
     } catch (error) {
-      logger.error('WorkoutService.saveActualValues failed', error);
-      throw new ServiceError('Nie udało się zapisać wyników treningu', error);
+      logger.error('WorkoutService.discardActiveWorkout failed', error);
+      throw new ServiceError('Nie udało się odrzucić treningu', error);
     }
   }
 
@@ -639,7 +646,7 @@ export class WorkoutService {
     return result?.count || 0;
   }
 
-  /** Reusable INSERT for workout_sets — used by saveWorkoutExercises and saveActualValues */
+  /** Reusable INSERT for workout_sets — used by saveWorkoutExercises */
   private async insertSet(
     setId: string,
     workoutExerciseId: string,
@@ -657,19 +664,19 @@ export class WorkoutService {
         workoutExerciseId,
         order,
         set.reps,
-        set.weight || null,
+        set.weight ?? null,
         set.rpe || null,
         set.tempo || null,
-        set.restTime || null,
+        set.restTime ?? null,
         set.completed ? 1 : 0,
         set.notes || null,
         set.actualReps || null,
-        set.actualWeight || null,
+        set.actualWeight ?? null,
         set.actualRpe || null,
-        set.duration || null,
-        set.actualDuration || null,
-        set.distance || null,
-        set.actualDistance || null,
+        set.duration ?? null,
+        set.actualDuration ?? null,
+        set.distance ?? null,
+        set.actualDistance ?? null,
       ],
     );
   }
