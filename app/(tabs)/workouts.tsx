@@ -112,7 +112,18 @@ export default function WorkoutsScreen() {
     newWorkouts.splice(index - 1, 0, item);
 
     setWorkouts(newWorkouts);
-    await workoutService.reorderWorkouts(newWorkouts.map((w) => w.id));
+    try {
+      await workoutService.reorderWorkouts(newWorkouts.map((w) => w.id));
+    } catch (error) {
+      logger.error('Błąd zmiany kolejności', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się zmienić kolejności', 'error');
+      }
+      // Revert the optimistic reorder to whatever the DB actually holds.
+      loadWorkouts();
+    }
   };
 
   const moveWorkoutDown = async (index: number) => {
@@ -128,7 +139,18 @@ export default function WorkoutsScreen() {
     newWorkouts.splice(index + 1, 0, item);
 
     setWorkouts(newWorkouts);
-    await workoutService.reorderWorkouts(newWorkouts.map((w) => w.id));
+    try {
+      await workoutService.reorderWorkouts(newWorkouts.map((w) => w.id));
+    } catch (error) {
+      logger.error('Błąd zmiany kolejności', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się zmienić kolejności', 'error');
+      }
+      // Revert the optimistic reorder to whatever the DB actually holds.
+      loadWorkouts();
+    }
   };
 
   const handleToggleFavorite = async (workoutId: string) => {
