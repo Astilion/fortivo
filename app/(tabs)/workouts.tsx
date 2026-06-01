@@ -159,8 +159,17 @@ export default function WorkoutsScreen() {
   };
 
   const setAsActive = async (workoutId: string) => {
-    await workoutService.setActiveWorkout(workoutId);
-    router.push('/(tabs)/current-workout');
+    try {
+      await workoutService.setActiveWorkout(workoutId);
+      router.push('/(tabs)/current-workout');
+    } catch (error) {
+      logger.error('Błąd ustawiania aktywnego treningu', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się ustawić aktywnego treningu', 'error');
+      }
+    }
   };
 
   const handleSetActivePlan = async (planId: string) => {
