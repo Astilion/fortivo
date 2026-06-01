@@ -342,43 +342,6 @@ export class WorkoutService {
     }
   }
 
-  async saveActualValues(
-    workoutId: string,
-    exercises: WorkoutExerciseWithSets[],
-  ): Promise<void> {
-    try {
-      await this.db.withTransactionAsync(async () => {
-        for (const ex of exercises) {
-          const workoutExerciseRow = await this.db.getFirstAsync<{
-            id: string;
-          }>(
-            'SELECT id FROM workout_exercises WHERE workout_id = ? AND exercise_id = ?',
-            [workoutId, ex.exercise.id],
-          );
-
-          if (!workoutExerciseRow) continue;
-
-          await this.db.runAsync(
-            'DELETE FROM workout_sets WHERE workout_exercise_id = ?',
-            [workoutExerciseRow.id],
-          );
-
-          for (let i = 0; i < ex.sets.length; i++) {
-            await this.insertSet(
-              ex.sets[i].id,
-              workoutExerciseRow.id,
-              i,
-              ex.sets[i],
-            );
-          }
-        }
-      });
-    } catch (error) {
-      logger.error('WorkoutService.saveActualValues failed', error);
-      throw new ServiceError('Nie udało się zapisać wyników treningu', error);
-    }
-  }
-
   // Incremental persistence for the in-progress active workout. UPSERTs on the
   // stable ids supplied by the store (no DELETE+reinsert, so refs/ids survive),
   // then prunes exercises/sets the user removed.
@@ -655,7 +618,7 @@ export class WorkoutService {
     return result?.count || 0;
   }
 
-  /** Reusable INSERT for workout_sets — used by saveWorkoutExercises and saveActualValues */
+  /** Reusable INSERT for workout_sets — used by saveWorkoutExercises */
   private async insertSet(
     setId: string,
     workoutExerciseId: string,
