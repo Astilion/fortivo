@@ -342,6 +342,15 @@ export class WorkoutService {
     }
   }
 
+  async discardActiveWorkout(workoutId: string): Promise<void> {
+    try {
+      await this._resetActiveWorkoutDB(workoutId);
+    } catch (error) {
+      logger.error('WorkoutService.discardActiveWorkout failed', error);
+      throw new ServiceError('Nie udało się odrzucić treningu', error);
+    }
+  }
+
   // Incremental persistence for the in-progress active workout. UPSERTs on the
   // stable ids supplied by the store (no DELETE+reinsert, so refs/ids survive),
   // then prunes exercises/sets the user removed.

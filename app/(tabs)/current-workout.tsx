@@ -4,11 +4,9 @@ import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
 import { useWeeklyPlanData } from '@/hooks/useWeeklyPlanData';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
+import { useStartWorkout } from '@/hooks/useStartWorkout';
 import { useApp } from '@/providers/AppProvider';
-import { useToastStore } from '@/store/toastStore';
 import { WorkoutRow, WorkoutExerciseWithSets } from '@/types/training';
-import { ServiceError } from '@/utils/errors';
-import { logger } from '@/utils/logger';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -20,7 +18,7 @@ export default function CurrentWorkoutScreen() {
   const [workoutsCount, setWorkoutsCount] = useState(0);
   const [workoutLoading, setWorkoutLoading] = useState(true);
   const { workoutService } = useApp();
-  const { showToast } = useToastStore();
+  const startWorkout = useStartWorkout();
   const {
     activePlan,
     planDays,
@@ -74,19 +72,9 @@ export default function CurrentWorkoutScreen() {
     );
   };
 
-  const handleStartFromPlan = async (workoutId: string, dayOfWeek: number) => {
+  const handleStartFromPlan = (workoutId: string, dayOfWeek: number) => {
     setSelectedDay(dayOfWeek);
-    try {
-      await workoutService.setActiveWorkout(workoutId);
-      await loadActiveWorkout();
-    } catch (error) {
-      logger.error('Błąd ustawiania aktywnego treningu', error);
-      if (error instanceof ServiceError) {
-        showToast(error.userMessage, 'error');
-      } else {
-        showToast('Nie udało się ustawić aktywnego treningu', 'error');
-      }
-    }
+    startWorkout(workoutId, loadActiveWorkout);
   };
 
   if (planLoading || workoutLoading) {

@@ -17,6 +17,7 @@ import { logger } from '@/utils/logger';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
+import { useStartWorkout } from '@/hooks/useStartWorkout';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type WorkoutsTab = 'workouts' | 'plans' | 'ready';
@@ -29,6 +30,7 @@ export default function WorkoutsScreen() {
   const { workoutService, weeklyPlanService, presetService } = useApp();
   const { showToast } = useToastStore();
   const router = useRouter();
+  const startWorkout = useStartWorkout();
   const presetWorkouts = presetService.getPresetWorkouts();
 
   useRefreshOnFocus(() => {
@@ -158,18 +160,8 @@ export default function WorkoutsScreen() {
     await loadWorkouts();
   };
 
-  const setAsActive = async (workoutId: string) => {
-    try {
-      await workoutService.setActiveWorkout(workoutId);
-      router.push('/(tabs)/current-workout');
-    } catch (error) {
-      logger.error('Błąd ustawiania aktywnego treningu', error);
-      if (error instanceof ServiceError) {
-        showToast(error.userMessage, 'error');
-      } else {
-        showToast('Nie udało się ustawić aktywnego treningu', 'error');
-      }
-    }
+  const setAsActive = (workoutId: string) => {
+    startWorkout(workoutId, () => router.push('/(tabs)/current-workout'));
   };
 
   const handleSetActivePlan = async (planId: string) => {
