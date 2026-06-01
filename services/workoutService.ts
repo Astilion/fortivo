@@ -259,10 +259,21 @@ export class WorkoutService {
   }
 
   async reorderWorkouts(workoutIds: string[]): Promise<void> {
-    for (let i = 0; i < workoutIds.length; i++) {
-      await this.db.runAsync(
-        'UPDATE workouts SET display_order = ? WHERE id = ?',
-        [i, workoutIds[i]],
+    // Wrap the per-row UPDATEs so an interruption can't leave a partial ordering.
+    try {
+      await this.db.withTransactionAsync(async () => {
+        for (let i = 0; i < workoutIds.length; i++) {
+          await this.db.runAsync(
+            'UPDATE workouts SET display_order = ? WHERE id = ?',
+            [i, workoutIds[i]],
+          );
+        }
+      });
+    } catch (error) {
+      logger.error('WorkoutService.reorderWorkouts failed', error);
+      throw new ServiceError(
+        'Nie udało się zmienić kolejności treningów',
+        error,
       );
     }
   }
