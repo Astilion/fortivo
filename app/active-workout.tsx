@@ -203,13 +203,15 @@ export default function ActiveWorkoutScreen() {
         actualDistance: set.actualDistance ?? set.distance,
       })),
     }));
+    // Bind workoutId + startTime together with exercises so a stale workoutId
+    // can never pair with another workout's exercises.
+    useActiveWorkoutStore
+      .getState()
+      .startActiveWorkout(
+        dbWorkout.id,
+        dbWorkout.started_at ? Date.parse(dbWorkout.started_at) : Date.now(),
+      );
     useActiveWorkoutStore.getState().setExercises(hydrated);
-
-    if (store.workoutStartTime === null && dbWorkout.started_at) {
-      useActiveWorkoutStore
-        .getState()
-        .startActiveWorkout(dbWorkout.id, Date.parse(dbWorkout.started_at));
-    }
   };
 
   const toggleSetCompleted = (exerciseId: string, setId: string) => {
