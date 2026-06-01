@@ -306,8 +306,8 @@ const runMigrations = async (db: SQLite.SQLiteDatabase) => {
     try {
       await db.withTransactionAsync(async () => {
         await db.execAsync(migrations[i]);
+        await db.execAsync(`PRAGMA user_version = ${version}`);
       });
-      await db.execAsync(`PRAGMA user_version = ${version}`);
     } catch (error) {
       logger.error(`Migracja v${version} nie powiodła się`, error);
       throw new DatabaseMigrationError(
