@@ -1,7 +1,7 @@
 import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
-import { WorkoutHistoryDetails } from '@/types/training';
+import { WorkoutHistoryDetails, WorkoutSet } from '@/types/training';
 import { formatDate } from '@/utils/date';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -16,6 +16,48 @@ import {
   View,
 } from 'react-native';
 import { logger } from '@/utils/logger';
+
+type MeasurementType = 'reps' | 'time' | 'distance';
+
+// labels mirror active-workout - keep in sync
+const getValueLabel = (measurementType?: MeasurementType): string => {
+  switch (measurementType) {
+    case 'time':
+      return 'Czas (s)';
+    case 'distance':
+      return 'Dyst. (m)';
+    default:
+      return 'Powtórzenia';
+  }
+};
+
+const getActualValue = (
+  set: WorkoutSet,
+  measurementType?: MeasurementType,
+): number | undefined => {
+  switch (measurementType) {
+    case 'time':
+      return set.actualDuration;
+    case 'distance':
+      return set.actualDistance;
+    default:
+      return set.actualReps;
+  }
+};
+
+const getPlannedValue = (
+  set: WorkoutSet,
+  measurementType?: MeasurementType,
+): number | undefined => {
+  switch (measurementType) {
+    case 'time':
+      return set.duration;
+    case 'distance':
+      return set.distance;
+    default:
+      return set.reps;
+  }
+};
 
 export default function WorkoutDetailsScreen() {
   const { historyId } = useLocalSearchParams<{ historyId: string }>();
@@ -129,61 +171,70 @@ export default function WorkoutDetailsScreen() {
               </Text>
             </Pressable>
 
-            {item.sets.map((set, setIndex) => (
-              <View key={set.id} style={styles.setCard}>
-                <View style={styles.setHeader}>
-                  <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
+            {item.sets.map((set, setIndex) => {
+              const measurementType = item.exercise.measurementType;
+              const actualValue = getActualValue(set, measurementType);
+              const plannedValue = getPlannedValue(set, measurementType);
+              const displayValue = actualValue ?? plannedValue ?? 0;
+              const displayWeight = set.actualWeight ?? set.weight ?? 0;
+              const valueDiffers =
+                set.actualWeight !== set.weight || actualValue !== plannedValue;
 
-                  {set.completed && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color={colors.accent}
-                    />
-                  )}
-                </View>
+              return (
+                <View key={set.id} style={styles.setCard}>
+                  <View style={styles.setHeader}>
+                    <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
 
-                <View style={styles.setData}>
-                  <View style={styles.dataItem}>
-                    <Text style={styles.dataLabel}>Ciężar</Text>
-                    <Text style={styles.dataValue}>
-                      {set.actualWeight || set.weight || 0} {weightUnit}
-                    </Text>
+                    {set.completed && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color={colors.accent}
+                      />
+                    )}
                   </View>
 
-                  <View style={styles.dataItem}>
-                    <Text style={styles.dataLabel}>Powtórzenia</Text>
-                    <Text style={styles.dataValue}>
-                      {set.actualReps || set.reps || 0}
-                    </Text>
-                  </View>
-
-                  {set.actualRpe && (
+                  <View style={styles.setData}>
                     <View style={styles.dataItem}>
-                      <Text style={styles.dataLabel}>RPE</Text>
-                      <Text style={styles.dataValue}>{set.actualRpe}</Text>
-                    </View>
-                  )}
-
-                  {set.tempo && (
-                    <View style={styles.dataItem}>
-                      <Text style={styles.dataLabel}>Tempo</Text>
-                      <Text style={styles.dataValue}>{set.tempo}</Text>
-                    </View>
-                  )}
-
-                  {(set.actualWeight !== set.weight ||
-                    set.actualReps !== set.reps) && (
-                    <View style={styles.plannedData}>
-                      <Text style={styles.plannedLabel}>
-                        Planowane: {set.weight}
-                        {weightUnit} × {set.reps}
+                      <Text style={styles.dataLabel}>Ciężar</Text>
+                      <Text style={styles.dataValue}>
+                        {displayWeight} {weightUnit}
                       </Text>
                     </View>
-                  )}
+
+                    <View style={styles.dataItem}>
+                      <Text style={styles.dataLabel}>
+                        {getValueLabel(measurementType)}
+                      </Text>
+                      <Text style={styles.dataValue}>{displayValue}</Text>
+                    </View>
+
+                    {set.actualRpe && (
+                      <View style={styles.dataItem}>
+                        <Text style={styles.dataLabel}>RPE</Text>
+                        <Text style={styles.dataValue}>{set.actualRpe}</Text>
+                      </View>
+                    )}
+
+                    {set.tempo && (
+                      <View style={styles.dataItem}>
+                        <Text style={styles.dataLabel}>Tempo</Text>
+                        <Text style={styles.dataValue}>{set.tempo}</Text>
+                      </View>
+                    )}
+
+                    {valueDiffers && (
+                      <View style={styles.plannedData}>
+                        <Text style={styles.plannedLabel}>
+                          Planowane: {set.weight ?? 0}
+                          {weightUnit} × {plannedValue ?? 0}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         ))}
       </ScrollView>
