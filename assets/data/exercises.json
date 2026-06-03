@@ -2983,7 +2983,7 @@
     "muscleGroups": ["Brzuch"],
     "equipment": ["masa ciała"],
     "difficulty": "Początkujący",
-    "measurementType": "reps",
+    "measurementType": "time",
     "isCustom": false,
     "createdAt": "2025-01-18T12:00:00.000Z"
   },
