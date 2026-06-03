@@ -16,12 +16,15 @@ export default function ExerciseProgressScreen() {
     exerciseId: string;
     exerciseName?: string;
   }>();
-  const { workoutService } = useApp();
+  const { workoutService, exerciseService } = useApp();
   const { settings } = useProfileSettings();
   const weightUnit = settings?.preferredWeightUnit ?? 'kg';
   const router = useRouter();
 
   const [progress, setProgress] = useState<ExerciseProgressWithWorkout[]>([]);
+  const [measurementType, setMeasurementType] = useState<
+    'reps' | 'time' | 'distance'
+  >('reps');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,8 +39,12 @@ export default function ExerciseProgressScreen() {
 
       try {
         setLoading(true);
-        const data = await workoutService.getExerciseProgress(exerciseId!);
+        const [data, exercise] = await Promise.all([
+          workoutService.getExerciseProgress(exerciseId!),
+          exerciseService.getExerciseById(exerciseId!),
+        ]);
         setProgress(data);
+        setMeasurementType(exercise?.measurementType ?? 'reps');
       } catch (error) {
         logger.error('Error loading exercise progress:', error);
         Alert.alert('Błąd', 'Nie udało się załadować historii ćwiczenia');
@@ -47,7 +54,7 @@ export default function ExerciseProgressScreen() {
       }
     };
     loadProgress();
-  }, [exerciseId, workoutService, router]);
+  }, [exerciseId, workoutService, exerciseService, router]);
 
   const bestPR =
     progress.length > 0 ? Math.max(...progress.map((p) => p.maxWeight)) : 0;
@@ -62,6 +69,18 @@ export default function ExerciseProgressScreen() {
 
   if (loading) {
     return <LoadingView />;
+  }
+
+  if (measurementType === 'time' || measurementType === 'distance') {
+    return (
+      <View style={styles.container}>
+        <EmptyState
+          icon="stats-chart-outline"
+          title="Statystyki wkrótce"
+          subtitle="Postęp dla ćwiczeń czasowych i dystansowych pojawi się w kolejnej aktualizacji."
+        />
+      </View>
+    );
   }
 
   return (
