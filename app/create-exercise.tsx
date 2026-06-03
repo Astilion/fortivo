@@ -1,11 +1,5 @@
-import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  Pressable,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import colors from '@/constants/Colors';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState, useCallback } from 'react';
@@ -202,13 +196,14 @@ export default function CreateExerciseScreen() {
   }
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={styles.container}
       contentContainerStyle={[
         styles.content,
         { paddingBottom: insets.bottom + 40 },
       ]}
       keyboardShouldPersistTaps="handled"
+      bottomOffset={20}
     >
       <View style={styles.section}>
         <Text style={styles.label}>
@@ -291,7 +286,7 @@ export default function CreateExerciseScreen() {
               : 'Utwórz ćwiczenie'}
         </Text>
       </Pressable>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 
