@@ -1927,7 +1927,7 @@
     "muscleGroups": ["Brzuch"],
     "equipment": ["hantle", "sztanga"],
     "difficulty": "Początkujący",
-    "measurementType": "reps",
+    "measurementType": "distance",
     "isCustom": false,
     "createdAt": "2025-01-18T12:00:00.000Z"
   },
@@ -1939,7 +1939,7 @@
     "muscleGroups": ["Brzuch"],
     "equipment": ["hantle", "kettlebell"],
     "difficulty": "Początkujący",
-    "measurementType": "reps",
+    "measurementType": "distance",
     "isCustom": false,
     "createdAt": "2025-01-18T12:00:00.000Z"
   },
@@ -1951,7 +1951,7 @@
     "muscleGroups": ["Brzuch"],
     "equipment": ["masa ciała"],
     "difficulty": "Początkujący",
-    "measurementType": "reps",
+    "measurementType": "distance",
     "isCustom": false,
     "createdAt": "2025-01-18T12:00:00.000Z"
   },
