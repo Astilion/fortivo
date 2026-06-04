@@ -9,7 +9,6 @@ import { ServiceError } from '@/utils/errors';
 import {
   ActivityIndicator,
   Linking,
-  ScrollView,
   StyleSheet,
   Switch,
   Text,
@@ -17,6 +16,7 @@ import {
   View,
   Pressable,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/providers/AppProvider';
 import { logger } from '@/utils/logger';
@@ -197,10 +197,12 @@ export default function ProfileScreen() {
         />
       )}
 
-      <ScrollView
+      <KeyboardAwareScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={20}
       >
         {/* ── Sekcja: Jednostki ── */}
         <SectionHeader icon="scale-outline" title="JEDNOSTKI" />
@@ -375,7 +377,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.bottomPadding} />
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
