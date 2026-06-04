@@ -10,14 +10,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { generateId } from '@/database/database';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { parseDecimal, parseInteger } from '@/utils/numbers';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { validateRPE, validateTempo } from '@/utils/validation';
@@ -374,9 +368,11 @@ export default function ActiveWorkoutScreen() {
         </Text>
       </View>
 
-      <ScrollView
+      <KeyboardAwareScrollView
         style={styles.content}
         contentContainerStyle={{ paddingBottom: 22 }}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={20}
       >
         {exerciseList.map((item, exIndex) => (
           <View key={item.id} style={styles.exerciseBlock}>
@@ -583,7 +579,7 @@ export default function ActiveWorkoutScreen() {
           variant="primary"
           onPress={() => router.push('/select-exercise?source=active-workout')}
         />
-      </ScrollView>
+      </KeyboardAwareScrollView>
       <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <Button
           title="Zakończ trening"
