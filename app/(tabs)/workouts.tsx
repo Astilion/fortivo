@@ -233,7 +233,7 @@ export default function WorkoutsScreen() {
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.optionButton, styles.rightOption]}
+          style={styles.optionButton}
           onPress={() => setSelectedTab('ready')}
         >
           <Text
@@ -368,10 +368,7 @@ const styles = StyleSheet.create({
   },
   optionButton: {
     flex: 1,
-    justifyContent: 'space-between',
-  },
-  rightOption: {
-    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   activeText: {
     color: colors.accent,
@@ -412,6 +409,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: colors.text.primary,
+    textAlign: 'center',
   },
   createButtonWrapper: {
     marginBottom: 20,

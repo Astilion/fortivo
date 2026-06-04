@@ -11,7 +11,8 @@ import { ServiceError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { confirmAction } from '@/utils/confirm';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -87,9 +88,11 @@ export default function CreateWorkoutScreen() {
   };
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={commonStyles.container}
       contentContainerStyle={{ gap: 16, paddingBottom: insets.bottom + 80 }}
+      keyboardShouldPersistTaps="handled"
+      bottomOffset={20}
     >
       <View>
         <Input
@@ -180,6 +183,6 @@ export default function CreateWorkoutScreen() {
         onPress={handleSaveWorkout}
         variant="primary"
       />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

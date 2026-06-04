@@ -6,14 +6,8 @@ import React, { useCallback, useState } from 'react';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
-import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { useApp } from '@/providers/AppProvider';
@@ -85,10 +79,7 @@ export default function WeightTrackingScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView style={styles.keyboardView} behavior="padding">
         {/* ── Summary ── */}
         <SummaryCard
           currentWeight={currentWeight}
