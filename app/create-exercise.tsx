@@ -16,6 +16,7 @@ interface ExerciseForm {
   muscleGroups: string[];
   equipment: string[];
   difficulty: 'Początkujący' | 'Średniozaawansowany' | 'Zaawansowany' | '';
+  measurementType: 'reps' | 'time' | 'distance';
   instructions: string;
 }
 
@@ -25,6 +26,7 @@ const EMPTY_FORM: ExerciseForm = {
   muscleGroups: [],
   equipment: [],
   difficulty: '',
+  measurementType: 'reps',
   instructions: '',
 };
 
@@ -44,6 +46,12 @@ const DIFFICULTY_OPTIONS = [
   'Początkujący',
   'Średniozaawansowany',
   'Zaawansowany',
+] as const;
+
+const MEASUREMENT_TYPE_OPTIONS = [
+  { value: 'reps', label: 'Powtórzenia' },
+  { value: 'time', label: 'Czas' },
+  { value: 'distance', label: 'Dystans' },
 ] as const;
 
 export default function CreateExerciseScreen() {
@@ -82,6 +90,7 @@ export default function CreateExerciseScreen() {
           muscleGroups: exercise.muscleGroups,
           equipment: exercise.equipment ?? [],
           difficulty: exercise.difficulty ?? '',
+          measurementType: exercise.measurementType ?? 'reps',
           instructions: exercise.instructions ?? '',
         });
       }
@@ -139,6 +148,7 @@ export default function CreateExerciseScreen() {
             muscleGroups: form.muscleGroups,
             equipment: form.equipment,
             difficulty: form.difficulty || undefined,
+            measurementType: form.measurementType,
             instructions: form.instructions.trim() || undefined,
           },
           LOCAL_USER_ID,
@@ -152,7 +162,7 @@ export default function CreateExerciseScreen() {
             equipment: form.equipment,
             difficulty: form.difficulty || undefined,
             instructions: form.instructions.trim() || undefined,
-            measurementType: 'reps',
+            measurementType: form.measurementType,
           },
           LOCAL_USER_ID,
         );
@@ -256,6 +266,16 @@ export default function CreateExerciseScreen() {
           {DIFFICULTY_OPTIONS.map((diff) =>
             renderChip(diff, form.difficulty === diff, () =>
               updateField('difficulty', form.difficulty === diff ? '' : diff),
+            ),
+          )}
+        </View>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.label}>Typ pomiaru</Text>
+        <View style={styles.chipGrid}>
+          {MEASUREMENT_TYPE_OPTIONS.map((opt) =>
+            renderChip(opt.label, form.measurementType === opt.value, () =>
+              updateField('measurementType', opt.value),
             ),
           )}
         </View>
