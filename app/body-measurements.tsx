@@ -7,16 +7,8 @@ import React, { useCallback, useState } from 'react';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
-import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BODY_PARTS } from '@/constants/bodyParts';
 import { MeasurementRow } from '@/components/measurements/MeasurementRow';
@@ -94,10 +86,7 @@ export default function BodyMeasurementsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <View style={styles.flex}>
         {/* ── Tab switcher ── */}
         <View style={styles.tabBar}>
           <Pressable
@@ -133,10 +122,11 @@ export default function BodyMeasurementsScreen() {
 
         {/* ── Measurements ── */}
         {activeTab === 'measurements' && (
-          <ScrollView
+          <KeyboardAwareScrollView
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            bottomOffset={20}
           >
             {error && <Text style={styles.errorText}>{error}</Text>}
             {BODY_PARTS.map((part) => (
@@ -151,7 +141,7 @@ export default function BodyMeasurementsScreen() {
                 onAdd={() => handleAdd(part.key)}
               />
             ))}
-          </ScrollView>
+          </KeyboardAwareScrollView>
         )}
 
         {/* ── History ── */}
@@ -183,7 +173,7 @@ export default function BodyMeasurementsScreen() {
             )}
           </>
         )}
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }
