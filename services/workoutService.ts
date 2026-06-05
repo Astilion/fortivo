@@ -9,6 +9,7 @@ import {
   ExerciseProgressWithWorkout,
   ExerciseRow,
   PerformanceSnapshot,
+  PerformanceSnapshotExercise,
   Workout,
   WorkoutExerciseRow,
   WorkoutExerciseWithSets,
@@ -257,6 +258,49 @@ export class WorkoutService {
     }
 
     return result;
+  }
+
+  // Edit form opens on last-performed values so the plan tracks progression once
+  // saved; overlays planned fields with the last finished session's snapshot.
+  async getWorkoutExercisesForEdit(
+    workoutId: string,
+  ): Promise<WorkoutExerciseWithSets[]> {
+    const exercises = await this.getWorkoutExercises(workoutId);
+    const snapshot = await this.getLatestPerformanceSnapshot(workoutId);
+    if (!snapshot) return exercises;
+
+    const queueByExerciseId = new Map<string, PerformanceSnapshotExercise[]>();
+    for (const snapEx of snapshot.exercises) {
+      const queue = queueByExerciseId.get(snapEx.exerciseId) ?? [];
+      queue.push(snapEx);
+      queueByExerciseId.set(snapEx.exerciseId, queue);
+    }
+    const consumed = new Map<string, number>();
+
+    return exercises.map((ex) => {
+      const queue = queueByExerciseId.get(ex.exercise.id);
+      const idx = consumed.get(ex.exercise.id) ?? 0;
+      const snapEx = queue?.[idx];
+      if (!snapEx) return ex;
+      consumed.set(ex.exercise.id, idx + 1);
+
+      return {
+        ...ex,
+        sets: ex.sets.map((set, i) => {
+          const snapSet = snapEx.sets[i];
+          if (!snapSet) return set;
+          // `??` not `||`: a real 0 (bodyweight) must overlay as 0.
+          return {
+            ...set,
+            reps: snapSet.actualReps ?? set.reps,
+            weight: snapSet.actualWeight ?? set.weight,
+            rpe: snapSet.actualRpe ?? set.rpe,
+            duration: snapSet.actualDuration ?? set.duration,
+            distance: snapSet.actualDistance ?? set.distance,
+          };
+        }),
+      };
+    });
   }
 
   async reorderWorkouts(workoutIds: string[]): Promise<void> {

@@ -46,7 +46,7 @@ export default function EditWorkoutScreen() {
       const workout = await workoutService.getWorkoutById(id);
       if (workout) {
         setWorkoutName(workout.name);
-        const exercises = await workoutService.getWorkoutExercises(id);
+        const exercises = await workoutService.getWorkoutExercisesForEdit(id);
         setExercises(exercises.map((ex) => ({ ...ex, id: generateId('we') })));
       }
     } catch (error) {
