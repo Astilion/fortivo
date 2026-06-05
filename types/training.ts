@@ -192,6 +192,33 @@ export interface WorkoutHistoryDetails {
   };
 }
 
+export interface PerformanceSnapshotSet {
+  completed: boolean;
+  reps: number | null;
+  weight: number | null;
+  rpe: number | null;
+  tempo: string | null;
+  duration: number | null;
+  distance: number | null;
+  actualReps: number | null;
+  actualWeight: number | null;
+  actualRpe: number | null;
+  actualDuration: number | null;
+  actualDistance: number | null;
+}
+
+export interface PerformanceSnapshotExercise {
+  exerciseId: string;
+  name: string;
+  measurementType: 'reps' | 'time' | 'distance';
+  sets: PerformanceSnapshotSet[];
+}
+
+export interface PerformanceSnapshot {
+  version: number;
+  exercises: PerformanceSnapshotExercise[];
+}
+
 export interface ExerciseProgressWithWorkout {
   id: string;
   exerciseId: string;
@@ -353,6 +380,7 @@ export interface WorkoutHistoryRow {
   completed_at: string;
   actual_duration: number;
   performance_notes: string | null;
+  performance_data: string | null;
   workout_name?: string;
 }
 

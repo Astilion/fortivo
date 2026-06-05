@@ -8,6 +8,7 @@ import {
   ExerciseProgressRow,
   ExerciseProgressWithWorkout,
   ExerciseRow,
+  PerformanceSnapshot,
   Workout,
   WorkoutExerciseRow,
   WorkoutExerciseWithSets,
@@ -419,15 +420,42 @@ export class WorkoutService {
   async saveWorkoutHistory(
     workoutId: string,
     durationMinutes: number,
+    exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
     const id = generateId('wh');
     const userId = LOCAL_USER_ID;
 
+    // Frozen copy: re-running the workout overwrites the live sets, which would
+    // otherwise mutate this past entry.
+    const snapshot: PerformanceSnapshot = {
+      version: 1,
+      exercises: exercises.map((ex) => ({
+        exerciseId: ex.exercise.id,
+        name: ex.exercise.name,
+        measurementType: ex.exercise.measurementType ?? 'reps',
+        sets: ex.sets.map((s) => ({
+          completed: s.completed,
+          reps: s.reps ?? null,
+          weight: s.weight ?? null,
+          rpe: s.rpe ?? null,
+          tempo: s.tempo ?? null,
+          duration: s.duration ?? null,
+          distance: s.distance ?? null,
+          actualReps: s.actualReps ?? null,
+          actualWeight: s.actualWeight ?? null,
+          actualRpe: s.actualRpe ?? null,
+          actualDuration: s.actualDuration ?? null,
+          actualDistance: s.actualDistance ?? null,
+        })),
+      })),
+    };
+
     try {
       await this.db.runAsync(
         `INSERT INTO workout_history (
-          id, workout_id, user_id, completed_at, actual_duration, performance_notes
-        ) VALUES (?, ?, ?, ?, ?, ?)`,
+          id, workout_id, user_id, completed_at, actual_duration,
+          performance_notes, performance_data
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           workoutId,
@@ -435,6 +463,7 @@ export class WorkoutService {
           new Date().toISOString(),
           durationMinutes,
           null,
+          JSON.stringify(snapshot),
         ],
       );
     } catch (error) {
@@ -543,7 +572,13 @@ export class WorkoutService {
       throw new Error('Workout history not found');
     }
 
-    const exercises = await this.getWorkoutExercises(historyRow.workout_id);
+    const exercises = historyRow.performance_data
+      ? this.deserializePerformanceSnapshot(
+          historyRow.performance_data,
+          historyRow.completed_at,
+        )
+      : // Legacy: entries from before v8 have no snapshot — read live tables.
+        await this.getWorkoutExercises(historyRow.workout_id);
 
     const stats = {
       totalVolume: exercises.reduce(
@@ -571,6 +606,44 @@ export class WorkoutService {
       exercises,
       stats,
     };
+  }
+
+  private deserializePerformanceSnapshot(
+    json: string,
+    completedAt: string,
+  ): WorkoutExerciseWithSets[] {
+    const snapshot = JSON.parse(json) as PerformanceSnapshot;
+
+    return snapshot.exercises.map((ex, exIndex) => {
+      // History render only touches id/name/measurementType; rest is stubbed.
+      const exercise: Exercise = {
+        id: ex.exerciseId,
+        name: ex.name,
+        measurementType: ex.measurementType,
+        categories: [],
+        muscleGroups: [],
+        isCustom: false,
+        createdAt: new Date(completedAt),
+      };
+
+      const sets: WorkoutSet[] = ex.sets.map((s, setIndex) => ({
+        id: `snap_${exIndex}_${setIndex}`,
+        completed: s.completed,
+        reps: s.reps ?? 0,
+        weight: s.weight ?? undefined,
+        rpe: s.rpe ?? undefined,
+        tempo: s.tempo ?? undefined,
+        duration: s.duration ?? undefined,
+        distance: s.distance ?? undefined,
+        actualReps: s.actualReps ?? undefined,
+        actualWeight: s.actualWeight ?? undefined,
+        actualRpe: s.actualRpe ?? undefined,
+        actualDuration: s.actualDuration ?? undefined,
+        actualDistance: s.actualDistance ?? undefined,
+      }));
+
+      return { id: `snapex_${exIndex}`, exercise, sets, isExpanded: false };
+    });
   }
 
   async countWorkouts(): Promise<number> {
