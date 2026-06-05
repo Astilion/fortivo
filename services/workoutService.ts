@@ -280,7 +280,7 @@ export class WorkoutService {
   }
 
   async setActiveWorkout(id: string): Promise<void> {
-    // Wrap both writes so we never end up with zero or two active rows if
+    // Wrap all writes so we never end up with zero or two active rows if
     // interrupted between them. started_at marks the activation moment, used
     // to compute workout duration and survive a process kill.
     try {
@@ -290,9 +290,10 @@ export class WorkoutService {
           'UPDATE workouts SET is_active = 1, started_at = ? WHERE id = ?',
           [new Date().toISOString(), id],
         );
-        // Starting a workout begins a fresh session — clear the values logged
-        // the last time this workout was performed so it doesn't open
-        // pre-filled and pre-checked.
+        // Clean slate first (deterministic regardless of any leftover from a
+        // discarded session), then seed actuals from the last finished session
+        // so the workout opens pre-filled with what was lifted last time.
+        // completed stays 0 — values are suggestions, not checked-off sets.
         await this.db.runAsync(
           `UPDATE workout_sets
            SET actual_reps = NULL, actual_weight = NULL, actual_rpe = NULL,
@@ -302,10 +303,87 @@ export class WorkoutService {
            )`,
           [id],
         );
+        await this.seedActualsFromLastSession(id);
       });
     } catch (error) {
       logger.error('WorkoutService.setActiveWorkout failed', error);
       throw new ServiceError('Nie udało się ustawić aktywnego treningu', error);
+    }
+  }
+
+  // Prefill workout_sets.actual_* from the most recent finished session's frozen
+  // snapshot. Best-effort: matches exercises by id (queueing duplicates by order)
+  // and sets by set_order index, so an edited plan (add/remove/reorder) never
+  // crashes — unmatched sets keep their NULL actuals and fall back to planned.
+  private async seedActualsFromLastSession(workoutId: string): Promise<void> {
+    const row = await this.db.getFirstAsync<{ performance_data: string }>(
+      `SELECT performance_data FROM workout_history
+       WHERE workout_id = ? AND performance_data IS NOT NULL
+       ORDER BY completed_at DESC LIMIT 1`,
+      [workoutId],
+    );
+    if (!row) return;
+
+    let snapshot: PerformanceSnapshot;
+    try {
+      snapshot = JSON.parse(row.performance_data) as PerformanceSnapshot;
+    } catch (error) {
+      // Corrupt snapshot must not block activation — fall back to planned.
+      logger.error(
+        'WorkoutService.seedActualsFromLastSession parse failed',
+        error,
+      );
+      return;
+    }
+
+    const workoutExercises = await this.db.getAllAsync<{
+      id: string;
+      exercise_id: string;
+    }>(
+      `SELECT id, exercise_id FROM workout_exercises
+       WHERE workout_id = ? ORDER BY exercise_order ASC`,
+      [workoutId],
+    );
+
+    const queueByExerciseId = new Map<string, string[]>();
+    for (const we of workoutExercises) {
+      const queue = queueByExerciseId.get(we.exercise_id) ?? [];
+      queue.push(we.id);
+      queueByExerciseId.set(we.exercise_id, queue);
+    }
+    const consumed = new Map<string, number>();
+
+    for (const snapEx of snapshot.exercises) {
+      const queue = queueByExerciseId.get(snapEx.exerciseId);
+      if (!queue) continue;
+      const idx = consumed.get(snapEx.exerciseId) ?? 0;
+      if (idx >= queue.length) continue;
+      consumed.set(snapEx.exerciseId, idx + 1);
+
+      const setRows = await this.db.getAllAsync<{ id: string }>(
+        `SELECT id FROM workout_sets
+         WHERE workout_exercise_id = ? ORDER BY set_order ASC`,
+        [queue[idx]],
+      );
+
+      for (let i = 0; i < setRows.length; i++) {
+        const snapSet = snapEx.sets[i];
+        if (!snapSet) continue;
+        await this.db.runAsync(
+          `UPDATE workout_sets SET
+             actual_reps = ?, actual_weight = ?, actual_rpe = ?,
+             actual_duration = ?, actual_distance = ?
+           WHERE id = ?`,
+          [
+            snapSet.actualReps,
+            snapSet.actualWeight,
+            snapSet.actualRpe,
+            snapSet.actualDuration,
+            snapSet.actualDistance,
+            setRows[i].id,
+          ],
+        );
+      }
     }
   }
 
