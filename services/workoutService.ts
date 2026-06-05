@@ -311,30 +311,37 @@ export class WorkoutService {
     }
   }
 
-  // Prefill workout_sets.actual_* from the most recent finished session's frozen
-  // snapshot. Best-effort: matches exercises by id (queueing duplicates by order)
-  // and sets by set_order index, so an edited plan (add/remove/reorder) never
-  // crashes — unmatched sets keep their NULL actuals and fall back to planned.
-  private async seedActualsFromLastSession(workoutId: string): Promise<void> {
+  // Latest finished session's frozen snapshot for a workout, or null when there
+  // is none / it is corrupt — callers fall back to planned values.
+  private async getLatestPerformanceSnapshot(
+    workoutId: string,
+  ): Promise<PerformanceSnapshot | null> {
     const row = await this.db.getFirstAsync<{ performance_data: string }>(
       `SELECT performance_data FROM workout_history
        WHERE workout_id = ? AND performance_data IS NOT NULL
        ORDER BY completed_at DESC LIMIT 1`,
       [workoutId],
     );
-    if (!row) return;
+    if (!row) return null;
 
-    let snapshot: PerformanceSnapshot;
     try {
-      snapshot = JSON.parse(row.performance_data) as PerformanceSnapshot;
+      return JSON.parse(row.performance_data) as PerformanceSnapshot;
     } catch (error) {
-      // Corrupt snapshot must not block activation — fall back to planned.
       logger.error(
-        'WorkoutService.seedActualsFromLastSession parse failed',
+        'WorkoutService.getLatestPerformanceSnapshot parse failed',
         error,
       );
-      return;
+      return null;
     }
+  }
+
+  // Prefill workout_sets.actual_* from the most recent finished session's frozen
+  // snapshot. Best-effort: matches exercises by id (queueing duplicates by order)
+  // and sets by set_order index, so an edited plan (add/remove/reorder) never
+  // crashes — unmatched sets keep their NULL actuals and fall back to planned.
+  private async seedActualsFromLastSession(workoutId: string): Promise<void> {
+    const snapshot = await this.getLatestPerformanceSnapshot(workoutId);
+    if (!snapshot) return;
 
     const workoutExercises = await this.db.getAllAsync<{
       id: string;
