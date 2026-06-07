@@ -63,7 +63,16 @@ export default function WorkoutsScreen() {
         try {
           await workoutService.deleteWorkout(id);
           showToast('Trening usunięty', 'info');
-          loadWorkouts();
+          // Deleting a workout nulls its plan-day links (SET NULL); refresh the
+          // plan slices too so the list doesn't show a stale workout name.
+          const [allWorkouts, plans, activePlan] = await Promise.all([
+            workoutService.getAllWorkouts(),
+            weeklyPlanService.getAllPlansWithDetails(),
+            weeklyPlanService.getActivePlan(),
+          ]);
+          setWorkouts(allWorkouts);
+          setWeeklyPlans(plans);
+          setActivePlan(activePlan);
         } catch (error) {
           logger.error('Błąd usuwania:', error);
           if (error instanceof ServiceError) {
