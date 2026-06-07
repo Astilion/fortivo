@@ -164,7 +164,7 @@ export interface PeriodizationBlock {
 
 export interface WorkoutHistoryWithDetails {
   id: string;
-  workoutId: string;
+  workoutId: string | null;
   workoutName: string;
   completedAt: string;
   actualDuration: number;
@@ -180,7 +180,7 @@ export interface WorkoutExerciseWithSets {
 
 export interface WorkoutHistoryDetails {
   id: string;
-  workoutId: string;
+  workoutId: string | null;
   workoutName: string;
   completedAt: Date;
   actualDuration: number;
@@ -375,19 +375,19 @@ export interface ExerciseProgressRow {
 
 export interface WorkoutHistoryRow {
   id: string;
-  workout_id: string;
+  workout_id: string | null;
   user_id: string;
   completed_at: string;
   actual_duration: number;
   performance_notes: string | null;
   performance_data: string | null;
-  workout_name?: string;
+  workout_name: string | null;
 }
 
 export interface WorkoutHistoryQueryRow {
   id: string;
-  workout_id: string;
-  workout_name: string;
+  workout_id: string | null;
+  workout_name: string | null;
   completed_at: string;
   actual_duration: number;
 }

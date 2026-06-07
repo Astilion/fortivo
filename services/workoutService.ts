@@ -548,6 +548,7 @@ export class WorkoutService {
 
   async saveWorkoutHistory(
     workoutId: string,
+    workoutName: string | null,
     durationMinutes: number,
     exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
@@ -582,12 +583,13 @@ export class WorkoutService {
     try {
       await this.db.runAsync(
         `INSERT INTO workout_history (
-          id, workout_id, user_id, completed_at, actual_duration,
+          id, workout_id, workout_name, user_id, completed_at, actual_duration,
           performance_notes, performance_data
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           workoutId,
+          workoutName ?? null,
           userId,
           new Date().toISOString(),
           durationMinutes,
@@ -669,9 +671,8 @@ export class WorkoutService {
     userId: string = LOCAL_USER_ID,
   ): Promise<WorkoutHistoryWithDetails[]> {
     const rows = await this.db.getAllAsync<WorkoutHistoryQueryRow>(
-      `SELECT wh.id, wh.workout_id, wh.completed_at, wh.actual_duration, w.name as workout_name
+      `SELECT wh.id, wh.workout_id, wh.workout_name, wh.completed_at, wh.actual_duration
        FROM workout_history wh
-       JOIN workouts w ON wh.workout_id = w.id
        WHERE wh.user_id = ?
        ORDER BY wh.completed_at DESC`,
       [userId],
@@ -680,7 +681,7 @@ export class WorkoutService {
     return rows.map((row) => ({
       id: row.id,
       workoutId: row.workout_id,
-      workoutName: row.workout_name,
+      workoutName: row.workout_name ?? 'Usunięty trening',
       completedAt: row.completed_at,
       actualDuration: row.actual_duration,
     }));
@@ -690,10 +691,7 @@ export class WorkoutService {
     historyId: string,
   ): Promise<WorkoutHistoryDetails> {
     const historyRow = await this.db.getFirstAsync<WorkoutHistoryRow>(
-      `SELECT wh.*, w.name as workout_name
-       FROM workout_history wh
-       JOIN workouts w ON wh.workout_id = w.id
-       WHERE wh.id = ?`,
+      `SELECT * FROM workout_history WHERE id = ?`,
       [historyId],
     );
 
@@ -701,13 +699,19 @@ export class WorkoutService {
       throw new Error('Workout history not found');
     }
 
-    const exercises = historyRow.performance_data
-      ? this.deserializePerformanceSnapshot(
-          historyRow.performance_data,
-          historyRow.completed_at,
-        )
-      : // Legacy: entries from before v8 have no snapshot — read live tables.
-        await this.getWorkoutExercises(historyRow.workout_id);
+    let exercises: WorkoutExerciseWithSets[];
+    if (historyRow.performance_data) {
+      exercises = this.deserializePerformanceSnapshot(
+        historyRow.performance_data,
+        historyRow.completed_at,
+      );
+    } else if (historyRow.workout_id) {
+      // Legacy: entries from before v8 have no snapshot — read live tables.
+      exercises = await this.getWorkoutExercises(historyRow.workout_id);
+    } else {
+      // Pre-v8 entry whose workout was since deleted — nothing left to read.
+      exercises = [];
+    }
 
     const stats = {
       totalVolume: exercises.reduce(
@@ -729,7 +733,7 @@ export class WorkoutService {
     return {
       id: historyRow.id,
       workoutId: historyRow.workout_id,
-      workoutName: historyRow.workout_name!,
+      workoutName: historyRow.workout_name ?? 'Usunięty trening',
       completedAt: new Date(historyRow.completed_at),
       actualDuration: historyRow.actual_duration,
       exercises,
@@ -787,12 +791,11 @@ export class WorkoutService {
     userId: string = LOCAL_USER_ID,
   ): Promise<ExerciseProgressWithWorkout[]> {
     const rows = await this.db.getAllAsync<ExerciseProgressQueryRow>(
-      `SELECT ep.*, w.name as workout_name 
-       FROM exercise_progress ep 
-       LEFT JOIN workout_history wh 
-         ON DATE(ep.date) = DATE(wh.completed_at) AND wh.user_id = ep.user_id 
-       LEFT JOIN workouts w ON wh.workout_id = w.id
-       WHERE ep.exercise_id = ? AND ep.user_id = ? 
+      `SELECT ep.*, wh.workout_name as workout_name
+       FROM exercise_progress ep
+       LEFT JOIN workout_history wh
+         ON DATE(ep.date) = DATE(wh.completed_at) AND wh.user_id = ep.user_id
+       WHERE ep.exercise_id = ? AND ep.user_id = ?
        ORDER BY ep.date DESC`,
       [exerciseId, userId],
     );
