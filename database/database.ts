@@ -290,6 +290,32 @@ CREATE INDEX IF NOT EXISTS idx_workouts_favorite ON workouts(is_favorite);
   `
   ALTER TABLE workout_history ADD COLUMN performance_data TEXT;
   `,
+
+  // ─── v9: Decouple history from workout ────────────────────────────
+  // SET NULL + denormalized name so history survives workout deletion.
+  `
+  CREATE TABLE workout_history_new (
+    id TEXT PRIMARY KEY,
+    workout_id TEXT,
+    workout_name TEXT,
+    user_id TEXT NOT NULL,
+    completed_at TEXT NOT NULL,
+    actual_duration INTEGER NOT NULL,
+    performance_notes TEXT,
+    performance_data TEXT,
+    FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE SET NULL
+  );
+  INSERT INTO workout_history_new
+    (id, workout_id, workout_name, user_id, completed_at, actual_duration, performance_notes, performance_data)
+  SELECT wh.id, wh.workout_id, w.name, wh.user_id, wh.completed_at, wh.actual_duration,
+         wh.performance_notes, wh.performance_data
+  FROM workout_history wh
+  LEFT JOIN workouts w ON wh.workout_id = w.id;
+  DROP TABLE workout_history;
+  ALTER TABLE workout_history_new RENAME TO workout_history;
+  CREATE INDEX IF NOT EXISTS idx_workout_history_workout ON workout_history(workout_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_history_user_date ON workout_history(user_id, completed_at);
+  `,
 ];
 
 // ─── Migration runner ─────────────────────────────────────────────────────────
