@@ -291,7 +291,11 @@ export default function ActiveWorkoutScreen() {
 
         try {
           await workoutService.saveActiveWorkoutSnapshot(workoutId, exercises);
-          await workoutService.saveWorkoutHistory(workoutId, durationMinutes);
+          await workoutService.saveWorkoutHistory(
+            workoutId,
+            durationMinutes,
+            exercises,
+          );
           await workoutService.saveExerciseProgress(workoutId, exercises);
 
           await workoutService.clearActiveWorkout(workoutId);

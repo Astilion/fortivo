@@ -285,6 +285,11 @@ CREATE INDEX IF NOT EXISTS idx_workouts_favorite ON workouts(is_favorite);
   `
   ALTER TABLE workouts ADD COLUMN started_at TEXT;
   `,
+
+  // ─── v8: Immutable per-session performance snapshot ───────────────
+  `
+  ALTER TABLE workout_history ADD COLUMN performance_data TEXT;
+  `,
 ];
 
 // ─── Migration runner ─────────────────────────────────────────────────────────

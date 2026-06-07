@@ -8,6 +8,8 @@ import {
   ExerciseProgressRow,
   ExerciseProgressWithWorkout,
   ExerciseRow,
+  PerformanceSnapshot,
+  PerformanceSnapshotExercise,
   Workout,
   WorkoutExerciseRow,
   WorkoutExerciseWithSets,
@@ -258,6 +260,49 @@ export class WorkoutService {
     return result;
   }
 
+  // Edit form opens on last-performed values so the plan tracks progression once
+  // saved; overlays planned fields with the last finished session's snapshot.
+  async getWorkoutExercisesForEdit(
+    workoutId: string,
+  ): Promise<WorkoutExerciseWithSets[]> {
+    const exercises = await this.getWorkoutExercises(workoutId);
+    const snapshot = await this.getLatestPerformanceSnapshot(workoutId);
+    if (!snapshot) return exercises;
+
+    const queueByExerciseId = new Map<string, PerformanceSnapshotExercise[]>();
+    for (const snapEx of snapshot.exercises) {
+      const queue = queueByExerciseId.get(snapEx.exerciseId) ?? [];
+      queue.push(snapEx);
+      queueByExerciseId.set(snapEx.exerciseId, queue);
+    }
+    const consumed = new Map<string, number>();
+
+    return exercises.map((ex) => {
+      const queue = queueByExerciseId.get(ex.exercise.id);
+      const idx = consumed.get(ex.exercise.id) ?? 0;
+      const snapEx = queue?.[idx];
+      if (!snapEx) return ex;
+      consumed.set(ex.exercise.id, idx + 1);
+
+      return {
+        ...ex,
+        sets: ex.sets.map((set, i) => {
+          const snapSet = snapEx.sets[i];
+          if (!snapSet) return set;
+          // `??` not `||`: a real 0 (bodyweight) must overlay as 0.
+          return {
+            ...set,
+            reps: snapSet.actualReps ?? set.reps,
+            weight: snapSet.actualWeight ?? set.weight,
+            rpe: snapSet.actualRpe ?? set.rpe,
+            duration: snapSet.actualDuration ?? set.duration,
+            distance: snapSet.actualDistance ?? set.distance,
+          };
+        }),
+      };
+    });
+  }
+
   async reorderWorkouts(workoutIds: string[]): Promise<void> {
     // Wrap the per-row UPDATEs so an interruption can't leave a partial ordering.
     try {
@@ -279,7 +324,7 @@ export class WorkoutService {
   }
 
   async setActiveWorkout(id: string): Promise<void> {
-    // Wrap both writes so we never end up with zero or two active rows if
+    // Wrap all writes so we never end up with zero or two active rows if
     // interrupted between them. started_at marks the activation moment, used
     // to compute workout duration and survive a process kill.
     try {
@@ -289,9 +334,10 @@ export class WorkoutService {
           'UPDATE workouts SET is_active = 1, started_at = ? WHERE id = ?',
           [new Date().toISOString(), id],
         );
-        // Starting a workout begins a fresh session — clear the values logged
-        // the last time this workout was performed so it doesn't open
-        // pre-filled and pre-checked.
+        // Clean slate first (deterministic regardless of any leftover from a
+        // discarded session), then seed actuals from the last finished session
+        // so the workout opens pre-filled with what was lifted last time.
+        // completed stays 0 — values are suggestions, not checked-off sets.
         await this.db.runAsync(
           `UPDATE workout_sets
            SET actual_reps = NULL, actual_weight = NULL, actual_rpe = NULL,
@@ -301,10 +347,94 @@ export class WorkoutService {
            )`,
           [id],
         );
+        await this.seedActualsFromLastSession(id);
       });
     } catch (error) {
       logger.error('WorkoutService.setActiveWorkout failed', error);
       throw new ServiceError('Nie udało się ustawić aktywnego treningu', error);
+    }
+  }
+
+  // Latest finished session's frozen snapshot for a workout, or null when there
+  // is none / it is corrupt — callers fall back to planned values.
+  private async getLatestPerformanceSnapshot(
+    workoutId: string,
+  ): Promise<PerformanceSnapshot | null> {
+    const row = await this.db.getFirstAsync<{ performance_data: string }>(
+      `SELECT performance_data FROM workout_history
+       WHERE workout_id = ? AND performance_data IS NOT NULL
+       ORDER BY completed_at DESC LIMIT 1`,
+      [workoutId],
+    );
+    if (!row) return null;
+
+    try {
+      return JSON.parse(row.performance_data) as PerformanceSnapshot;
+    } catch (error) {
+      logger.error(
+        'WorkoutService.getLatestPerformanceSnapshot parse failed',
+        error,
+      );
+      return null;
+    }
+  }
+
+  // Prefill workout_sets.actual_* from the most recent finished session's frozen
+  // snapshot. Best-effort: matches exercises by id (queueing duplicates by order)
+  // and sets by set_order index, so an edited plan (add/remove/reorder) never
+  // crashes — unmatched sets keep their NULL actuals and fall back to planned.
+  private async seedActualsFromLastSession(workoutId: string): Promise<void> {
+    const snapshot = await this.getLatestPerformanceSnapshot(workoutId);
+    if (!snapshot) return;
+
+    const workoutExercises = await this.db.getAllAsync<{
+      id: string;
+      exercise_id: string;
+    }>(
+      `SELECT id, exercise_id FROM workout_exercises
+       WHERE workout_id = ? ORDER BY exercise_order ASC`,
+      [workoutId],
+    );
+
+    const queueByExerciseId = new Map<string, string[]>();
+    for (const we of workoutExercises) {
+      const queue = queueByExerciseId.get(we.exercise_id) ?? [];
+      queue.push(we.id);
+      queueByExerciseId.set(we.exercise_id, queue);
+    }
+    const consumed = new Map<string, number>();
+
+    for (const snapEx of snapshot.exercises) {
+      const queue = queueByExerciseId.get(snapEx.exerciseId);
+      if (!queue) continue;
+      const idx = consumed.get(snapEx.exerciseId) ?? 0;
+      if (idx >= queue.length) continue;
+      consumed.set(snapEx.exerciseId, idx + 1);
+
+      const setRows = await this.db.getAllAsync<{ id: string }>(
+        `SELECT id FROM workout_sets
+         WHERE workout_exercise_id = ? ORDER BY set_order ASC`,
+        [queue[idx]],
+      );
+
+      for (let i = 0; i < setRows.length; i++) {
+        const snapSet = snapEx.sets[i];
+        if (!snapSet) continue;
+        await this.db.runAsync(
+          `UPDATE workout_sets SET
+             actual_reps = ?, actual_weight = ?, actual_rpe = ?,
+             actual_duration = ?, actual_distance = ?
+           WHERE id = ?`,
+          [
+            snapSet.actualReps,
+            snapSet.actualWeight,
+            snapSet.actualRpe,
+            snapSet.actualDuration,
+            snapSet.actualDistance,
+            setRows[i].id,
+          ],
+        );
+      }
     }
   }
 
@@ -419,15 +549,42 @@ export class WorkoutService {
   async saveWorkoutHistory(
     workoutId: string,
     durationMinutes: number,
+    exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
     const id = generateId('wh');
     const userId = LOCAL_USER_ID;
 
+    // Frozen copy: re-running the workout overwrites the live sets, which would
+    // otherwise mutate this past entry.
+    const snapshot: PerformanceSnapshot = {
+      version: 1,
+      exercises: exercises.map((ex) => ({
+        exerciseId: ex.exercise.id,
+        name: ex.exercise.name,
+        measurementType: ex.exercise.measurementType ?? 'reps',
+        sets: ex.sets.map((s) => ({
+          completed: s.completed,
+          reps: s.reps ?? null,
+          weight: s.weight ?? null,
+          rpe: s.rpe ?? null,
+          tempo: s.tempo ?? null,
+          duration: s.duration ?? null,
+          distance: s.distance ?? null,
+          actualReps: s.actualReps ?? null,
+          actualWeight: s.actualWeight ?? null,
+          actualRpe: s.actualRpe ?? null,
+          actualDuration: s.actualDuration ?? null,
+          actualDistance: s.actualDistance ?? null,
+        })),
+      })),
+    };
+
     try {
       await this.db.runAsync(
         `INSERT INTO workout_history (
-          id, workout_id, user_id, completed_at, actual_duration, performance_notes
-        ) VALUES (?, ?, ?, ?, ?, ?)`,
+          id, workout_id, user_id, completed_at, actual_duration,
+          performance_notes, performance_data
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           workoutId,
@@ -435,6 +592,7 @@ export class WorkoutService {
           new Date().toISOString(),
           durationMinutes,
           null,
+          JSON.stringify(snapshot),
         ],
       );
     } catch (error) {
@@ -543,7 +701,13 @@ export class WorkoutService {
       throw new Error('Workout history not found');
     }
 
-    const exercises = await this.getWorkoutExercises(historyRow.workout_id);
+    const exercises = historyRow.performance_data
+      ? this.deserializePerformanceSnapshot(
+          historyRow.performance_data,
+          historyRow.completed_at,
+        )
+      : // Legacy: entries from before v8 have no snapshot — read live tables.
+        await this.getWorkoutExercises(historyRow.workout_id);
 
     const stats = {
       totalVolume: exercises.reduce(
@@ -571,6 +735,44 @@ export class WorkoutService {
       exercises,
       stats,
     };
+  }
+
+  private deserializePerformanceSnapshot(
+    json: string,
+    completedAt: string,
+  ): WorkoutExerciseWithSets[] {
+    const snapshot = JSON.parse(json) as PerformanceSnapshot;
+
+    return snapshot.exercises.map((ex, exIndex) => {
+      // History render only touches id/name/measurementType; rest is stubbed.
+      const exercise: Exercise = {
+        id: ex.exerciseId,
+        name: ex.name,
+        measurementType: ex.measurementType,
+        categories: [],
+        muscleGroups: [],
+        isCustom: false,
+        createdAt: new Date(completedAt),
+      };
+
+      const sets: WorkoutSet[] = ex.sets.map((s, setIndex) => ({
+        id: `snap_${exIndex}_${setIndex}`,
+        completed: s.completed,
+        reps: s.reps ?? 0,
+        weight: s.weight ?? undefined,
+        rpe: s.rpe ?? undefined,
+        tempo: s.tempo ?? undefined,
+        duration: s.duration ?? undefined,
+        distance: s.distance ?? undefined,
+        actualReps: s.actualReps ?? undefined,
+        actualWeight: s.actualWeight ?? undefined,
+        actualRpe: s.actualRpe ?? undefined,
+        actualDuration: s.actualDuration ?? undefined,
+        actualDistance: s.actualDistance ?? undefined,
+      }));
+
+      return { id: `snapex_${exIndex}`, exercise, sets, isExpanded: false };
+    });
   }
 
   async countWorkouts(): Promise<number> {
