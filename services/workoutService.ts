@@ -606,6 +606,7 @@ export class WorkoutService {
   async saveExerciseProgress(
     workoutId: string,
     exercises: WorkoutExerciseWithSets[],
+    workoutName: string | null,
   ): Promise<void> {
     const userId = LOCAL_USER_ID;
     const date = new Date().toISOString();
@@ -646,8 +647,8 @@ export class WorkoutService {
           await this.db.runAsync(
             `INSERT INTO exercise_progress (
               id, exercise_id, user_id, date, max_weight, total_volume,
-              estimated_one_rep_max, personal_record
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              estimated_one_rep_max, personal_record, workout_name
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               generateId('ep'),
               ex.exercise.id,
@@ -657,6 +658,7 @@ export class WorkoutService {
               totalVolume,
               null,
               isPersonalRecord ? 1 : 0,
+              workoutName ?? null,
             ],
           );
         }
@@ -791,12 +793,9 @@ export class WorkoutService {
     userId: string = LOCAL_USER_ID,
   ): Promise<ExerciseProgressWithWorkout[]> {
     const rows = await this.db.getAllAsync<ExerciseProgressQueryRow>(
-      `SELECT ep.*, wh.workout_name as workout_name
-       FROM exercise_progress ep
-       LEFT JOIN workout_history wh
-         ON DATE(ep.date) = DATE(wh.completed_at) AND wh.user_id = ep.user_id
-       WHERE ep.exercise_id = ? AND ep.user_id = ?
-       ORDER BY ep.date DESC`,
+      `SELECT * FROM exercise_progress
+       WHERE exercise_id = ? AND user_id = ?
+       ORDER BY date DESC`,
       [exerciseId, userId],
     );
 
@@ -807,7 +806,7 @@ export class WorkoutService {
       maxWeight: row.max_weight,
       totalVolume: row.total_volume,
       personalRecord: row.personal_record === 1,
-      workoutName: row.workout_name || undefined,
+      workoutName: row.workout_name ?? undefined,
     }));
   }
 

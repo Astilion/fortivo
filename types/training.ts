@@ -371,6 +371,7 @@ export interface ExerciseProgressRow {
   total_volume: number;
   estimated_one_rep_max: number | null;
   personal_record: number;
+  workout_name: string | null;
 }
 
 export interface WorkoutHistoryRow {
