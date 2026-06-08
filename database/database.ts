@@ -316,6 +316,11 @@ CREATE INDEX IF NOT EXISTS idx_workouts_favorite ON workouts(is_favorite);
   CREATE INDEX IF NOT EXISTS idx_workout_history_workout ON workout_history(workout_id);
   CREATE INDEX IF NOT EXISTS idx_workout_history_user_date ON workout_history(user_id, completed_at);
   `,
+
+  // ─── v10: Denormalize workout name onto exercise_progress ─────────
+  `
+  ALTER TABLE exercise_progress ADD COLUMN workout_name TEXT;
+  `,
 ];
 
 // ─── Migration runner ─────────────────────────────────────────────────────────

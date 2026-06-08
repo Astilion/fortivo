@@ -297,7 +297,11 @@ export default function ActiveWorkoutScreen() {
             durationMinutes,
             exercises,
           );
-          await workoutService.saveExerciseProgress(workoutId, exercises);
+          await workoutService.saveExerciseProgress(
+            workoutId,
+            exercises,
+            workout?.name ?? null,
+          );
 
           await workoutService.clearActiveWorkout(workoutId);
           useActiveWorkoutStore.getState().finishActiveWorkout();
