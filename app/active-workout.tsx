@@ -232,9 +232,11 @@ export default function ActiveWorkoutScreen() {
     const newSet: WorkoutSet = {
       id: generateId('ws'),
       // reps is required (NOT NULL); kept as a placeholder for time/distance sets.
-      reps: lastSet?.actualReps || lastSet?.reps || 10,
-      weight: lastSet?.actualWeight || lastSet?.weight || 0,
-      rpe: lastSet?.actualRpe || lastSet?.rpe || undefined,
+      // `??` not `||` throughout: a logged 0 (bodyweight, failed set) must
+      // carry over instead of skipping to the planned value.
+      reps: lastSet?.actualReps ?? lastSet?.reps ?? 10,
+      weight: lastSet?.actualWeight ?? lastSet?.weight ?? 0,
+      rpe: lastSet?.actualRpe ?? lastSet?.rpe,
       tempo: lastSet?.tempo || undefined,
       restTime: lastSet?.restTime || undefined,
       completed: false,
@@ -242,16 +244,16 @@ export default function ActiveWorkoutScreen() {
       actualReps:
         isTime || isDistance
           ? undefined
-          : lastSet?.actualReps || lastSet?.reps || 8,
-      actualWeight: lastSet?.actualWeight || lastSet?.weight || 0,
-      actualRpe: lastSet?.actualRpe || undefined,
-      duration: lastSet?.duration || undefined,
+          : (lastSet?.actualReps ?? lastSet?.reps ?? 8),
+      actualWeight: lastSet?.actualWeight ?? lastSet?.weight ?? 0,
+      actualRpe: lastSet?.actualRpe,
+      duration: lastSet?.duration,
       actualDuration: isTime
-        ? lastSet?.actualDuration || lastSet?.duration || undefined
+        ? (lastSet?.actualDuration ?? lastSet?.duration)
         : undefined,
-      distance: lastSet?.distance || undefined,
+      distance: lastSet?.distance,
       actualDistance: isDistance
-        ? lastSet?.actualDistance || lastSet?.distance || undefined
+        ? (lastSet?.actualDistance ?? lastSet?.distance)
         : undefined,
     };
 
