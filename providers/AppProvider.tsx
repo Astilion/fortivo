@@ -2,6 +2,7 @@ import exercisesData from '@/assets/data/exercises.json';
 import { DatabaseMigrationError, initDatabase } from '@/database/database';
 import { useDbErrorStore } from '@/store/dbErrorStore';
 import { DatabaseRecoveryScreen } from '@/components/DatabaseRecoveryScreen';
+import { ErrorView } from '@/components/ui/ErrorView';
 import { Exercise, ExerciseService } from '@/services/exerciseService';
 import { WorkoutService } from '@/services/workoutService';
 import { useExerciseStore } from '@/store/exerciseStore';
@@ -70,6 +71,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isReady, setIsReady] = useState(false);
+  const [initError, setInitError] = useState(false);
   const [context, setContext] = useState<AppContextType | null>(null);
   const initializeService = useExerciseStore(
     (state) => state.initializeService,
@@ -85,6 +87,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const reinitNonce = useDbErrorStore((state) => state.reinitNonce);
   const setDbError = useDbErrorStore((state) => state.setDbError);
   const clearDbError = useDbErrorStore((state) => state.clearDbError);
+  const requestReinit = useDbErrorStore((state) => state.requestReinit);
 
   // Bootstrap on mount; re-run on every recovery attempt (reinitNonce bump).
   useEffect(() => {
@@ -94,6 +97,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const initializeApp = async () => {
     setIsReady(false);
+    setInitError(false);
     try {
       const database = await initDatabase();
 
@@ -159,9 +163,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsReady(true);
     } catch (error) {
       logger.error('Failed to initialize app:', error);
-      // Migration failures get the recovery screen; other errors stay logged.
+      // Migration failures get the recovery screen; anything else gets a
+      // retryable error state instead of an endless spinner.
       if (error instanceof DatabaseMigrationError) {
         setDbError(error);
+      } else {
+        setInitError(true);
       }
     }
   };
@@ -170,6 +177,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   // (tabs) tree never mounts and crashes on useApp() with no context.
   if (dbError) {
     return <DatabaseRecoveryScreen />;
+  }
+
+  if (initError) {
+    return (
+      <ErrorView
+        error="Nie udało się uruchomić aplikacji"
+        onRetry={requestReinit}
+      />
+    );
   }
 
   if (!isReady || !context) {
