@@ -6,6 +6,10 @@ import { useWeeklyPlanData } from '@/hooks/useWeeklyPlanData';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { useStartWorkout } from '@/hooks/useStartWorkout';
 import { useApp } from '@/providers/AppProvider';
+import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
 import { WorkoutRow, WorkoutExerciseWithSets } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -18,6 +22,7 @@ export default function CurrentWorkoutScreen() {
   const [workoutsCount, setWorkoutsCount] = useState(0);
   const [workoutLoading, setWorkoutLoading] = useState(true);
   const { workoutService } = useApp();
+  const { showToast } = useToastStore();
   const startWorkout = useStartWorkout();
   const {
     activePlan,
@@ -62,10 +67,23 @@ export default function CurrentWorkoutScreen() {
           style: 'destructive',
           onPress: async () => {
             if (!activeWorkout) return;
-            await workoutService.discardActiveWorkout(activeWorkout.id);
-            setActiveWorkout(null);
-            setSelectedDay(null);
-            setExercises([]);
+            try {
+              await workoutService.discardActiveWorkout(activeWorkout.id);
+              // Reset the global session store too, or the FAB keeps showing
+              // a workout that no longer exists in the DB.
+              useActiveWorkoutStore.getState().reset();
+              setActiveWorkout(null);
+              setSelectedDay(null);
+              setExercises([]);
+            } catch (error) {
+              logger.error('Failed to discard active workout', error);
+              showToast(
+                error instanceof ServiceError
+                  ? error.userMessage
+                  : 'Nie udało się odrzucić treningu',
+                'error',
+              );
+            }
           },
         },
       ],
