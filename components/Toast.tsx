@@ -4,9 +4,15 @@ import colors from '@/constants/Colors';
 import { useToastStore } from '@/store/toastStore';
 
 const SLIDE_OFFSET = 120;
-const DISMISS_AFTER = 1500;
 
 type ToastType = 'error' | 'success' | 'info';
+
+// Errors need reading time; success/info are just confirmations.
+const DISMISS_AFTER_MS: Record<ToastType, number> = {
+  error: 4000,
+  success: 1500,
+  info: 2000,
+};
 
 export function Toast() {
   const { message, type, hideToast } = useToastStore();
@@ -42,7 +48,7 @@ export function Toast() {
     }).start();
 
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(dismiss, DISMISS_AFTER);
+    timerRef.current = setTimeout(dismiss, DISMISS_AFTER_MS[type]);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
