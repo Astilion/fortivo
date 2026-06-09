@@ -6,6 +6,7 @@ import { PresetWorkoutCard } from '@/components/ui/PresetWorkoutCard';
 import { WeeklyPlanCard } from '@/components/ui/WeeklyPlanCard';
 import { WorkoutCard } from '@/components/ui/WorkoutCard';
 import colors from '@/constants/Colors';
+import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 import { useToastStore } from '@/store/toastStore';
 import { useApp } from '@/providers/AppProvider';
@@ -27,6 +28,7 @@ export default function WorkoutsScreen() {
   const [selectedTab, setSelectedTab] = useState<WorkoutsTab>('workouts');
   const [isLoading, setIsLoading] = useState(true);
   const { weeklyPlans, setWeeklyPlans, setActivePlan } = useWeeklyPlanStore();
+  const activeWorkoutId = useActiveWorkoutStore((state) => state.workoutId);
   const { workoutService, weeklyPlanService, presetService } = useApp();
   const { showToast } = useToastStore();
   const router = useRouter();
@@ -53,6 +55,17 @@ export default function WorkoutsScreen() {
   const loadWorkouts = async () => {
     const allWorkouts = await workoutService.getAllWorkouts();
     setWorkouts(allWorkouts);
+  };
+
+  // Editing the active workout would DELETE+reinsert its rows while the
+  // in-memory session still holds the old ids — autosave would then silently
+  // resurrect them and wipe the edit. Block until the session ends.
+  const handleEditWorkout = (workoutId: string) => {
+    if (workoutId === activeWorkoutId) {
+      showToast('Zakończ lub odrzuć aktywny trening, żeby go edytować', 'info');
+      return;
+    }
+    router.push(`/edit-workout?id=${workoutId}`);
   };
 
   const handleDeleteWorkout = (id: string, name: string) => {
@@ -297,7 +310,7 @@ export default function WorkoutsScreen() {
                     workoutName={workout.name}
                     exerciseCount={workout.exercise_count}
                     onPress={() => setAsActive(workout.id)}
-                    onEdit={() => router.push(`/edit-workout?id=${workout.id}`)}
+                    onEdit={() => handleEditWorkout(workout.id)}
                     onDelete={() =>
                       handleDeleteWorkout(workout.id, workout.name)
                     }
