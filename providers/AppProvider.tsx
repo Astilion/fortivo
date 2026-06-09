@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import exercisesData from '@/assets/data/exercises.json';
 import { DatabaseMigrationError, initDatabase } from '@/database/database';
 import { useDbErrorStore } from '@/store/dbErrorStore';
@@ -166,8 +167,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       // Migration failures get the recovery screen; anything else gets a
       // retryable error state instead of an endless spinner.
       if (error instanceof DatabaseMigrationError) {
+        Sentry.captureException(error, {
+          tags: {
+            migration_version: error.message.match(/v(\d+)/)?.[1] ?? 'unknown',
+          },
+        });
         setDbError(error);
       } else {
+        Sentry.captureException(error);
         setInitError(true);
       }
     }
