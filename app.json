@@ -37,6 +37,14 @@
         {
           "enableFTS": false
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "organization": "TODO_SENTRY_ORG_SLUG",
+          "project": "TODO_SENTRY_PROJECT_SLUG"
+        }
       ]
     ],
     "experiments": {
