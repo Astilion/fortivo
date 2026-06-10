@@ -37,6 +37,14 @@
         {
           "enableFTS": false
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "organization": "astilion",
+          "project": "fortivo"
+        }
       ]
     ],
     "experiments": {

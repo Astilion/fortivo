@@ -6,8 +6,16 @@ import { useOnboardingStore } from '@/store/onboardingStore';
 import { AppProvider } from '@/providers/AppProvider';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
+import * as Sentry from '@sentry/react-native';
+import { isRunningInExpoGo } from 'expo';
 import { useFonts } from 'expo-font';
-import { Href, Redirect, Stack, usePathname } from 'expo-router';
+import {
+  Href,
+  Redirect,
+  Stack,
+  useNavigationContainerRef,
+  usePathname,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -21,6 +29,21 @@ export const unstable_settings = {
 };
 
 SplashScreen.preventAutoHideAsync();
+
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: !isRunningInExpoGo(),
+});
+
+// Module scope so startup errors are captured before any component mounts.
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  // Local/dev runs must not pollute the project; errors are the priority,
+  // tracing stays at a token sample.
+  enabled: !__DEV__,
+  tracesSampleRate: 0.1,
+  integrations: [navigationIntegration],
+  enableNativeFramesTracking: !isRunningInExpoGo(),
+});
 
 const FortivoDarkTheme = {
   ...DefaultTheme,
@@ -49,11 +72,12 @@ const commonScreenOptions: NativeStackNavigationOptions = {
   animation: 'fade',
 };
 
-export default function RootLayout() {
+function RootLayout() {
   const activeWorkoutId = useActiveWorkoutStore((state) => state.workoutId);
   const workoutStartTime = useActiveWorkoutStore(
     (state) => state.workoutStartTime,
   );
+  const navigationRef = useNavigationContainerRef();
   const pathname = usePathname();
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -62,6 +86,12 @@ export default function RootLayout() {
   const showOnboarding = useOnboardingStore((state) => state.showOnboarding);
 
   const isReady = loaded && showOnboarding !== null;
+
+  useEffect(() => {
+    if (navigationRef?.current) {
+      navigationIntegration.registerNavigationContainer(navigationRef);
+    }
+  }, [navigationRef]);
 
   useEffect(() => {
     if (error) throw error;
@@ -187,3 +217,5 @@ export default function RootLayout() {
     </KeyboardProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);
