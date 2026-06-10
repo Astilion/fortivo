@@ -16,6 +16,8 @@ import {
   View,
   Pressable,
 } from 'react-native';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/providers/AppProvider';
@@ -62,13 +64,14 @@ const SettingsRow: React.FC<SettingsRowProps> = ({
 );
 
 export default function ProfileScreen() {
-  const { profileService } = useApp();
+  const { profileService, exportService } = useApp();
   const router = useRouter();
   const { settings, setSettings, loading, error } = useProfileSettings();
   const { showToast } = useToastStore();
   const [restTimeInput, setRestTimeInput] = useState<string>('');
   const [goalWeightInput, setGoalWeightInput] = useState<string>('');
   const [goalWeightError, setGoalWeightError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -150,6 +153,40 @@ export default function ProfileScreen() {
       setSettings(updatedSettings);
       profileService.updateUserSettings(updatedSettings);
     };
+
+  const handleExportData = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const envelope = await exportService.exportAllData();
+      const file = new File(
+        Paths.cache,
+        `fortivo-export-${new Date().toISOString().slice(0, 10)}.json`,
+      );
+      file.create({ overwrite: true });
+      file.write(JSON.stringify(envelope, null, 2));
+
+      if (!(await Sharing.isAvailableAsync())) {
+        showToast('Udostępnianie niedostępne na tym urządzeniu', 'error');
+        return;
+      }
+      await Sharing.shareAsync(file.uri, {
+        mimeType: 'application/json',
+        dialogTitle: 'Eksport danych Fortivo',
+      });
+      showToast('Wyeksportowano dane', 'success');
+    } catch (error) {
+      logger.error('Data export failed', error);
+      showToast(
+        error instanceof ServiceError
+          ? error.userMessage
+          : 'Nie udało się wyeksportować danych',
+        'error',
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const handleOpenPrivacyPolicy = async () => {
     try {
@@ -361,6 +398,24 @@ export default function ProfileScreen() {
         {/* ── Sekcja: O aplikacji ── */}
         <SectionHeader icon="document-text-outline" title="O APLIKACJI" />
         <View style={styles.card}>
+          <Pressable
+            onPress={handleExportData}
+            disabled={exporting}
+            accessibilityLabel="Eksportuj dane do pliku JSON"
+            hitSlop={8}
+          >
+            <SettingsRow label="Eksportuj dane (JSON)">
+              {exporting ? (
+                <ActivityIndicator size="small" color={colors.text.secondary} />
+              ) : (
+                <Ionicons
+                  name="download-outline"
+                  size={20}
+                  color={colors.text.secondary}
+                />
+              )}
+            </SettingsRow>
+          </Pressable>
           <Pressable
             onPress={handleOpenPrivacyPolicy}
             accessibilityLabel="Otwórz politykę prywatności"
