@@ -79,48 +79,6 @@ export class ExerciseService {
     return rows.map(this.mapRowToExercise);
   }
 
-  async getExercisesByCategory(
-    category: string,
-    userId?: string,
-  ): Promise<Exercise[]> {
-    let query =
-      'SELECT * FROM exercises WHERE categories LIKE ? AND (is_custom = 0';
-    const params: any[] = [`%"${category}"%`];
-
-    if (userId) {
-      query += ' OR (is_custom = 1 AND user_id = ?))';
-      params.push(userId);
-    } else {
-      query += ')';
-    }
-
-    query += ' ORDER BY name ASC';
-
-    const rows = await this.db.getAllAsync<ExerciseRow>(query, params);
-    return rows.map(this.mapRowToExercise);
-  }
-
-  async getExercisesByMuscleGroup(
-    muscleGroup: string,
-    userId?: string,
-  ): Promise<Exercise[]> {
-    let query =
-      'SELECT * FROM exercises WHERE muscle_groups LIKE ? AND (is_custom = 0';
-    const params: any[] = [`%"${muscleGroup}"%`];
-
-    if (userId) {
-      query += ' OR (is_custom = 1 AND user_id = ?))';
-      params.push(userId);
-    } else {
-      query += ')';
-    }
-
-    query += ' ORDER BY name ASC';
-
-    const rows = await this.db.getAllAsync<ExerciseRow>(query, params);
-    return rows.map(this.mapRowToExercise);
-  }
-
   async getExerciseById(id: string): Promise<Exercise | null> {
     const row = await this.db.getFirstAsync<ExerciseRow>(
       'SELECT * FROM exercises WHERE id = ?',
@@ -128,25 +86,6 @@ export class ExerciseService {
     );
 
     return row ? this.mapRowToExercise(row) : null;
-  }
-
-  async searchExercises(query: string, userId?: string): Promise<Exercise[]> {
-    const searchTerm = `%${query}%`;
-    let sql =
-      'SELECT * FROM exercises WHERE (name LIKE ? OR categories LIKE ?) AND (is_custom = 0)';
-    const params: any[] = [searchTerm, searchTerm];
-
-    if (userId) {
-      sql += ' OR (is_custom = 1 AND user_id = ?))';
-      params.push(userId);
-    } else {
-      sql += ')';
-    }
-
-    sql += ' ORDER BY is_custom DESC, name ASC';
-
-    const rows = await this.db.getAllAsync<ExerciseRow>(sql, params);
-    return rows.map(this.mapRowToExercise);
   }
 
   async createExercise(

@@ -22,8 +22,6 @@ interface ExerciseState {
   initializeService: (service: ExerciseService) => void;
   loadExercises: () => Promise<void>;
   loadCategories: () => Promise<void>;
-  searchExercises: (query: string) => Promise<void>;
-  filterByCategory: (category: string) => Promise<void>;
   createExercise: (
     exercise: Omit<Exercise, 'id' | 'isCustom' | 'createdAt' | 'userId'>,
   ) => Promise<void>;
@@ -82,49 +80,6 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       set({ categories });
     } catch (error) {
       logger.error('Failed to load categories:', error);
-    }
-  },
-
-  searchExercises: async (query: string) => {
-    const { exerciseService, userId } = get();
-    if (!exerciseService) return;
-
-    set({ loading: true, error: null });
-    try {
-      if (query.trim() === '') {
-        await get().loadExercises();
-      } else {
-        const exercises = await exerciseService.searchExercises(query, userId);
-        set({ exercises, loading: false });
-      }
-    } catch (error) {
-      logger.error('Failed to search exercises', error);
-      const message = toUserMessage(error, 'Nie udało się wyszukać ćwiczeń');
-      useToastStore.getState().showToast(message, 'error');
-      set({ error: message, loading: false });
-    }
-  },
-
-  filterByCategory: async (category: string) => {
-    const { exerciseService, userId } = get();
-    if (!exerciseService) return;
-
-    set({ loading: true, error: null });
-    try {
-      if (category === 'all') {
-        await get().loadExercises();
-      } else {
-        const exercises = await exerciseService.getExercisesByCategory(
-          category,
-          userId,
-        );
-        set({ exercises, loading: false });
-      }
-    } catch (error) {
-      logger.error('Failed to filter exercises', error);
-      const message = toUserMessage(error, 'Nie udało się odfiltrować ćwiczeń');
-      useToastStore.getState().showToast(message, 'error');
-      set({ error: message, loading: false });
     }
   },
 
