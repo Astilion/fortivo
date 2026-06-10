@@ -14,6 +14,7 @@ import { WeightService } from '@/services/weightService';
 import { MeasurementService } from '@/services/measurementService';
 import { WeeklyPlanService } from '@/services/weeklyPlanService';
 import { PresetService } from '@/services/presetService';
+import { ExportService } from '@/services/exportService';
 import { validatePresets } from '@/utils/validatePresets';
 import { ACTIVE_WORKOUT_TIMEOUT_MS } from '@/constants/activeWorkout';
 import * as SQLite from 'expo-sqlite';
@@ -31,6 +32,7 @@ interface AppContextType {
   measurementService: MeasurementService;
   weeklyPlanService: WeeklyPlanService;
   presetService: PresetService;
+  exportService: ExportService;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -109,6 +111,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       const measurementService = new MeasurementService(database);
       const weeklyPlanService = new WeeklyPlanService(database);
       const presetService = new PresetService(database);
+      const exportService = new ExportService(database);
 
       const validatedExercises = validateExerciseData(exercisesData);
       await exerciseService.seedExercises(validatedExercises);
@@ -156,6 +159,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         measurementService,
         weeklyPlanService,
         presetService,
+        exportService,
       });
 
       validatePresets(exerciseService);
