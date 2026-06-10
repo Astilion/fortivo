@@ -180,24 +180,6 @@ export class WeeklyPlanService {
     } as WeeklyPlanDayRow;
   }
 
-  async removeWorkoutFromWeeklyPlan(
-    weeklyPlanId: string,
-    dayOfWeek: number,
-  ): Promise<void> {
-    try {
-      await this.db.runAsync(
-        `UPDATE weekly_plan_days SET workout_id = NULL, is_rest_day = 1 WHERE weekly_plan_id= ? AND day_of_week = ?`,
-        [weeklyPlanId, dayOfWeek],
-      );
-    } catch (error) {
-      logger.error(
-        'WeeklyPlanService.removeWorkoutFromWeeklyPlan failed',
-        error,
-      );
-      throw new ServiceError('Nie udało się usunąć treningu', error);
-    }
-  }
-
   async updateWeeklyPlan(
     weeklyPlanId: string,
     name: string,

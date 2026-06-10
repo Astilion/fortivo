@@ -34,8 +34,6 @@ steps and is not live yet.
 - TypeScript ~5.9.2 (strict)
 - Zustand ^5.0.8 for state
 - expo-sqlite ~16.0.8 for local storage
-- react-hook-form ^7.63.0
-- date-fns ^4.1.0
 - react-native-reanimated ~4.1.1
 - Jest via jest-expo ~54.0.17, with @testing-library/react-native
 - ESLint 9 (flat config) + Prettier
