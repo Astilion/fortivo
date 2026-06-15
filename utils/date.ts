@@ -16,3 +16,10 @@ export const getGreeting = (): string => {
   if (hour < 18) return 'Dzień dobry';
   return 'Dobry wieczór';
 };
+
+export const localDateString = (d: Date = new Date()): string => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0'); // getMonth() is 0-indexed
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};

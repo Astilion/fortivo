@@ -1,16 +1,20 @@
+import { describe, test, expect, afterEach, jest } from '@jest/globals';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { renderHook, act } from '@testing-library/react-native';
+import { UserSettings } from '@/types/training';
 
 const mockProfileService = {
-  getUserSettings: jest.fn().mockResolvedValue({
-    userId: 'local_user',
-    preferredWeightUnit: 'kg',
-    defaultRestTime: 90,
-    trackRPE: true,
-    trackTempo: false,
-    trackRestTime: true,
-    weekStartsOn: 1,
-  }),
+  getUserSettings: jest
+    .fn<(userId: string) => Promise<UserSettings>>()
+    .mockResolvedValue({
+      userId: 'local_user',
+      preferredWeightUnit: 'kg',
+      defaultRestTime: 90,
+      trackRPE: true,
+      trackTempo: false,
+      trackRestTime: true,
+      weekStartsOn: 1,
+    }),
   updateUserSettings: jest.fn(),
 };
 

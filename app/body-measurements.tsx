@@ -14,6 +14,7 @@ import { BODY_PARTS } from '@/constants/bodyParts';
 import { MeasurementRow } from '@/components/measurements/MeasurementRow';
 import { HistoryRow } from '@/components/measurements/HistoryRow';
 import { LOCAL_USER_ID } from '@/constants/User';
+import { localDateString } from '@/utils/date';
 
 type TabType = 'measurements' | 'history';
 
@@ -52,7 +53,7 @@ export default function BodyMeasurementsScreen() {
         LOCAL_USER_ID,
         bodyPartKey,
         value,
-        new Date().toISOString().split('T')[0],
+        localDateString(),
       );
       setMeasurements((prev) => [newEntry, ...prev]);
       setInputs((prev) => ({ ...prev, [bodyPartKey]: '' }));
