@@ -1,3 +1,4 @@
+import { describe, test, expect } from '@jest/globals';
 import { parseInteger, parseDecimal } from '@/utils/numbers';
 
 describe('parseInteger', () => {
