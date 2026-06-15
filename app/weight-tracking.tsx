@@ -16,6 +16,7 @@ import { WeightEntryRow } from '@/components/weight/WeightEntryRow';
 import { SummaryCard } from '@/components/weight/SummaryCard';
 import { LOCAL_USER_ID } from '@/constants/User';
 import { confirmAction } from '@/utils/confirm';
+import { localDateString } from '@/utils/date';
 
 export default function WeightTrackingScreen() {
   const [entries, setEntries] = useState<WeightEntry[]>([]);
@@ -43,7 +44,7 @@ export default function WeightTrackingScreen() {
       const newEntry = await weightService.addWeightEntry(
         LOCAL_USER_ID,
         weight,
-        new Date().toISOString().split('T')[0],
+        localDateString(),
         notes,
       );
       setEntries((prev) => [newEntry, ...prev]);
