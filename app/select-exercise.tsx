@@ -258,7 +258,7 @@ export default function SelectExerciseScreen() {
             { bottom: insets.bottom + (activeWorkoutId ? 170 : 34) },
           ]}
         >
-          <Ionicons name="add" size={28} color="#1C2227" />
+          <Ionicons name="add" size={28} color={colors.primary} />
         </Pressable>
       )}
 

@@ -224,7 +224,7 @@ export default function CreateExerciseScreen() {
           value={form.name}
           onChangeText={(text) => updateField('name', text)}
           placeholder="np. Wyciskanie sztangi"
-          placeholderTextColor="#6C757D"
+          placeholderTextColor={colors.muted}
           maxLength={100}
         />
       </View>
@@ -287,7 +287,7 @@ export default function CreateExerciseScreen() {
           value={form.instructions}
           onChangeText={(text) => updateField('instructions', text)}
           placeholder="Opisz technikę wykonania..."
-          placeholderTextColor="#6C757D"
+          placeholderTextColor={colors.muted}
           multiline
           numberOfLines={4}
           textAlignVertical="top"
