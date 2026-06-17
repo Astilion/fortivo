@@ -6,6 +6,9 @@ import { Workout, WorkoutRow, WorkoutWithCountRow } from '@/types/training';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
 
 export default function SelectWorkoutScreen() {
   const [workouts, setWorkouts] = useState<WorkoutWithCountRow[]>([]);
@@ -13,11 +16,23 @@ export default function SelectWorkoutScreen() {
   const { setPendingWorkout } = useWeeklyPlanStore();
   const router = useRouter();
 
+  const { showToast } = useToastStore();
+
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
-        const all = await workoutService.getAllWorkouts();
-        setWorkouts(all);
+        try {
+          const all = await workoutService.getAllWorkouts();
+          setWorkouts(all);
+        } catch (error) {
+          logger.error('Failed to load workouts', error);
+          showToast(
+            error instanceof ServiceError
+              ? error.userMessage
+              : 'Nie udało się załadować treningów',
+            'error',
+          );
+        }
       };
       load();
       // Fetch the list on each focus; workoutService is stable from context.

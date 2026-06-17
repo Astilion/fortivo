@@ -30,10 +30,20 @@ export default function BodyMeasurementsScreen() {
 
   const loadMeasurements = useCallback(async () => {
     if (!measurementService) return;
-    const fetchedMeasurements =
-      await measurementService.getMeasurements(LOCAL_USER_ID);
-    setMeasurements(fetchedMeasurements);
-  }, [measurementService]);
+    try {
+      const fetchedMeasurements =
+        await measurementService.getMeasurements(LOCAL_USER_ID);
+      setMeasurements(fetchedMeasurements);
+    } catch (error) {
+      logger.error('Failed to load measurements', error);
+      showToast(
+        error instanceof ServiceError
+          ? error.userMessage
+          : 'Nie udało się załadować pomiarów',
+        'error',
+      );
+    }
+  }, [measurementService, showToast]);
 
   useFocusEffect(
     useCallback(() => {
