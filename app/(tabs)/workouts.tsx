@@ -178,8 +178,17 @@ export default function WorkoutsScreen() {
   };
 
   const handleToggleFavorite = async (workoutId: string) => {
-    await workoutService.toggleFavoriteWorkout(workoutId);
-    await loadWorkouts();
+    try {
+      await workoutService.toggleFavoriteWorkout(workoutId);
+      await loadWorkouts();
+    } catch (error) {
+      logger.error('Błąd zmiany ulubionych', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się zmienić ulubionych', 'error');
+      }
+    }
   };
 
   const setAsActive = (workoutId: string) => {
@@ -187,14 +196,22 @@ export default function WorkoutsScreen() {
   };
 
   const handleSetActivePlan = async (planId: string) => {
-    await weeklyPlanService.setWeeklyPlanActive(planId);
-
-    const [plans, activePlan] = await Promise.all([
-      weeklyPlanService.getAllPlansWithDetails(),
-      weeklyPlanService.getActivePlan(),
-    ]);
-    setWeeklyPlans(plans);
-    setActivePlan(activePlan);
+    try {
+      await weeklyPlanService.setWeeklyPlanActive(planId);
+      const [plans, activePlan] = await Promise.all([
+        weeklyPlanService.getAllPlansWithDetails(),
+        weeklyPlanService.getActivePlan(),
+      ]);
+      setWeeklyPlans(plans);
+      setActivePlan(activePlan);
+    } catch (error) {
+      logger.error('Błąd aktywacji planu', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się aktywować planu', 'error');
+      }
+    }
   };
 
   const renderPresetCard = useCallback(
@@ -215,10 +232,19 @@ export default function WorkoutsScreen() {
       'Wyłącz aktywny plan',
       'Plan pozostanie zapisany, ale nie będzie aktywny.',
       async () => {
-        await weeklyPlanService.clearActivePlan();
-        const plans = await weeklyPlanService.getAllPlansWithDetails();
-        setWeeklyPlans(plans);
-        setActivePlan(null);
+        try {
+          await weeklyPlanService.clearActivePlan();
+          const plans = await weeklyPlanService.getAllPlansWithDetails();
+          setWeeklyPlans(plans);
+          setActivePlan(null);
+        } catch (error) {
+          logger.error('Błąd wyłączania planu', error);
+          if (error instanceof ServiceError) {
+            showToast(error.userMessage, 'error');
+          } else {
+            showToast('Nie udało się wyłączyć planu', 'error');
+          }
+        }
       },
       'Wyłącz',
     );
