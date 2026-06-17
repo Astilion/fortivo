@@ -85,10 +85,22 @@ export default function ProfileScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings?.defaultRestTime, settings?.goalWeight]);
 
-  const handleWeightUnitChange = (unit: WeightUnit) => {
-    const updatedSettings = { ...settings!, preferredWeightUnit: unit };
+  const handleWeightUnitChange = async (unit: WeightUnit) => {
+    const previous = settings!;
+    const updatedSettings = { ...previous, preferredWeightUnit: unit };
     setSettings(updatedSettings);
-    profileService.updateUserSettings(updatedSettings);
+    try {
+      await profileService.updateUserSettings(updatedSettings);
+    } catch (error) {
+      logger.error('Error updating weight unit:', error);
+      setSettings(previous);
+      showToast(
+        error instanceof ServiceError
+          ? error.userMessage
+          : 'Nie udało się zapisać ustawień',
+        'error',
+      );
+    }
   };
 
   const handleGoalWeightChange = (value: string) => {
@@ -148,10 +160,22 @@ export default function ProfileScreen() {
 
   const handleToggle =
     (field: 'trackRPE' | 'trackTempo' | 'trackRestTime') =>
-    (value: boolean) => {
-      const updatedSettings = { ...settings!, [field]: value };
+    async (value: boolean) => {
+      const previous = settings!;
+      const updatedSettings = { ...previous, [field]: value };
       setSettings(updatedSettings);
-      profileService.updateUserSettings(updatedSettings);
+      try {
+        await profileService.updateUserSettings(updatedSettings);
+      } catch (error) {
+        logger.error(`Error updating ${field}:`, error);
+        setSettings(previous);
+        showToast(
+          error instanceof ServiceError
+            ? error.userMessage
+            : 'Nie udało się zapisać ustawień',
+          'error',
+        );
+      }
     };
 
   const handleExportData = async () => {
