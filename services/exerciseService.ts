@@ -301,6 +301,14 @@ export class ExerciseService {
 
     return (row?.count || 0) > 0;
   }
+
+  async countWorkoutsUsingExercise(exerciseId: string): Promise<number> {
+    const row = await this.db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(DISTINCT workout_id) as count FROM workout_exercises WHERE exercise_id = ?',
+      [exerciseId],
+    );
+    return row?.count ?? 0;
+  }
 }
 
 export { Exercise } from '../types/training';

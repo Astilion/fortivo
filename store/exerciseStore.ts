@@ -32,6 +32,7 @@ interface ExerciseState {
     >,
   ) => Promise<void>;
   deleteExercise: (id: string) => Promise<void>;
+  getExerciseUsageCount: (exerciseId: string) => Promise<number>;
   loadFavorites: () => Promise<void>;
   toggleFavorite: (exerciseId: string) => Promise<void>;
   isFavorite: (exerciseId: string) => boolean;
@@ -143,6 +144,17 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
         loading: false,
       });
       throw error;
+    }
+  },
+
+  getExerciseUsageCount: async (exerciseId: string) => {
+    const { exerciseService } = get();
+    if (!exerciseService) return 0;
+    try {
+      return await exerciseService.countWorkoutsUsingExercise(exerciseId);
+    } catch (error) {
+      logger.error('Failed to count workouts using exercise', error);
+      return 0;
     }
   },
   // ==================== FAVORITES ====================

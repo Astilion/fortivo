@@ -36,6 +36,9 @@ export default function ExercisesScreen() {
   const isFavorite = useExerciseStore((state) => state.isFavorite);
   const loadExercises = useExerciseStore((state) => state.loadExercises);
   const deleteExercise = useExerciseStore((state) => state.deleteExercise);
+  const getExerciseUsageCount = useExerciseStore(
+    (state) => state.getExerciseUsageCount,
+  );
 
   const favoriteExercises = useExerciseStore(
     (state) => state.favoriteExercises,
@@ -100,23 +103,24 @@ export default function ExercisesScreen() {
             <>
               <Pressable
                 style={styles.favoriteButton}
-                onPress={(e) => {
+                onPress={async (e) => {
                   e.stopPropagation();
-                  confirmAction(
-                    'Usuń ćwiczenie',
-                    'Czy na pewno chcesz usunąć to ćwiczenie?',
-                    async () => {
-                      try {
-                        await deleteExercise(item.id);
-                      } catch (error) {
-                        if (error instanceof ServiceError) {
-                          showToast(error.userMessage, 'error');
-                        } else {
-                          showToast('Nie udało się usunąć ćwiczenia', 'error');
-                        }
+                  const count = await getExerciseUsageCount(item.id);
+                  const message =
+                    count > 0
+                      ? `To ćwiczenie jest używane w istniejących treningach (liczba: ${count}). Po usunięciu zniknie ze wszystkich z nich, a jego historia progresu zostanie bezpowrotnie skasowana.`
+                      : 'Czy na pewno chcesz usunąć to ćwiczenie?';
+                  confirmAction('Usuń ćwiczenie', message, async () => {
+                    try {
+                      await deleteExercise(item.id);
+                    } catch (error) {
+                      if (error instanceof ServiceError) {
+                        showToast(error.userMessage, 'error');
+                      } else {
+                        showToast('Nie udało się usunąć ćwiczenia', 'error');
                       }
-                    },
-                  );
+                    }
+                  });
                 }}
                 hitSlop={8}
                 accessibilityLabel="Usuń ćwiczenie"
@@ -166,7 +170,14 @@ export default function ExercisesScreen() {
         </View>
       </Card>
     ),
-    [router, toggleFavorite, isFavorite, deleteExercise, showToast],
+    [
+      router,
+      toggleFavorite,
+      isFavorite,
+      deleteExercise,
+      showToast,
+      getExerciseUsageCount,
+    ],
   );
 
   if (loading) {
