@@ -45,6 +45,14 @@ export default function WorkoutsScreen() {
         ]);
         setWorkouts(allWorkouts);
         setWeeklyPlans(plans);
+      } catch (error) {
+        logger.error('Błąd ładowania treningów', error);
+        showToast(
+          error instanceof ServiceError
+            ? error.userMessage
+            : 'Nie udało się załadować treningów',
+          'error',
+        );
       } finally {
         setIsLoading(false);
       }

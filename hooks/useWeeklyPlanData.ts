@@ -5,6 +5,9 @@ import { DAYS_OF_WEEK } from '@/utils/days';
 import { LOCAL_USER_ID } from '@/constants/User';
 import { useCallback, useMemo, useState } from 'react';
 import { useRefreshOnFocus } from './useRefreshOnFocus';
+import { useToastStore } from '@/store/toastStore';
+import { ServiceError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
 
 type DayStatus = 'on_plan' | 'off_plan' | 'none';
 
@@ -23,6 +26,7 @@ export const useWeeklyPlanData = () => {
   >([]);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToastStore();
 
   const refreshPlan = useCallback(async () => {
     try {
@@ -35,10 +39,24 @@ export const useWeeklyPlanData = () => {
       ]);
       setActivePlan(plan);
       setCompletedThisWeek(completed);
+    } catch (error) {
+      logger.error('Failed to load weekly plan', error);
+      showToast(
+        error instanceof ServiceError
+          ? error.userMessage
+          : 'Nie udało się załadować planu',
+        'error',
+      );
     } finally {
       setLoading(false);
     }
-  }, [weeklyPlanService, workoutService, profileService, setActivePlan]);
+  }, [
+    weeklyPlanService,
+    workoutService,
+    profileService,
+    setActivePlan,
+    showToast,
+  ]);
 
   useRefreshOnFocus(refreshPlan, [refreshPlan]);
 

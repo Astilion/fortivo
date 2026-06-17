@@ -29,9 +29,20 @@ export default function WeightTrackingScreen() {
 
   const loadEntries = useCallback(async () => {
     if (!weightService) return;
-    const fetchedEntries = await weightService.getWeightEntries(LOCAL_USER_ID);
-    setEntries(fetchedEntries);
-  }, [weightService]);
+    try {
+      const fetchedEntries =
+        await weightService.getWeightEntries(LOCAL_USER_ID);
+      setEntries(fetchedEntries);
+    } catch (error) {
+      logger.error('Failed to load weight entries', error);
+      showToast(
+        error instanceof ServiceError
+          ? error.userMessage
+          : 'Nie udało się załadować historii wagi',
+        'error',
+      );
+    }
+  }, [weightService, showToast]);
 
   useFocusEffect(
     useCallback(() => {
