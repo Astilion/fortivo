@@ -43,6 +43,15 @@ Sentry.init({
   tracesSampleRate: 0.1,
   integrations: [navigationIntegration],
   enableNativeFramesTracking: !isRunningInExpoGo(),
+  sendDefaultPii: false,
+  beforeBreadcrumb(breadcrumb) {
+    // console args are the only breadcrumb channel that can carry user data
+    return breadcrumb.category === 'console' ? null : breadcrumb;
+  },
+  beforeSend(event) {
+    delete event.user;
+    return event;
+  },
 });
 
 const FortivoDarkTheme = {
