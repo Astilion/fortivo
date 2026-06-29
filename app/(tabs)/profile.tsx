@@ -190,15 +190,24 @@ export default function ProfileScreen() {
       file.create({ overwrite: true });
       file.write(JSON.stringify(envelope, null, 2));
 
-      if (!(await Sharing.isAvailableAsync())) {
-        showToast('Udostępnianie niedostępne na tym urządzeniu', 'error');
-        return;
+      try {
+        if (!(await Sharing.isAvailableAsync())) {
+          showToast('Udostępnianie niedostępne na tym urządzeniu', 'error');
+          return;
+        }
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'application/json',
+          dialogTitle: 'Eksport danych Fortivo',
+        });
+        showToast('Wyeksportowano dane', 'success');
+      } finally {
+        // A full health-data dump must not linger in the cache after sharing.
+        try {
+          file.delete();
+        } catch (cleanupError) {
+          logger.error('Failed to clean up export file', cleanupError);
+        }
       }
-      await Sharing.shareAsync(file.uri, {
-        mimeType: 'application/json',
-        dialogTitle: 'Eksport danych Fortivo',
-      });
-      showToast('Wyeksportowano dane', 'success');
     } catch (error) {
       logger.error('Data export failed', error);
       showToast(

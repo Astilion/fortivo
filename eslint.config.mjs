@@ -6,6 +6,17 @@ export default defineConfig([
   expoConfig,
   eslintPluginPrettierRecommended,
   {
+    rules: {
+      'no-console': 'error',
+    },
+  },
+  {
+    files: ['utils/logger.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     ignores: ['dist/*', 'expo-env.d.ts', '.expo/*'],
   },
 ]);
