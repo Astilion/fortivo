@@ -20,6 +20,7 @@
     },
     "android": {
       "package": "com.astilion.fortivo",
+      "allowBackup": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#1C2227"
@@ -41,7 +42,7 @@
       [
         "@sentry/react-native/expo",
         {
-          "url": "https://sentry.io/",
+          "url": "https://de.sentry.io/",
           "organization": "astilion",
           "project": "fortivo"
         }
