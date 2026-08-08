@@ -5,6 +5,7 @@ import {
   WeeklyPlan,
   WeeklyPlanWithDays,
   Workout,
+  PlanDayInput,
 } from '@/types/training';
 import { generateId } from '@/database/database';
 import { logger } from '@/utils/logger';
@@ -82,41 +83,50 @@ export class WeeklyPlanService {
     return this.buildWeeklyPlan(planRow);
   }
 
-  async createWeeklyPlan(
+  async savePlanWithDays(
+    planId: string | null,
     name: string,
-    weekNumber?: number,
-    notes?: string,
-  ): Promise<WeeklyPlanRow> {
-    const id = generateId('weekly_plan');
-    const createdAt = new Date();
-
+    days: PlanDayInput[],
+  ): Promise<string> {
+    const id = planId ?? generateId('weekly_plan');
     try {
-      await this.db.runAsync(
-        `INSERT INTO weekly_plans (id, name, week_number, notes, created_at, is_active) VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          id,
-          name,
-          weekNumber ?? null,
-          notes || null,
-          createdAt.toISOString(),
-          0,
-        ],
-      );
+      await this.db.withTransactionAsync(async () => {
+        if (planId === null) {
+          await this.db.runAsync(
+            `INSERT INTO weekly_plans (id, name, week_number, notes, created_at, is_active) VALUES (?, ?, ?, ?, ?, ?)`,
+            [id, name, null, null, new Date().toISOString(), 0],
+          );
+        } else {
+          await this.db.runAsync(
+            `UPDATE weekly_plans SET name = ? WHERE id = ?`,
+            [name, id],
+          );
+        }
+
+        await this.db.runAsync(
+          `DELETE FROM weekly_plan_days WHERE weekly_plan_id = ?`,
+          [id],
+        );
+
+        for (const day of days) {
+          await this.db.runAsync(
+            `INSERT INTO weekly_plan_days (id, weekly_plan_id, day_of_week, day_name, workout_id, is_rest_day) VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              generateId('weekly_plan_day'),
+              id,
+              day.dayOfWeek,
+              day.dayName ?? null,
+              day.workoutId ?? null,
+              day.isRestDay ? 1 : 0,
+            ],
+          );
+        }
+      });
     } catch (error) {
-      logger.error('WeeklyPlanService.createWeeklyPlan failed', error);
-      throw new ServiceError(
-        'Nie udało się utworzyć planu tygodniowego',
-        error,
-      );
+      logger.error('WeeklyPlanService.savePlanWithDays failed', error);
+      throw new ServiceError('Nie udało się zapisać planu tygodniowego', error);
     }
-    return {
-      id,
-      name,
-      week_number: weekNumber || null,
-      notes: notes || null,
-      created_at: createdAt.toISOString(),
-      is_active: 0,
-    } as WeeklyPlanRow;
+    return id;
   }
 
   async deleteWeeklyPlan(id: string): Promise<void> {
@@ -141,60 +151,6 @@ export class WeeklyPlanService {
       logger.error('WeeklyPlanService.setWeeklyPlanActive failed', error);
       throw new ServiceError(
         'Nie udało się aktywować planu tygodniowego',
-        error,
-      );
-    }
-  }
-
-  async addWeeklyPlanDay(
-    weeklyPlanId: string,
-    dayOfWeek: number,
-    dayName?: string,
-    workoutId?: string,
-    isRestDay?: boolean,
-  ): Promise<WeeklyPlanDayRow> {
-    const id = generateId('weekly_plan_day');
-    try {
-      await this.db.runAsync(
-        `insert into weekly_plan_days (id, weekly_plan_id, day_of_week, day_name, workout_id, is_rest_day) values (?, ?, ?, ?, ?, ?)`,
-        [
-          id,
-          weeklyPlanId,
-          dayOfWeek,
-          dayName || null,
-          workoutId || null,
-          isRestDay ? 1 : 0,
-        ],
-      );
-    } catch (error) {
-      logger.error('WeeklyPlanService.addWeeklyPlanDay failed', error);
-      throw new ServiceError('Nie udało się dodać dnia do planu', error);
-    }
-    return {
-      id,
-      weekly_plan_id: weeklyPlanId,
-      day_of_week: dayOfWeek,
-      day_name: dayName || null,
-      workout_id: workoutId || null,
-      is_rest_day: isRestDay ? 1 : 0,
-    } as WeeklyPlanDayRow;
-  }
-
-  async updateWeeklyPlan(
-    weeklyPlanId: string,
-    name: string,
-    weekNumber?: number,
-    notes?: string,
-  ): Promise<void> {
-    try {
-      await this.db.runAsync(
-        `UPDATE weekly_plans SET name = ?, week_number = ?, notes = ? WHERE id = ?`,
-        [name, weekNumber || null, notes || null, weeklyPlanId],
-      );
-    } catch (error) {
-      logger.error('WeeklyPlanService.updateWeeklyPlan failed', error);
-      throw new ServiceError(
-        'Nie udało się zaktualizować planu tygodniowego',
         error,
       );
     }
@@ -245,18 +201,6 @@ export class WeeklyPlanService {
           : null,
       })),
     } as WeeklyPlan;
-  }
-
-  async deleteAllPlanDays(weeklyPlanId: string): Promise<void> {
-    try {
-      await this.db.runAsync(
-        `DELETE FROM weekly_plan_days WHERE weekly_plan_id = ?`,
-        [weeklyPlanId],
-      );
-    } catch (error) {
-      logger.error('WeeklyPlanService.deleteAllPlanDays failed', error);
-      throw new ServiceError('Nie udało się usunąć dni planu', error);
-    }
   }
 
   async clearActivePlan(): Promise<void> {

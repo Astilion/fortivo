@@ -328,6 +328,13 @@ export interface WeeklyPlanRow {
   is_active: number;
 }
 
+export interface PlanDayInput {
+  dayOfWeek: number;
+  dayName?: string;
+  workoutId?: string | null;
+  isRestDay: boolean;
+}
+
 export interface TrainingPlanWeekRow {
   id: string;
   training_plan_id: string;

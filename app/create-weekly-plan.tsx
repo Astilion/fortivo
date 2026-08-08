@@ -9,6 +9,7 @@ import {
 import { useWeeklyPlanStore } from '@/store/weeklyPlanStore';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
+import { PlanDayInput } from '@/types/training';
 import colors from '@/constants/Colors';
 import { View, ScrollView, Text, StyleSheet, Pressable } from 'react-native';
 import { Input } from '@/components/ui/Input';
@@ -118,61 +119,29 @@ export default function CreateWeeklyPlanScreen() {
       showToast('Podaj nazwę planu', 'error');
       return;
     }
-    if (isEditMode) {
-      try {
-        await weeklyPlanService.updateWeeklyPlan(id, planName);
-        await weeklyPlanService.deleteAllPlanDays(id);
 
-        const daysToUpdate = days.filter(
-          (day) => day.workoutId !== null || day.isRestDay,
-        );
-        await Promise.all(
-          daysToUpdate.map((day) =>
-            weeklyPlanService.addWeeklyPlanDay(
-              id,
-              day.dayOfWeek,
-              day.dayName,
-              day.workoutId ?? undefined,
-              day.isRestDay,
-            ),
-          ),
-        );
-        router.back();
-      } catch (error) {
-        logger.error('Błąd aktualizacji planu', error);
-        if (error instanceof ServiceError) {
-          showToast(error.userMessage, 'error');
-        } else {
-          showToast('Nie udało się zaktualizować planu', 'error');
-        }
-        return;
-      }
-    } else {
-      try {
-        const planRow = await weeklyPlanService.createWeeklyPlan(planName);
+    const dayInputs: PlanDayInput[] = days
+      .filter((day) => day.workoutId !== null || day.isRestDay)
+      .map((day) => ({
+        dayOfWeek: day.dayOfWeek,
+        dayName: day.dayName,
+        workoutId: day.workoutId,
+        isRestDay: day.isRestDay,
+      }));
 
-        const daysToAdd = days.filter(
-          (day) => day.workoutId !== null || day.isRestDay,
-        );
-        await Promise.all(
-          daysToAdd.map((day) =>
-            weeklyPlanService.addWeeklyPlanDay(
-              planRow.id,
-              day.dayOfWeek,
-              day.dayName,
-              day.workoutId ?? undefined,
-              day.isRestDay,
-            ),
-          ),
-        );
-        router.back();
-      } catch (error) {
-        logger.error('Błąd zapisu planu', error);
-        if (error instanceof ServiceError) {
-          showToast(error.userMessage, 'error');
-        } else {
-          showToast('Nie udało się zapisać planu', 'error');
-        }
+    try {
+      await weeklyPlanService.savePlanWithDays(
+        isEditMode ? id : null,
+        planName,
+        dayInputs,
+      );
+      router.back();
+    } catch (error) {
+      logger.error('Błąd zapisu planu', error);
+      if (error instanceof ServiceError) {
+        showToast(error.userMessage, 'error');
+      } else {
+        showToast('Nie udało się zapisać planu', 'error');
       }
     }
   };
