@@ -8,6 +8,7 @@ import {
   PlanDayInput,
 } from '@/types/training';
 import { generateId } from '@/database/database';
+import { runInTransaction } from '@/database/writeLock';
 import { logger } from '@/utils/logger';
 import { ServiceError } from '@/utils/errors';
 
@@ -90,7 +91,7 @@ export class WeeklyPlanService {
   ): Promise<string> {
     const id = planId ?? generateId('weekly_plan');
     try {
-      await this.db.withTransactionAsync(async () => {
+      await runInTransaction(this.db, async () => {
         if (planId === null) {
           await this.db.runAsync(
             `INSERT INTO weekly_plans (id, name, week_number, notes, created_at, is_active) VALUES (?, ?, ?, ?, ?, ?)`,
@@ -140,7 +141,7 @@ export class WeeklyPlanService {
 
   async setWeeklyPlanActive(id: string): Promise<void> {
     try {
-      await this.db.withTransactionAsync(async () => {
+      await runInTransaction(this.db, async () => {
         await this.db.runAsync(`UPDATE weekly_plans SET is_active = 0`);
         await this.db.runAsync(
           `UPDATE weekly_plans SET is_active = 1 WHERE id = ?`,

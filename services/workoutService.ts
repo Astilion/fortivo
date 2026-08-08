@@ -1,4 +1,5 @@
 import { generateId } from '@/database/database';
+import { runInTransaction } from '@/database/writeLock';
 import { logger } from '@/utils/logger';
 import { ServiceError } from '@/utils/errors';
 import { getWeekStart } from '@/utils/days';
@@ -148,7 +149,7 @@ export class WorkoutService {
     exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
     try {
-      await this.db.withTransactionAsync(async () => {
+      await runInTransaction(this.db, async () => {
         await this.db.runAsync(
           'DELETE FROM workout_exercises WHERE workout_id = ?',
           [workoutId],
@@ -306,7 +307,7 @@ export class WorkoutService {
   async reorderWorkouts(workoutIds: string[]): Promise<void> {
     // Wrap the per-row UPDATEs so an interruption can't leave a partial ordering.
     try {
-      await this.db.withTransactionAsync(async () => {
+      await runInTransaction(this.db, async () => {
         for (let i = 0; i < workoutIds.length; i++) {
           await this.db.runAsync(
             'UPDATE workouts SET display_order = ? WHERE id = ?',
@@ -328,7 +329,7 @@ export class WorkoutService {
     // interrupted between them. started_at marks the activation moment, used
     // to compute workout duration and survive a process kill.
     try {
-      await this.db.withTransactionAsync(async () => {
+      await runInTransaction(this.db, async () => {
         await this.db.runAsync('UPDATE workouts SET is_active = 0');
         await this.db.runAsync(
           'UPDATE workouts SET is_active = 1, started_at = ? WHERE id = ?',
@@ -446,7 +447,7 @@ export class WorkoutService {
   }
 
   private async _resetActiveWorkoutDB(workoutId: string): Promise<void> {
-    await this.db.withTransactionAsync(async () => {
+    await runInTransaction(this.db, async () => {
       await this.db.runAsync(
         `UPDATE workout_sets
          SET actual_reps = NULL, actual_weight = NULL, actual_rpe = NULL,
@@ -492,7 +493,7 @@ export class WorkoutService {
     exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
     try {
-      await this.db.withTransactionAsync(() =>
+      await runInTransaction(this.db, () =>
         this._saveSnapshotInTx(workoutId, exercises),
       );
     } catch (error) {
@@ -653,7 +654,7 @@ export class WorkoutService {
     exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
     try {
-      await this.db.withTransactionAsync(async () => {
+      await runInTransaction(this.db, async () => {
         const workout = await this.db.getFirstAsync<{
           name: string;
           started_at: string | null;
