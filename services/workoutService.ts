@@ -463,22 +463,6 @@ export class WorkoutService {
     });
   }
 
-  async deactivateActiveWorkout(workoutId: string): Promise<void> {
-    try {
-      await this.db.runAsync(
-        'UPDATE workouts SET is_active = 0, started_at = NULL WHERE id = ?',
-        [workoutId],
-      );
-    } catch (error) {
-      logger.error('WorkoutService.deactivateActiveWorkout failed', error);
-      throw new ServiceError('Nie udało się zakończyć treningu', error);
-    }
-  }
-
-  async clearActiveWorkout(workoutId: string): Promise<void> {
-    await this.deactivateActiveWorkout(workoutId);
-  }
-
   async clearStaleActiveWorkout(workoutId: string): Promise<void> {
     try {
       await this._resetActiveWorkoutDB(workoutId);
@@ -508,45 +492,54 @@ export class WorkoutService {
     exercises: WorkoutExerciseWithSets[],
   ): Promise<void> {
     try {
-      await this.db.withTransactionAsync(async () => {
-        for (let i = 0; i < exercises.length; i++) {
-          const { id, exercise, sets } = exercises[i];
-
-          await this.db.runAsync(
-            `INSERT INTO workout_exercises (
-              id, workout_id, exercise_id, exercise_order, superset_group, notes
-            ) VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET exercise_order = excluded.exercise_order`,
-            [id, workoutId, exercise.id, i, null, null],
-          );
-
-          for (let j = 0; j < sets.length; j++) {
-            await this.upsertSet(sets[j].id, id, j, sets[j]);
-          }
-
-          await this.deleteRowsNotIn(
-            'workout_sets',
-            'workout_exercise_id',
-            id,
-            sets.map((s) => s.id),
-          );
-        }
-
-        // CASCADE clears the sets of any pruned exercise.
-        await this.deleteRowsNotIn(
-          'workout_exercises',
-          'workout_id',
-          workoutId,
-          exercises.map((e) => e.id),
-        );
-      });
+      await this.db.withTransactionAsync(() =>
+        this._saveSnapshotInTx(workoutId, exercises),
+      );
     } catch (error) {
       logger.error('WorkoutService.saveActiveWorkoutSnapshot failed', error);
       throw new ServiceError('Nie udało się zapisać postępu treningu', error);
     }
   }
 
-  async saveWorkoutHistory(
+  // The _...InTx helpers own no transaction so finishWorkout can compose them
+  // under one BEGIN — expo-sqlite rejects nested transactions.
+  private async _saveSnapshotInTx(
+    workoutId: string,
+    exercises: WorkoutExerciseWithSets[],
+  ): Promise<void> {
+    for (let i = 0; i < exercises.length; i++) {
+      const { id, exercise, sets } = exercises[i];
+
+      await this.db.runAsync(
+        `INSERT INTO workout_exercises (
+          id, workout_id, exercise_id, exercise_order, superset_group, notes
+        ) VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET exercise_order = excluded.exercise_order`,
+        [id, workoutId, exercise.id, i, null, null],
+      );
+
+      for (let j = 0; j < sets.length; j++) {
+        await this.upsertSet(sets[j].id, id, j, sets[j]);
+      }
+
+      await this.deleteRowsNotIn(
+        'workout_sets',
+        'workout_exercise_id',
+        id,
+        sets.map((s) => s.id),
+      );
+    }
+
+    // CASCADE clears the sets of any pruned exercise.
+    await this.deleteRowsNotIn(
+      'workout_exercises',
+      'workout_id',
+      workoutId,
+      exercises.map((e) => e.id),
+    );
+  }
+
+  private async _insertWorkoutHistoryInTx(
     workoutId: string,
     workoutName: string | null,
     durationMinutes: number,
@@ -580,92 +573,126 @@ export class WorkoutService {
       })),
     };
 
-    try {
-      await this.db.runAsync(
-        `INSERT INTO workout_history (
-          id, workout_id, workout_name, user_id, completed_at, actual_duration,
-          performance_notes, performance_data
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          id,
-          workoutId,
-          workoutName ?? null,
-          userId,
-          new Date().toISOString(),
-          durationMinutes,
-          null,
-          JSON.stringify(snapshot),
-        ],
-      );
-    } catch (error) {
-      logger.error('WorkoutService.saveWorkoutHistory failed', error);
-      throw new ServiceError('Nie udało się zapisać historii treningu', error);
-    }
+    await this.db.runAsync(
+      `INSERT INTO workout_history (
+        id, workout_id, workout_name, user_id, completed_at, actual_duration,
+        performance_notes, performance_data
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        workoutId,
+        workoutName ?? null,
+        userId,
+        new Date().toISOString(),
+        durationMinutes,
+        null,
+        JSON.stringify(snapshot),
+      ],
+    );
   }
 
-  async saveExerciseProgress(
-    workoutId: string,
+  private async _saveProgressInTx(
     exercises: WorkoutExerciseWithSets[],
     workoutName: string | null,
   ): Promise<void> {
     const userId = LOCAL_USER_ID;
     const date = new Date().toISOString();
 
+    for (const ex of exercises) {
+      // Progress is weight/reps based (max weight, volume = reps × weight).
+      // Time/distance exercises have no meaningful values here — skip them.
+      const measurementType = ex.exercise.measurementType;
+      if (measurementType === 'time' || measurementType === 'distance') {
+        continue;
+      }
+
+      const completedSets = ex.sets.filter((s) => s.completed);
+      if (completedSets.length === 0) continue;
+
+      const maxWeight = Math.max(
+        ...completedSets.map((s) => s.actualWeight || 0),
+      );
+
+      const totalVolume = completedSets.reduce(
+        (sum, set) => sum + (set.actualReps || 0) * (set.actualWeight || 0),
+        0,
+      );
+
+      const previousRecord = await this.db.getFirstAsync<ExerciseProgressRow>(
+        `SELECT * FROM exercise_progress
+         WHERE exercise_id = ? AND user_id = ?
+         ORDER BY max_weight DESC LIMIT 1`,
+        [ex.exercise.id, userId],
+      );
+
+      const isPersonalRecord =
+        !previousRecord || maxWeight > previousRecord.max_weight;
+
+      await this.db.runAsync(
+        `INSERT INTO exercise_progress (
+          id, exercise_id, user_id, date, max_weight, total_volume,
+          estimated_one_rep_max, personal_record, workout_name
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          generateId('ep'),
+          ex.exercise.id,
+          userId,
+          date,
+          maxWeight,
+          totalVolume,
+          null,
+          isPersonalRecord ? 1 : 0,
+          workoutName ?? null,
+        ],
+      );
+    }
+  }
+
+  async finishWorkout(
+    workoutId: string,
+    exercises: WorkoutExerciseWithSets[],
+  ): Promise<void> {
     try {
       await this.db.withTransactionAsync(async () => {
-        for (const ex of exercises) {
-          // Progress is weight/reps based (max weight, volume = reps × weight).
-          // Time/distance exercises have no meaningful values here — skip them.
-          const measurementType = ex.exercise.measurementType;
-          if (measurementType === 'time' || measurementType === 'distance') {
-            continue;
-          }
+        const workout = await this.db.getFirstAsync<{
+          name: string;
+          started_at: string | null;
+          is_active: number;
+        }>('SELECT name, started_at, is_active FROM workouts WHERE id = ?', [
+          workoutId,
+        ]);
 
-          const completedSets = ex.sets.filter((s) => s.completed);
-          if (completedSets.length === 0) continue;
+        if (!workout) throw new Error('Active workout row not found');
+        // Idempotency guard: a retry after a partial failure must not append a
+        // second history row for a workout that already finished.
+        if (workout.is_active !== 1) return;
 
-          const maxWeight = Math.max(
-            ...completedSets.map((s) => s.actualWeight || 0),
-          );
+        const durationMinutes = workout.started_at
+          ? Math.max(
+              0,
+              Math.round((Date.now() - Date.parse(workout.started_at)) / 60000),
+            )
+          : 0;
 
-          const totalVolume = completedSets.reduce(
-            (sum, set) => sum + (set.actualReps || 0) * (set.actualWeight || 0),
-            0,
-          );
-
-          const previousRecord =
-            await this.db.getFirstAsync<ExerciseProgressRow>(
-              `SELECT * FROM exercise_progress
-             WHERE exercise_id = ? AND user_id = ?
-             ORDER BY max_weight DESC LIMIT 1`,
-              [ex.exercise.id, userId],
-            );
-
-          const isPersonalRecord =
-            !previousRecord || maxWeight > previousRecord.max_weight;
-
-          await this.db.runAsync(
-            `INSERT INTO exercise_progress (
-              id, exercise_id, user_id, date, max_weight, total_volume,
-              estimated_one_rep_max, personal_record, workout_name
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              generateId('ep'),
-              ex.exercise.id,
-              userId,
-              date,
-              maxWeight,
-              totalVolume,
-              null,
-              isPersonalRecord ? 1 : 0,
-              workoutName ?? null,
-            ],
-          );
-        }
+        await this._saveSnapshotInTx(workoutId, exercises);
+        await this._insertWorkoutHistoryInTx(
+          workoutId,
+          workout.name,
+          durationMinutes,
+          exercises,
+        );
+        await this._saveProgressInTx(exercises, workout.name);
+        await this.db.runAsync(
+          'UPDATE workouts SET is_active = 0, started_at = NULL WHERE id = ?',
+          [workoutId],
+        );
       });
     } catch (error) {
-      logger.error('WorkoutService.saveExerciseProgress failed', error);
-      throw new ServiceError('Nie udało się zapisać postępu ćwiczeń', error);
+      logger.error('WorkoutService.finishWorkout failed', error);
+      throw new ServiceError(
+        'Nie udało się zapisać zakończonego treningu',
+        error,
+      );
     }
   }
 
