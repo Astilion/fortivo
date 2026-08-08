@@ -1,4 +1,5 @@
 import { generateId } from '@/database/database';
+import { runInTransaction } from '@/database/writeLock';
 import { logger } from '@/utils/logger';
 import { ServiceError } from '@/utils/errors';
 import { PRESET_WORKOUTS } from '@/constants/PresetWorkouts';
@@ -30,7 +31,7 @@ export class PresetService {
     const nowIso = new Date().toISOString();
 
     try {
-      await this.db.withTransactionAsync(async () => {
+      await runInTransaction(this.db, async () => {
         await this.db.runAsync(
           `INSERT INTO workouts (
             id, name, date, duration, notes, tags, completed, template_id, created_at
