@@ -282,30 +282,11 @@ export default function ActiveWorkoutScreen() {
       'Zakończ trening',
       'Czy na pewno chcesz zakończyć trening?',
       async () => {
-        const { workoutId, workoutStartTime, exercises } =
-          useActiveWorkoutStore.getState();
-        if (!workoutId || workoutStartTime === null || !exercises) return;
-
-        const durationMinutes = Math.max(
-          0,
-          Math.round((Date.now() - workoutStartTime) / 60000),
-        );
+        const { workoutId, exercises } = useActiveWorkoutStore.getState();
+        if (!workoutId || !exercises) return;
 
         try {
-          await workoutService.saveActiveWorkoutSnapshot(workoutId, exercises);
-          await workoutService.saveWorkoutHistory(
-            workoutId,
-            workout?.name ?? null,
-            durationMinutes,
-            exercises,
-          );
-          await workoutService.saveExerciseProgress(
-            workoutId,
-            exercises,
-            workout?.name ?? null,
-          );
-
-          await workoutService.clearActiveWorkout(workoutId);
+          await workoutService.finishWorkout(workoutId, exercises);
           useActiveWorkoutStore.getState().finishActiveWorkout();
           showToast('Trening zakończony!', 'success');
           router.replace('/(tabs)/workout-history');
