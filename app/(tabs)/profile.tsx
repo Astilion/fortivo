@@ -22,6 +22,10 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/providers/AppProvider';
 import { logger } from '@/utils/logger';
+import {
+  isCrashReportingEnabled,
+  setCrashReportingEnabled,
+} from '@/utils/crashReporting';
 
 const PRIVACY_POLICY_URL = 'https://astilion.github.io/fortivo-privacy/';
 
@@ -72,6 +76,11 @@ export default function ProfileScreen() {
   const [goalWeightInput, setGoalWeightInput] = useState<string>('');
   const [goalWeightError, setGoalWeightError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [crashReporting, setCrashReporting] = useState(true);
+
+  useEffect(() => {
+    isCrashReportingEnabled().then(setCrashReporting);
+  }, []);
 
   useEffect(() => {
     if (settings) {
@@ -177,6 +186,19 @@ export default function ProfileScreen() {
         );
       }
     };
+
+  const handleCrashReportingToggle = async (value: boolean) => {
+    const previous = crashReporting;
+    setCrashReporting(value);
+    try {
+      await setCrashReportingEnabled(value);
+      showToast('Zmiana zadziała po ponownym uruchomieniu aplikacji', 'info');
+    } catch (error) {
+      logger.error('Error updating crash reporting flag:', error);
+      setCrashReporting(previous);
+      showToast('Nie udało się zapisać ustawienia', 'error');
+    }
+  };
 
   const handleExportData = async () => {
     if (exporting) return;
@@ -431,6 +453,15 @@ export default function ProfileScreen() {
         {/* ── Sekcja: O aplikacji ── */}
         <SectionHeader icon="document-text-outline" title="O APLIKACJI" />
         <View style={styles.card}>
+          <SettingsRow label="Wysyłaj raporty o błędach">
+            <Switch
+              value={crashReporting}
+              onValueChange={handleCrashReportingToggle}
+              trackColor={{ false: colors.secondary, true: colors.background }}
+              thumbColor={crashReporting ? colors.accent : colors.muted}
+              ios_backgroundColor={colors.secondary}
+            />
+          </SettingsRow>
           <Pressable
             onPress={handleExportData}
             disabled={exporting}
