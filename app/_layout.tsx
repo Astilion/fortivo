@@ -4,6 +4,7 @@ import { Toast } from '@/components/Toast';
 import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { AppProvider } from '@/providers/AppProvider';
+import { isCrashReportingEnabled } from '@/utils/crashReporting';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import * as Sentry from '@sentry/react-native';
@@ -34,25 +35,41 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo(),
 });
 
-// Module scope so startup errors are captured before any component mounts.
-Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-  // Local/dev runs must not pollute the project; errors are the priority,
-  // tracing stays at a token sample.
-  enabled: !__DEV__,
-  tracesSampleRate: 0.1,
-  integrations: [navigationIntegration],
-  enableNativeFramesTracking: !isRunningInExpoGo(),
-  sendDefaultPii: false,
-  beforeBreadcrumb(breadcrumb) {
-    // console args are the only breadcrumb channel that can carry user data
-    return breadcrumb.category === 'console' ? null : breadcrumb;
-  },
-  beforeSend(event) {
-    delete event.user;
-    return event;
-  },
-});
+const MAX_EVENTS_PER_SESSION = 25;
+let sentEventCount = 0;
+
+// Not module scope: the opt-out flag is only readable asynchronously from
+// AsyncStorage. Honouring a user's refusal outranks capturing the handful of
+// errors that could fire before this resolves.
+const bootstrapCrashReporting = async () => {
+  if (!(await isCrashReportingEnabled())) return;
+
+  Sentry.init({
+    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    // Local/dev runs must not pollute the project; errors are the priority,
+    // tracing stays at a token sample.
+    enabled: !__DEV__,
+    tracesSampleRate: 0.1,
+    integrations: [navigationIntegration],
+    enableNativeFramesTracking: !isRunningInExpoGo(),
+    sendDefaultPii: false,
+    beforeBreadcrumb(breadcrumb) {
+      // console args are the only breadcrumb channel that can carry user data
+      return breadcrumb.category === 'console' ? null : breadcrumb;
+    },
+    beforeSend(event) {
+      // A crash loop on one tester's device can burn the whole monthly quota
+      // and blind us for the rest of the period; rate limiting is
+      // Business-plan only.
+      if (sentEventCount >= MAX_EVENTS_PER_SESSION) return null;
+      sentEventCount++;
+      delete event.user;
+      return event;
+    },
+  });
+};
+
+bootstrapCrashReporting();
 
 const FortivoDarkTheme = {
   ...DefaultTheme,
