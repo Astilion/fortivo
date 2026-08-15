@@ -52,9 +52,10 @@ yarn-error.*
 !.env.example
 
 # AI / internal docs
-CLAUDE.md
-/docs/
-.claude/
+/docs/*
+!/docs/*.md
+.claude/*
+!.claude/skills/
 
 # Service credentials (Firebase, EAS, etc.)
 google-services.json
