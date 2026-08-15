@@ -1,6 +1,6 @@
 ---
 name: koniec
-description: Zamyka sesję roboczą nad Fortivo. Aktualizuje STATUS.md, ROADMAP.md, DECISIONS.md, BACKLOG.md i w razie potrzeby CLAUDE.md na podstawie tego, co faktycznie wydarzyło się w tej sesji. Uruchamiać wyłącznie na wyraźne polecenie użytkownika, nigdy z własnej inicjatywy.
+description: Zamyka sesję roboczą nad Fortivo. Aktualizuje STATUS.md, prywatną ROADMAP.md, DECISIONS.md, BACKLOG.md i w razie potrzeby CLAUDE.md na podstawie tego, co faktycznie wydarzyło się w tej sesji. Uruchamiać wyłącznie na wyraźne polecenie użytkownika, nigdy z własnej inicjatywy.
 disable-model-invocation: true
 ---
 
@@ -10,32 +10,37 @@ Wykonaj kroki po kolei. **Pokaż diff PRZED zapisem każdego pliku i poczekaj na
 
 ## 1. `docs/STATUS.md` — nadpisz
 
-Maksymalnie 30 linii:
-
 ```markdown
 # Status — RRRR-MM-DD
 
 **Wersja:** x.y.z · **Migracja bazy:** vN · **main:** <short-sha>
 
-## Zrobione w tej sesji
-## W toku / niedokończone
+## Zrobione ostatnio
+
+## W toku
+
 ## Czeka na zewnątrz
+
 ## Następny krok
 ```
 
-Sekcja „Czeka na zewnątrz" jest dla rzeczy zablokowanych na trzecią stronę
-(DPA, review w Play Console) — bez niej takie pozycje giną między sesjami.
+`main` bierz z `git rev-parse --short HEAD`, nie z poprzedniej treści pliku.
+„Czeka na zewnątrz" jest dla rzeczy zablokowanych na trzecią stronę (DPA, review
+w Play Console) — bez tej sekcji giną między sesjami.
 
-Pusta sekcja → wpisz „—". Nie wymyślaj treści.
+Maks. 30 linii. Pusta sekcja → „—". Nie wymyślaj treści.
 
-## 2. `docs/ROADMAP.md`
+## 2. `docs/private/ROADMAP.md`
+
+To jest roadmapa robocza i jedyna, którą edytujesz.
 
 - Odznacz `[x]` **tylko** to, co faktycznie działa — nie „napisane", tylko „działa".
-- Porzucone → **NIE usuwaj**. Przekreśl i dopisz `(porzucone RRRR-MM-DD: powód)`.
+- Porzucone → **NIE usuwaj**. Przekreśl + `(porzucone RRRR-MM-DD: powód)`.
 - Nowe → dopisz z `(nowe RRRR-MM-DD)`.
 
-Przekreślanie zamiast usuwania jest celowe: żeby za trzy miesiące nikt — ani użytkownik,
-ani model — nie zaproponował ponownie czegoś, co już odrzucono.
+Jeśli zmienił się horyzont (doszedł/wypadł etap, zmieniła się kolejność), zgłoś to
+w raporcie końcowym jako „`docs/ROADMAP.md` do odświeżenia" — ale **nie edytuj jej sam**.
+Wersja publiczna jest wyprowadzana świadomie, nie synchronizowana automatycznie.
 
 ## 3. `docs/DECISIONS.md` — dopisz na końcu
 
@@ -48,42 +53,50 @@ ani model — nie zaproponował ponownie czegoś, co już odrzucono.
 **Dlaczego:**
 ```
 
-- Dopisuj **wyłącznie na końcu**. Nigdy nie edytuj wcześniejszych wpisów.
+- Wyłącznie na końcu. Nigdy nie edytuj wcześniejszych wpisów.
 - Jedna decyzja = jeden wpis.
-- „Odrzucone" jest obowiązkowe. Jeśli nie było alternatyw — napisz dlaczego.
+- „Odrzucone" obowiązkowe. Brak alternatyw → napisz dlaczego ich nie było.
 - Implementacja bez wyboru to nie decyzja. Pomiń.
+- Ten plik jest publiczny. Pisz tak, żeby dało się to obronić pod pytaniem
+  z zewnątrz — bez skrótów zrozumiałych tylko dla nas.
 
 ## 4. `docs/BACKLOG.md`
 
-Nowy dług odkryty w tej sesji → dopisz **tutaj**, nie do `DECISIONS.md`.
-Dług spłacony → oznacz jako zamknięty z datą, nie kasuj wpisu.
+Nowy dług odkryty w tej sesji → **tutaj**, nie do `DECISIONS.md`.
+Dług spłacony → oznacz zamknięciem z datą, nie kasuj wpisu.
 
-Rozróżnienie: `DECISIONS.md` = co postanowiliśmy i dlaczego. `BACKLOG.md` = co wiemy,
+Granica: `DECISIONS.md` = co postanowiliśmy i dlaczego. `BACKLOG.md` = co wiemy,
 że jest nie tak, i świadomie odkładamy.
 
 ## 5. `CLAUDE.md` — tylko warunkowo
 
-Zaktualizuj **wyłącznie** gdy zmieniła się konwencja kodu, struktura folderów,
-stack albo proces release/komendy.
+Wyłącznie gdy zmieniła się konwencja kodu, struktura folderów, stack albo
+proces release/komendy.
 
-**Nie** wpisuj tu stanu projektu (wersja, SHA, status milestone'a) — to `STATUS.md`.
-**Nie** wpisuj tu uzasadnień — to `DECISIONS.md`, tu zostaje sama reguła plus odesłanie.
-**Nie** wpisuj tu długu — to `BACKLOG.md`.
+**Nie** wpisuj stanu projektu → `STATUS.md`. **Nie** wpisuj uzasadnień →
+`DECISIONS.md`, tu zostaje reguła plus odesłanie. **Nie** wpisuj długu → `BACKLOG.md`.
 
-Jeśli kusi Cię dopisanie akapitu z uzasadnieniem: to sygnał, że wpis należy
-do `DECISIONS.md`.
+Kusi Cię dopisanie akapitu z uzasadnieniem? To sygnał, że wpis należy do `DECISIONS.md`.
 
 ## 6. Raport końcowy
 
 Poza plikami wypisz:
 
 - **Notion:** jedno zdanie — co użytkownik ma ręcznie zaktualizować
-- **Push:** przypomnij o `git push` w głównym repo **oraz** osobno w `docs/private/`,
-  jeśli tam też były zmiany
+- **`docs/ROADMAP.md`:** czy wymaga odświeżenia (patrz krok 2)
+- **Push repo głównego:** przypomnij
+- **Push repo prywatnego** — podaj gotową komendę do skopiowania:
+
+  ```
+  git -C docs/private add -A && git -C docs/private commit -m "notatki RRRR-MM-DD" && git -C docs/private push
+  ```
+
+  Najpierw sprawdź `git -C docs/private status -sb`. Jeśli nie ma zmian ani
+  niewypchniętych commitów — pomiń tę pozycję zamiast przypominać na sucho.
 
 ## Zasady twarde
 
 - Nie dotykaj plików z kodem. Ten skill zmienia wyłącznie dokumentację.
-- Nie wymyślaj rzeczy, których nie było w tej sesji. Nie masz pewności, czy coś
-  skończone — zapytaj, nie zgaduj.
-- Sesja była krótka i nie ma czego zapisać → powiedz to wprost zamiast produkować wpisy.
+- Nie rób `git commit` ani `git push` sam — przygotuj treść, komendy podaj do wykonania.
+- Nie wymyślaj rzeczy, których nie było w tej sesji. Nie masz pewności — zapytaj.
+- Sesja krótka i nie ma czego zapisać → powiedz to wprost zamiast produkować wpisy.
