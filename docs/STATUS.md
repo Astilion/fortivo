@@ -1,6 +1,6 @@
 # Status — 2026-08-15
 
-**Wersja:** 0.6.0 · **Migracja bazy:** v10 · **main:** `9fae822`
+**Wersja:** 0.6.0 · **Migracja bazy:** v10 · **main:** `2781ded`
 
 ## Zrobione ostatnio
 
