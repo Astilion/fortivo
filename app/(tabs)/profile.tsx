@@ -26,8 +26,7 @@ import {
   isCrashReportingEnabled,
   setCrashReportingEnabled,
 } from '@/utils/crashReporting';
-
-const PRIVACY_POLICY_URL = 'https://astilion.github.io/fortivo-privacy/';
+import { PRIVACY_POLICY_URL } from '@/constants/Links';
 
 const APP_VERSION = Constants.expoConfig?.version ?? '—';
 
@@ -76,7 +75,7 @@ export default function ProfileScreen() {
   const [goalWeightInput, setGoalWeightInput] = useState<string>('');
   const [goalWeightError, setGoalWeightError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
-  const [crashReporting, setCrashReporting] = useState(true);
+  const [crashReporting, setCrashReporting] = useState(false);
 
   useEffect(() => {
     isCrashReportingEnabled().then(setCrashReporting);
@@ -191,7 +190,7 @@ export default function ProfileScreen() {
     const previous = crashReporting;
     setCrashReporting(value);
     try {
-      await setCrashReportingEnabled(value);
+      await setCrashReportingEnabled(value, 'profile');
       showToast('Zmiana zadziała po ponownym uruchomieniu aplikacji', 'info');
     } catch (error) {
       logger.error('Error updating crash reporting flag:', error);
