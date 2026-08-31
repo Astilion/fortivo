@@ -35,34 +35,70 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo(),
 });
 
-const MAX_EVENTS_PER_SESSION = 25;
-let sentEventCount = 0;
+const MAX_ERRORS_PER_SESSION = 25;
+const MAX_TRANSACTIONS_PER_SESSION = 10;
+let sentErrorCount = 0;
+let sentTransactionCount = 0;
 
-// Not module scope: the opt-out flag is only readable asynchronously from
-// AsyncStorage. Honouring a user's refusal outranks capturing the handful of
-// errors that could fire before this resolves.
+// Route paths carry entity IDs (/workout-details?id=…); touch breadcrumbs carry
+// accessibility labels, which on this app means exercise names.
+const stripQuery = (value: unknown) =>
+  typeof value === 'string' ? value.split('?')[0] : undefined;
+
 const bootstrapCrashReporting = async () => {
+  // `enabled: false` is not a kill switch: initAndBind ignores options.enabled
+  // and the RN client calls _initNativeSdk() regardless, so native handlers
+  // install anyway. Skipping init entirely is the only real off switch —
+  // same mechanism as the user opt-out below.
+  if (__DEV__) return;
   if (!(await isCrashReportingEnabled())) return;
 
   Sentry.init({
     dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-    // Local/dev runs must not pollute the project; errors are the priority,
-    // tracing stays at a token sample.
-    enabled: !__DEV__,
     tracesSampleRate: 0.1,
     integrations: [navigationIntegration],
     enableNativeFramesTracking: !isRunningInExpoGo(),
     sendDefaultPii: false,
+
     beforeBreadcrumb(breadcrumb) {
-      // console args are the only breadcrumb channel that can carry user data
-      return breadcrumb.category === 'console' ? null : breadcrumb;
+      // console args are an open channel for anything ever logged
+      if (breadcrumb.category === 'console') return null;
+
+      // TouchEventBoundary puts component names and a11y labels in `message`
+      if (breadcrumb.category === 'touch') {
+        return { ...breadcrumb, message: undefined, data: undefined };
+      }
+
+      // keep the navigation trail, drop the params
+      if (breadcrumb.category === 'navigation') {
+        return {
+          ...breadcrumb,
+          data: {
+            from: stripQuery(breadcrumb.data?.from),
+            to: stripQuery(breadcrumb.data?.to),
+          },
+        };
+      }
+
+      return breadcrumb;
     },
+
     beforeSend(event) {
       // A crash loop on one tester's device can burn the whole monthly quota
       // and blind us for the rest of the period; rate limiting is
       // Business-plan only.
-      if (sentEventCount >= MAX_EVENTS_PER_SESSION) return null;
-      sentEventCount++;
+      if (sentErrorCount >= MAX_ERRORS_PER_SESSION) return null;
+      sentErrorCount++;
+      delete event.user;
+      return event;
+    },
+
+    beforeSendTransaction(event) {
+      // beforeSend is never called for transactions — without this hook the
+      // tracing sample bypasses both the scrubbing and the budget. Separate
+      // counter so traces cannot starve the error budget.
+      if (sentTransactionCount >= MAX_TRANSACTIONS_PER_SESSION) return null;
+      sentTransactionCount++;
       delete event.user;
       return event;
     },
