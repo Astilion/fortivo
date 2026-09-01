@@ -20,8 +20,9 @@ Kod przestał być wąskim gardłem — dalej idzie warstwa papierowa.
 
 ## W toku
 
-Porządkowanie dokumentacji wg `docs/private/metodyka-pracy.md`: `STATUS.md` / `ROADMAP.md` /
-`BACKLOG.md` / `DECISIONS.md` jako cztery osobne pliki + dieta `CLAUDE.md` (zostają same konwencje).
+Przepisanie polityki prywatności pod model **opt-in** — dokument musi opisywać zgodę jako podstawę
+crash reportingu, a data w jego nagłówku musi być równa `PRIVACY_POLICY_VERSION`
+w `constants/Links.ts` (dziś `2026-08-31`).
 
 ## Czeka na zewnątrz
 
