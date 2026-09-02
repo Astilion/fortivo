@@ -499,3 +499,30 @@ Zweryfikowane `expo config --type introspect` — oba wchodzą do manifestu z
 Data Safety i tłumaczyć w listingu, a użytkownikowi czytającemu listę uprawnień wyglądają
 jak dostęp do jego plików. Blokada usuwa je u źródła, zamiast opisywać coś, czego kod
 nigdy nie wywołuje.
+
+---
+
+## 2026-09-02 — `SYSTEM_ALERT_WINDOW` i `VIBRATE` zablokowane; weryfikacja uprawnień przenosi się na wygenerowany manifest
+
+**Kontekst:** Weryfikacja punktu 7 polityki prywatności przeszła po raz pierwszy przez
+`expo prebuild` i grep po `AndroidManifest.xml`. Scalony manifest zawierał dwa uprawnienia
+spoza `app.json`: `SYSTEM_ALERT_WINDOW` (wkład manifestu zależności) i `VIBRATE` (szablon
+Expo/biblioteki). Grep po `Haptics`, `Vibration` i `expo-haptics` w `app/ components/ hooks/
+services/ store/` nie zwraca nic — `VIBRATE` jest martwe. Metoda z wpisu (c) z 2026-08-31
+(`expo config --type introspect`) obu nie pokazywała.
+
+**Decyzja:** Oba dopisane do `android.blockedPermissions`; manifest po ponownym prebuildzie
+ma `INTERNET` bez atrybutów i cztery pozostałe z `tools:node="remove"`. Procedura weryfikacji
+uprawnień przechodzi na **wygenerowany manifest** (`expo prebuild --platform android
+--no-install` + grep, potem skasowanie `android/`) i w tej formie stoi w checkliście buildowej.
+`VIBRATE` ma odnotowany w `BACKLOG.md` warunek odblokowania: `expo-notifications` z M2.1.
+
+**Odrzucone:** utrzymanie `expo config --type introspect` jako metody weryfikacji.
+
+**Dlaczego:** Introspekcja raportuje tablicę `android.permissions` z configu, a nie wkład
+manifestów bibliotek i szablonu — czyli dokładnie tę część, która wnosi uprawnienia bez wiedzy
+autora. Weryfikacja czegoś, co idzie do Play, musi patrzeć na artefakt, który tam trafia.
+Ten wpis **uzupełnia wpis (c) z 2026-08-31** (`android.blockedPermissions` na obu uprawnieniach
+STORAGE): tamta decyzja pozostaje w mocy, zmienia się wyłącznie metoda weryfikacji i lista
+zablokowanych uprawnień. Idzie osobno, bo dziennik jest append-only — poprawka w starym wpisie
+ukryłaby fakt, że przez jeden cykl weryfikacja opierała się na niepełnym źródle.

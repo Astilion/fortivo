@@ -23,6 +23,9 @@
 - Import/restore danych — domyka pętlę bezpieczeństwa; wysoko po becie.
 - `originalError` → `cause` w `ServiceError` (dziś komunikat SQLite nie dociera do Sentry).
 - `withExclusiveTransactionAsync` + przepchnięcie `txn` przez `_...InTx`.
+- `VIBRATE` zablokowane w `app.json` (2026-08-31, nieużywane). `expo-notifications` z M2.1
+  dokłada to uprawnienie — przy wdrażaniu przypomnień lokalnych trzeba je usunąć
+  z `blockedPermissions`, inaczej powiadomienia nie zawibrują, a przyczyna będzie niewidoczna.
 
 ## Nieużywane zależności (kandydaci do usunięcia lub zagospodarowania)
 
