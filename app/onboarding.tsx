@@ -1,5 +1,9 @@
 import colors from '@/constants/Colors';
+import { PRIVACY_POLICY_URL } from '@/constants/Links';
 import { useOnboardingStore } from '@/store/onboardingStore';
+import { useToastStore } from '@/store/toastStore';
+import { setCrashReportingEnabled } from '@/utils/crashReporting';
+import { logger } from '@/utils/logger';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -8,6 +12,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Linking,
   ListRenderItemInfo,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -22,6 +27,7 @@ type Slide = {
   key: string;
   title: string;
   description: string;
+  kind?: 'consent';
   icon?: keyof typeof Ionicons.glyphMap;
   image?: number;
 };
@@ -63,6 +69,14 @@ const SLIDES: Slide[] = [
     icon: 'barbell-outline',
   },
   {
+    key: 'crash-consent',
+    kind: 'consent',
+    title: 'Raporty o błędach',
+    description:
+      'Gdy aplikacja się zawiesi, może wysłać raport techniczny — co się zepsuło i na jakim urządzeniu. Raport nie zawiera Twoich treningów, wagi ani pomiarów. Nie masz konta, więc nie ma czego do Ciebie przypisać. Możesz to zmienić w każdej chwili w Profilu.',
+    icon: 'shield-checkmark-outline',
+  },
+  {
     key: 'start',
     title: 'Zaczynamy!',
     description:
@@ -71,14 +85,18 @@ const SLIDES: Slide[] = [
   },
 ];
 
+const CONSENT_INDEX = SLIDES.findIndex((slide) => slide.kind === 'consent');
+
 export default function OnboardingScreen() {
   const [index, setIndex] = useState(0);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<Slide>>(null);
   const completeOnboarding = useOnboardingStore((state) => state.complete);
+  const showToast = useToastStore((state) => state.showToast);
 
   const isLastSlide = index === SLIDES.length - 1;
+  const isConsentSlide = index === CONSENT_INDEX;
 
   const finish = useCallback(async () => {
     await completeOnboarding();
@@ -105,6 +123,37 @@ export default function OnboardingScreen() {
     listRef.current?.scrollToIndex({ index: index + 1, animated: true });
   }, [index, isLastSlide, finish]);
 
+  // Skipping the tour must not skip the consent question — a tester tapping
+  // through would otherwise never be asked, and unasked means no reporting.
+  const handleSkip = useCallback(() => {
+    if (index < CONSENT_INDEX) {
+      listRef.current?.scrollToIndex({ index: CONSENT_INDEX, animated: true });
+      return;
+    }
+    finish();
+  }, [index, finish]);
+
+  const handleConsent = useCallback(
+    async (value: boolean) => {
+      try {
+        await setCrashReportingEnabled(value, 'onboarding');
+      } catch (error) {
+        logger.error('Failed to save crash reporting consent', error);
+        showToast('Nie udało się zapisać ustawienia', 'error');
+      }
+      listRef.current?.scrollToIndex({ index: index + 1, animated: true });
+    },
+    [index, showToast],
+  );
+
+  const handleOpenPrivacyPolicy = useCallback(async () => {
+    try {
+      await Linking.openURL(PRIVACY_POLICY_URL);
+    } catch (error) {
+      logger.error('Error opening privacy policy URL:', error);
+    }
+  }, []);
+
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const next = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
@@ -130,10 +179,19 @@ export default function OnboardingScreen() {
         <View style={styles.textArea}>
           <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.description}>{item.description}</Text>
+          {item.kind === 'consent' && (
+            <Pressable
+              onPress={handleOpenPrivacyPolicy}
+              accessibilityLabel="Otwórz politykę prywatności"
+              hitSlop={8}
+            >
+              <Text style={styles.policyLink}>Polityka prywatności</Text>
+            </Pressable>
+          )}
         </View>
       </View>
     ),
-    [],
+    [handleOpenPrivacyPolicy],
   );
 
   return (
@@ -143,10 +201,10 @@ export default function OnboardingScreen() {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      {!isLastSlide && (
+      {!isLastSlide && !isConsentSlide && (
         <Pressable
           style={[styles.skipButton, { top: insets.top }]}
-          onPress={finish}
+          onPress={handleSkip}
           hitSlop={12}
         >
           <Text style={styles.skipText}>Pomiń</Text>
@@ -182,11 +240,28 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Pressable style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextText}>
-            {isLastSlide ? 'Zaczynamy!' : 'Dalej'}
-          </Text>
-        </Pressable>
+        {isConsentSlide ? (
+          <View style={styles.consentActions}>
+            <Pressable
+              style={styles.nextButton}
+              onPress={() => handleConsent(true)}
+            >
+              <Text style={styles.nextText}>Zgadzam się</Text>
+            </Pressable>
+            <Pressable
+              style={styles.secondaryButton}
+              onPress={() => handleConsent(false)}
+            >
+              <Text style={styles.secondaryText}>Nie teraz</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable style={styles.nextButton} onPress={handleNext}>
+            <Text style={styles.nextText}>
+              {isLastSlide ? 'Zaczynamy!' : 'Dalej'}
+            </Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -241,6 +316,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
+  policyLink: {
+    color: colors.accent,
+    fontSize: 15,
+    textDecorationLine: 'underline',
+    marginTop: 20,
+  },
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -274,6 +355,21 @@ const styles = StyleSheet.create({
   },
   nextText: {
     color: colors.primary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  consentActions: {
+    gap: 10,
+  },
+  secondaryButton: {
+    backgroundColor: colors.secondary,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondaryText: {
+    color: colors.text.primary,
     fontSize: 16,
     fontWeight: '600',
   },

@@ -35,36 +35,97 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo(),
 });
 
-const MAX_EVENTS_PER_SESSION = 25;
-let sentEventCount = 0;
+const MAX_ERRORS_PER_SESSION = 25;
+const MAX_TRANSACTIONS_PER_SESSION = 10;
+let sentErrorCount = 0;
+let sentTransactionCount = 0;
 
-// Not module scope: the opt-out flag is only readable asynchronously from
-// AsyncStorage. Honouring a user's refusal outranks capturing the handful of
-// errors that could fire before this resolves.
+// Route paths can carry entity IDs (/workout-details?id=…)
+const stripQuery = (value: unknown) =>
+  typeof value === 'string' ? value.split('?')[0] : undefined;
+
+// Native (Android SDK) breadcrumbs bypass beforeBreadcrumb entirely, and
+// server-side scrubbing clears the numeric network fields but leaves the
+// boolean vpn_active — so the final event gets one more pass here.
+const stripVpnFlag = <T extends { breadcrumbs?: Sentry.Breadcrumb[] }>(
+  event: T,
+): T => {
+  event.breadcrumbs = event.breadcrumbs?.map((b) =>
+    b.category === 'network.event' && b.data
+      ? { ...b, data: { ...b.data, vpn_active: undefined } }
+      : b,
+  );
+  return event;
+};
+
 const bootstrapCrashReporting = async () => {
+  // `enabled: false` is not a kill switch: initAndBind ignores options.enabled
+  // and the RN client calls _initNativeSdk() regardless, so native handlers
+  // install anyway. Skipping init entirely is the only real off switch —
+  // same mechanism as the user opt-out below.
+  if (__DEV__) return;
   if (!(await isCrashReportingEnabled())) return;
 
   Sentry.init({
     dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-    // Local/dev runs must not pollute the project; errors are the priority,
-    // tracing stays at a token sample.
-    enabled: !__DEV__,
     tracesSampleRate: 0.1,
     integrations: [navigationIntegration],
     enableNativeFramesTracking: !isRunningInExpoGo(),
     sendDefaultPii: false,
+
     beforeBreadcrumb(breadcrumb) {
-      // console args are the only breadcrumb channel that can carry user data
-      return breadcrumb.category === 'console' ? null : breadcrumb;
+      // console args are an open channel for anything ever logged
+      if (breadcrumb.category === 'console') return null;
+
+      // TouchEventBoundary puts component names and a11y labels in `message`
+      if (breadcrumb.category === 'touch') {
+        return { ...breadcrumb, message: undefined, data: undefined };
+      }
+
+      // keep the navigation trail, drop the params
+      if (breadcrumb.category === 'navigation') {
+        return {
+          ...breadcrumb,
+          data: {
+            from: stripQuery(breadcrumb.data?.from),
+            to: stripQuery(breadcrumb.data?.to),
+          },
+        };
+      }
+
+      // network crumbs carry signal strength, bandwidth and VPN state —
+      // none of which help debug a crash
+      if (breadcrumb.category === 'network.event') {
+        return {
+          ...breadcrumb,
+          data: {
+            action: breadcrumb.data?.action,
+            network_type: breadcrumb.data?.network_type,
+          },
+        };
+      }
+
+      return breadcrumb;
     },
+
     beforeSend(event) {
       // A crash loop on one tester's device can burn the whole monthly quota
       // and blind us for the rest of the period; rate limiting is
       // Business-plan only.
-      if (sentEventCount >= MAX_EVENTS_PER_SESSION) return null;
-      sentEventCount++;
+      if (sentErrorCount >= MAX_ERRORS_PER_SESSION) return null;
+      sentErrorCount++;
       delete event.user;
-      return event;
+      return stripVpnFlag(event);
+    },
+
+    beforeSendTransaction(event) {
+      // beforeSend is never called for transactions — without this hook the
+      // tracing sample bypasses both the scrubbing and the budget. Separate
+      // counter so traces cannot starve the error budget.
+      if (sentTransactionCount >= MAX_TRANSACTIONS_PER_SESSION) return null;
+      sentTransactionCount++;
+      delete event.user;
+      return stripVpnFlag(event);
     },
   });
 };

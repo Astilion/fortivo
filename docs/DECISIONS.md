@@ -415,3 +415,114 @@ jako jawny, jedyny wyjątek od tej reguły.
 **przeżyć reset bazy** przez `DatabaseRecoveryScreen`: gdyby siedziała w `user_settings`,
 reset po cichu przywróciłby raportowanie komuś, kto je świadomie wyłączył — i to
 w momencie awarii, czyli dokładnie wtedy, gdy poleci najwięcej zdarzeń.
+
+---
+
+## 2026-08-31 — Crash reporting przechodzi z opt-outu na opt-in
+
+**Kontekst:** Model opt-out (`value !== 'false'`) znaczył, że tester, który nigdy nie
+dotknął przełącznika w profilu, wysyłał raporty bez świadomej zgody. Sentry jest jedynym
+kanałem wychodzącym w całej aplikacji, a dane są wrażliwe.
+
+**Decyzja:** Domyślną wartością jest `false` — raportowanie startuje wyłącznie po jawnej
+zgodzie. Zgoda zbierana slajdem w onboardingu; „Pomiń" na wcześniejszych slajdach przewija
+do slajdu zgody zamiast kończyć onboarding (wymuszamy **zadanie pytania, nie odpowiedź**),
+a na samym slajdzie zgody przycisku „Pomiń" nie ma — stoją tam dwa równorzędne przyciski.
+Brak odpowiedzi = brak zgody = raportowanie wyłączone; sprzętowy „wstecz" nadal kończy
+onboarding i zostawia flagę nieustawioną. Zgoda działa dopiero od kolejnego startu
+aplikacji, bo `bootstrapCrashReporting()` biegnie raz przy module load `app/_layout.tsx` —
+tak samo jak przełącznik w profilu.
+
+Kształt samej flagi w AsyncStorage **nie zmienia się** — zostaje proste `'true'`/`'false'`.
+Metadane zgody (`{ value, at, policyVersion, source }`) idą do osobnego klucza
+`crashReportingConsentMeta`, zapisywanego fire-and-forget po udanym zapisie flagi.
+`policyVersion` bierze się z `PRIVACY_POLICY_VERSION` w `constants/Links.ts`, która musi
+być równa dacie w nagłówku dokumentu stojącego pod `PRIVACY_POLICY_URL`.
+
+**Odrzucone:** re-init Sentry w trakcie sesji zaraz po zgodzie (pierwsza sesja nie
+raportuje — świadomy koszt); trzymanie metadanych w tej samej wartości co flaga.
+
+**Dlaczego:** Domyślna zgoda jest złym defaultem wobec Play Data Safety, a fail-safe musi
+iść w stronę „nie wysyłamy" — dlatego również fallback w `catch` przy nieczytelnej fladze
+zwraca `false`. Flaga leci w ścieżce bootu, przed inicjalizacją bazy, więc nie wolno jej
+urosnąć do JSON-a wymagającego parsowania; metadane są audytem, nie stanem, i ich
+wywrócony zapis nie może zrollbackować zgody, która już się zapisała.
+
+**Konsekwencja Auto Backup:** flaga i `crashReportingConsentMeta` siedzą w AsyncStorage,
+a `android.allowBackup: true`, więc wracają z kopii zapasowej razem z flagą onboardingu.
+Użytkownik przywracający backup na nowym telefonie ma raportowanie włączone i **nie zobaczy
+ekranu zgody ponownie**. To jest poprawne — zgoda udzielona raz trwa — ale zapisane tutaj,
+bo przy następnej zmianie polityki prywatności ktoś o to zapyta.
+
+---
+
+## 2026-08-31 — Korekta guardraili Sentry: `__DEV__`, transakcje, breadcrumbs
+
+**Kontekst:** Przegląd konfiguracji przed betą pokazał trzy luki. Wpis z 2026-06-29
+deklarował `beforeBreadcrumb` „odsiewający parametry nawigacji" — filtra o tym działaniu
+w kodzie **nie było**, hook odrzucał wyłącznie kategorię `console`. Osobno:
+`tracesSampleRate = 0.1` wysyłał transakcje, których `beforeSend` w ogóle nie widzi, oraz
+`Sentry.init` biegł też w developmencie.
+
+**Decyzja:** `bootstrapCrashReporting()` wychodzi wcześniej przy `__DEV__`.
+`beforeSendTransaction` robi `delete event.user` i egzekwuje własny budżet
+`MAX_TRANSACTIONS_PER_SESSION = 10`. `beforeBreadcrumb` poza kategorią `console`
+sanitizuje `touch` (`message` i `data` na `undefined`) oraz `navigation` (`from`/`to`
+obcięte do ścieżki, bez query stringa). Ten wpis **prostuje 2026-06-29** w części
+o filtrze parametrów nawigacji.
+
+**Odrzucone:** wspólny licznik zdarzeń i transakcji.
+
+**Dlaczego:** `beforeSend` nie jest wołany dla transakcji, więc bez `beforeSendTransaction`
+próbka tracingu omijała jednocześnie scrubbing i budżet. Osobny licznik jest po to, żeby
+transakcje nie zjadły budżetu błędów — to raporty o awariach są tym, po co Sentry tu stoi.
+Trasy niosą ID encji w query stringu (`/workout-details?id=…`), a `TouchEventBoundary`
+wkłada w `message` nazwy komponentów i etykiety a11y, czyli w tej aplikacji nazwy ćwiczeń.
+Deklaracja w dzienniku decyzji bez pokrycia w kodzie jest gorsza niż jej brak — dlatego
+korekta idzie osobnym wpisem, a nie cichą poprawką starego.
+
+---
+
+## 2026-08-31 — `android.blockedPermissions` na obu uprawnieniach STORAGE
+
+**Kontekst:** Scalony manifest zawierał `READ_EXTERNAL_STORAGE` i `WRITE_EXTERNAL_STORAGE`
+wstrzyknięte przez zależności, mimo że aplikacja z nich nie korzysta — eksport zapisuje
+plik w `Paths.cache` i oddaje go przez SAF (`Sharing.shareAsync`).
+
+**Decyzja:** Oba uprawnienia jawnie zablokowane w `android.blockedPermissions` w `app.json`.
+Zweryfikowane `expo config --type introspect` — oba wchodzą do manifestu z
+`tools:node="remove"`.
+
+**Odrzucone:** brak zapisanych alternatyw.
+
+**Dlaczego:** Nieużywane uprawnienia do pamięci masowej trzeba zadeklarować w formularzu
+Data Safety i tłumaczyć w listingu, a użytkownikowi czytającemu listę uprawnień wyglądają
+jak dostęp do jego plików. Blokada usuwa je u źródła, zamiast opisywać coś, czego kod
+nigdy nie wywołuje.
+
+---
+
+## 2026-09-02 — `SYSTEM_ALERT_WINDOW` i `VIBRATE` zablokowane; weryfikacja uprawnień przenosi się na wygenerowany manifest
+
+**Kontekst:** Weryfikacja punktu 7 polityki prywatności przeszła po raz pierwszy przez
+`expo prebuild` i grep po `AndroidManifest.xml`. Scalony manifest zawierał dwa uprawnienia
+spoza `app.json`: `SYSTEM_ALERT_WINDOW` (wkład manifestu zależności) i `VIBRATE` (szablon
+Expo/biblioteki). Grep po `Haptics`, `Vibration` i `expo-haptics` w `app/ components/ hooks/
+services/ store/` nie zwraca nic — `VIBRATE` jest martwe. Metoda z wpisu (c) z 2026-08-31
+(`expo config --type introspect`) obu nie pokazywała.
+
+**Decyzja:** Oba dopisane do `android.blockedPermissions`; manifest po ponownym prebuildzie
+ma `INTERNET` bez atrybutów i cztery pozostałe z `tools:node="remove"`. Procedura weryfikacji
+uprawnień przechodzi na **wygenerowany manifest** (`expo prebuild --platform android
+--no-install` + grep, potem skasowanie `android/`) i w tej formie stoi w checkliście buildowej.
+`VIBRATE` ma odnotowany w `BACKLOG.md` warunek odblokowania: `expo-notifications` z M2.1.
+
+**Odrzucone:** utrzymanie `expo config --type introspect` jako metody weryfikacji.
+
+**Dlaczego:** Introspekcja raportuje tablicę `android.permissions` z configu, a nie wkład
+manifestów bibliotek i szablonu — czyli dokładnie tę część, która wnosi uprawnienia bez wiedzy
+autora. Weryfikacja czegoś, co idzie do Play, musi patrzeć na artefakt, który tam trafia.
+Ten wpis **uzupełnia wpis (c) z 2026-08-31** (`android.blockedPermissions` na obu uprawnieniach
+STORAGE): tamta decyzja pozostaje w mocy, zmienia się wyłącznie metoda weryfikacji i lista
+zablokowanych uprawnień. Idzie osobno, bo dziennik jest append-only — poprawka w starym wpisie
+ukryłaby fakt, że przez jeden cykl weryfikacja opierała się na niepełnym źródle.
