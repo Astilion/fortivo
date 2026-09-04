@@ -40,10 +40,23 @@ const MAX_TRANSACTIONS_PER_SESSION = 10;
 let sentErrorCount = 0;
 let sentTransactionCount = 0;
 
-// Route paths carry entity IDs (/workout-details?id=…); touch breadcrumbs carry
-// accessibility labels, which on this app means exercise names.
+// Route paths can carry entity IDs (/workout-details?id=…)
 const stripQuery = (value: unknown) =>
   typeof value === 'string' ? value.split('?')[0] : undefined;
+
+// Native (Android SDK) breadcrumbs bypass beforeBreadcrumb entirely, and
+// server-side scrubbing clears the numeric network fields but leaves the
+// boolean vpn_active — so the final event gets one more pass here.
+const stripVpnFlag = <T extends { breadcrumbs?: Sentry.Breadcrumb[] }>(
+  event: T,
+): T => {
+  event.breadcrumbs = event.breadcrumbs?.map((b) =>
+    b.category === 'network.event' && b.data
+      ? { ...b, data: { ...b.data, vpn_active: undefined } }
+      : b,
+  );
+  return event;
+};
 
 const bootstrapCrashReporting = async () => {
   // `enabled: false` is not a kill switch: initAndBind ignores options.enabled
@@ -80,6 +93,18 @@ const bootstrapCrashReporting = async () => {
         };
       }
 
+      // network crumbs carry signal strength, bandwidth and VPN state —
+      // none of which help debug a crash
+      if (breadcrumb.category === 'network.event') {
+        return {
+          ...breadcrumb,
+          data: {
+            action: breadcrumb.data?.action,
+            network_type: breadcrumb.data?.network_type,
+          },
+        };
+      }
+
       return breadcrumb;
     },
 
@@ -90,7 +115,7 @@ const bootstrapCrashReporting = async () => {
       if (sentErrorCount >= MAX_ERRORS_PER_SESSION) return null;
       sentErrorCount++;
       delete event.user;
-      return event;
+      return stripVpnFlag(event);
     },
 
     beforeSendTransaction(event) {
@@ -100,7 +125,7 @@ const bootstrapCrashReporting = async () => {
       if (sentTransactionCount >= MAX_TRANSACTIONS_PER_SESSION) return null;
       sentTransactionCount++;
       delete event.user;
-      return event;
+      return stripVpnFlag(event);
     },
   });
 };
