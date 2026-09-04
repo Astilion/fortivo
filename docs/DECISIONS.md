@@ -526,3 +526,34 @@ Ten wpis **uzupełnia wpis (c) z 2026-08-31** (`android.blockedPermissions` na o
 STORAGE): tamta decyzja pozostaje w mocy, zmienia się wyłącznie metoda weryfikacji i lista
 zablokowanych uprawnień. Idzie osobno, bo dziennik jest append-only — poprawka w starym wpisie
 ukryłaby fakt, że przez jeden cykl weryfikacja opierała się na niepełnym źródle.
+
+---
+
+## 2026-09-04 — Natywne breadcrumby Androida: scrubbing serwerowy plus `stripVpnFlag` w kliencie
+
+**Kontekst:** Smoke opt-in na fizycznym urządzeniu pokazał w żywych zdarzeniach Sentry
+breadcrumby kategorii `network.event`, `device.event` i `app.lifecycle`, których aplikacja
+nigdzie nie tworzy. Dokłada je natywny SDK Androida, a te breadcrumby **nie przechodzą przez
+`beforeBreadcrumb`** w warstwie JS — hook widzi wyłącznie to, co powstało po stronie
+JavaScriptu. Niosły siłę sygnału, przepustowość pobierania i wysyłania oraz `vpn_active`.
+
+**Decyzja:** Guardrail dwuwarstwowy. Po stronie serwera: reguły Advanced Data Scrubbing
+w projekcie Sentry na `$breadcrumb.data.signal_strength`, `download_bandwidth`,
+`upload_bandwidth` i `vpn_active`. Po stronie klienta: helper `stripVpnFlag` w `app/_layout.tsx`,
+wołany z `beforeSend` **i** `beforeSendTransaction`, kasujący `vpn_active` z breadcrumbów
+`network.event` w gotowym evencie. Wpis rozszerza serwerową regułę `$user.geo.**`
+z 2026-06-29 — konfiguracja projektu Sentry jest częścią guardraili, nie kosmetyką, i podlega
+tej samej zasadzie „nie usuwać bez decyzji" co hooki w kodzie.
+
+**Odrzucone:** oparcie się wyłącznie na regułach serwerowych — kasują trzy pola liczbowe, ale
+boolean `vpn_active` zostaje nietknięty. Oparcie się wyłącznie na kliencie — natywne
+breadcrumby omijają `beforeBreadcrumb`, więc pola liczbowe jechałyby aż do serwera, gdzie
+i tak muszą je złapać reguły.
+
+**Dlaczego:** Stan VPN, siła sygnału i przepustowość nie pomagają zdiagnozować żadnej awarii
+tej aplikacji, a razem opisują sytuację użytkownika w sposób, na który nikt się nie pisał
+klikając „zgadzam się" na raporty błędów. Żadna z warstw nie wystarcza sama: serwerowa nie
+rusza boolean, kliencka nie widzi natywnych breadcrumbów w momencie ich powstania. Wniosek
+ogólniejszy, ważny przy każdej przyszłej zmianie konfiguracji: **audyt guardraili robiony
+wyłącznie przez lekturę kodu JS jest niepełny** — trzeba obejrzeć zawartość faktycznie
+wysłanego zdarzenia.

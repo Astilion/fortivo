@@ -23,6 +23,20 @@
 - Import/restore danych — domyka pętlę bezpieczeństwa; wysoko po becie.
 - `originalError` → `cause` w `ServiceError` (dziś komunikat SQLite nie dociera do Sentry).
 - `withExclusiveTransactionAsync` + przepchnięcie `txn` przez `_...InTx`.
+- **Sesja instalacyjna nigdy nie raportuje** (2026-09-04). `bootstrapCrashReporting()` biegnie
+  raz przy ładowaniu modułu `app/_layout.tsx`, więc zgoda udzielona w onboardingu działa
+  dopiero od kolejnego startu aplikacji — a pierwsza sesja jest tą o najwyższym ryzyku
+  (migracje na świeżej bazie, seed 272 ćwiczeń). Skutek dla bety: **metryka crash-free
+  z kryteriów M1.16 jest lekko zawyżona**, bo nie obejmuje sesji instalacyjnych — czytać ją
+  z tym zastrzeżeniem. Re-init w trakcie sesji świadomie odrzucony (`DECISIONS.md`,
+  2026-08-31); ewentualne wyjście to przesunięcie decyzji o `Sentry.init` za odczyt zgody
+  w tej samej sesji, nie ponowna inicjalizacja klienta.
+- **Breadcrumby `network.event` znikają zamiast być przycinane** (2026-09-04). W ostatnim
+  przebiegu smoke'a nie było ich w evencie w ogóle, choć `beforeBreadcrumb` przycina je do
+  `action` + `network_type` i nigdzie ich nie usuwa. Podejrzenie: za szeroki selektor
+  w regułach Advanced Data Scrubbing w projekcie Sentry. Nie blokuje niczego — pod obiema
+  hipotezami `vpn_active` nie trafia do raportu; do sprawdzenia przy okazji następnej pracy
+  przy konfiguracji Sentry.
 - `VIBRATE` zablokowane w `app.json` (2026-08-31, nieużywane). `expo-notifications` z M2.1
   dokłada to uprawnienie — przy wdrażaniu przypomnień lokalnych trzeba je usunąć
   z `blockedPermissions`, inaczej powiadomienia nie zawibrują, a przyczyna będzie niewidoczna.

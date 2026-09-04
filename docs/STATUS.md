@@ -1,40 +1,36 @@
-# Status — 2026-08-15
+# Status — 2026-09-04
 
-**Wersja:** 0.6.0 · **Migracja bazy:** v10 · **main:** `2781ded`
+**Wersja:** 0.6.0 · **Migracja bazy:** v10 · **main:** `7364604`
 
 ## Zrobione ostatnio
 
-v0.6.0 **code-complete**, M1.15 (pre-beta hardening) **domknięte**:
+Smoke opt-in na fizycznym urządzeniu (dev client, 2026-09-03/04): slajd zgody w onboardingu,
+„Pomiń" przewijające do slajdu zgody, przełącznik w profilu, ścieżka odmowy nie wysyła nic.
+Guardraile potwierdzone na żywych zdarzeniach w Sentry — breadcrumby `navigation` bez
+parametrów, `touch` bez `message`/`data`, zero `console`, zdarzenia i transakcje bez pola
+`user`, transakcje faktycznie powstają.
 
-- pozycje audytu D1–D7, D14 (wycinek), D15
-- crash reporting (Sentry) z przełącznikiem w profilu
-- eksport danych do JSON
-- weryfikacja end-to-end na urządzeniu: restore z Android Auto Backup, eksport, 6/6 testów przełącznika
+Wykryte przy okazji: natywne breadcrumby Androida (`network.event`, `device.event`,
+`app.lifecycle`) nie przechodzą przez `beforeBreadcrumb` i niosły siłę sygnału,
+przepustowość i `vpn_active`. Domknięte dwuwarstwowo — reguły Advanced Data Scrubbing
+w projekcie Sentry + `stripVpnFlag` w `beforeSend`/`beforeSendTransaction` (`372dc34`).
 
-Po M1.15, przed betą: crash reporting przeszedł z **opt-outu na opt-in** — domyślnie
-wyłączony, zgoda zbierana slajdem w onboardingu (`crashReportingConsentMeta` z datą
-i wersją polityki), plus korekta guardraili Sentry (`__DEV__`, `beforeSendTransaction`,
-sanityzacja breadcrumbs `touch`/`navigation`) i `blockedPermissions` na obu STORAGE.
-
-Kod przestał być wąskim gardłem — dalej idzie warstwa papierowa.
+Usunięte rusztowanie smoke'a z `_layout.tsx` i `profile.tsx`; `PRIVACY_POLICY_VERSION`
+podbity na `2026-09-04`. Weryfikacja end-to-end M1.15 domknięta w całości.
 
 ## W toku
 
-Przepisanie polityki prywatności pod model **opt-in** — dokument musi opisywać zgodę jako podstawę
-crash reportingu, a data w jego nagłówku musi być równa `PRIVACY_POLICY_VERSION`
-w `constants/Links.ts` (dziś `2026-08-31`).
+Polityka prywatności pod model opt-in — dokument przepisany (nagłówek `2026-09-04`,
+zgodny z `PRIVACY_POLICY_VERSION`), został do publikacji pod `PRIVACY_POLICY_URL`.
 
 ## Czeka na zewnątrz
 
-Formalności blokujące M1.16 (closed beta):
-
-- DPA od Sentry
-- publikacja polityki prywatności — musi opisywać model **opt-in**, a data w jej nagłówku
-  musi być równa `PRIVACY_POLICY_VERSION` w `constants/Links.ts` (dziś `2026-08-31`)
-- formularz Data Safety w Play Console — dziś opisuje opt-out, do przerobienia
-- deklaracja Health apps w Play Console
+- publikacja polityki prywatności
+- Play Console: formularz Data Safety (opisuje dziś opt-out) + deklaracja Health apps
+  + target audience 16+
+- regulamin/nota bety dla testerów
 
 ## Następny krok
 
-**M1.16 closed beta** — start po domknięciu formalności powyżej. Dług z audytu (D8–D13) leci
-równolegle w oknie bety jako **M1.17**; lista w `docs/BACKLOG.md`.
+**M1.16 closed beta** — start po domknięciu formalności powyżej. Kodowo w M1.15 otwarte
+zostaje R5 („Usuń wszystkie dane"). Dług D8–D13 leci w oknie bety jako M1.17.
