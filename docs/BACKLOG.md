@@ -40,6 +40,18 @@
 - `VIBRATE` zablokowane w `app.json` (2026-08-31, nieużywane). `expo-notifications` z M2.1
   dokłada to uprawnienie — przy wdrażaniu przypomnień lokalnych trzeba je usunąć
   z `blockedPermissions`, inaczej powiadomienia nie zawibrują, a przyczyna będzie niewidoczna.
+- **R8/ProGuard praktycznie wyłączony** (2026-09-11, build 16). Play raportuje 1% zaciemnienia
+  kodu, brak pliku mapowania i optymalizację „niski"; Google sugeruje włączenie. Świadomie
+  odłożone poza okno bety — to zmiana wpływająca na runtime, a kod bety jest zamrożony.
+  Dodatkowo włączenie R8 wymaga wysyłania mapowań ProGuarda do Sentry, inaczej stosy natywne
+  przestaną być czytelne dokładnie wtedy, gdy zaczną przychodzić. Do rozważenia w M1.17
+  albo v0.7.
+- **Nieskompresowane DEX-y w AAB: 39,6 MB** (2026-09-11, build 16). Podejrzenie:
+  `expo-dev-client` siedzi w `dependencies`, nie `devDependencies` (dodany `4a8d6cc`
+  2026-09-04 na potrzeby lokalnego dev buildu), więc kompiluje się także do wydania
+  produkcyjnego. Do sprawdzenia w Eksploratorze pakietów aplikacji przez porównanie rozmiaru
+  pobierania z wersją 0.2.1 z marca (sprzed dev clienta). Jeśli potwierdzone — wykluczyć
+  z buildów release. Nie blokuje bety.
 
 ## Nieużywane zależności (kandydaci do usunięcia lub zagospodarowania)
 
