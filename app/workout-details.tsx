@@ -2,7 +2,7 @@ import colors from '@/constants/Colors';
 import { useApp } from '@/providers/AppProvider';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
 import { WorkoutHistoryDetails, WorkoutSet } from '@/types/training';
-import { formatDate } from '@/utils/date';
+import { formatDate, formatWorkoutDuration } from '@/utils/date';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -130,7 +130,7 @@ export default function WorkoutDetailsScreen() {
               color={colors.text.secondary}
             />
             <Text style={styles.headerInfoText}>
-              {details.actualDuration} min
+              {formatWorkoutDuration(details.actualDuration)}
             </Text>
           </View>
         </View>

@@ -166,12 +166,26 @@ export default function ActiveWorkoutScreen() {
     if (dbWorkout.started_at) {
       const startedAt = Date.parse(dbWorkout.started_at);
       if (Date.now() - startedAt > ACTIVE_WORKOUT_TIMEOUT_MS) {
-        await workoutService.clearStaleActiveWorkout(dbWorkout.id);
+        try {
+          const outcome = await workoutService.resolveStaleActiveWorkout(
+            dbWorkout.id,
+          );
+          showToast(
+            outcome === 'archived'
+              ? 'Trening wygasł po 12 h — zapisaliśmy go w historii.'
+              : 'Poprzedni trening wygasł (po 12h). Możesz zacząć nowy.',
+            'info',
+          );
+        } catch (error) {
+          logger.error('Failed to resolve stale active workout', error);
+          showToast(
+            error instanceof ServiceError
+              ? error.userMessage
+              : 'Nie udało się zamknąć wygasłego treningu',
+            'error',
+          );
+        }
         useActiveWorkoutStore.getState().reset();
-        showToast(
-          'Poprzedni trening wygasł (po 12h). Możesz zacząć nowy.',
-          'info',
-        );
         router.replace('/(tabs)/current-workout');
         return;
       }

@@ -130,8 +130,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       // Hydrate the in-memory active-workout store from the DB so the FAB and
       // duration survive a process kill. Legacy rows (pre-v7) have no
       // started_at — fall back to now, accepting a one-off wrong duration.
-      // A session older than the timeout is abandoned: clear it silently
-      // (no toast — the user has no context for it at boot).
+      // An expired session is closed silently (no toast — the user has no
+      // context for it at boot).
       if (activeWorkout) {
         const parsed = activeWorkout.started_at
           ? Date.parse(activeWorkout.started_at)
@@ -141,7 +141,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
           Date.now() - parsed > ACTIVE_WORKOUT_TIMEOUT_MS;
 
         if (isStale) {
-          await workoutService.clearStaleActiveWorkout(activeWorkout.id);
+          try {
+            await workoutService.resolveStaleActiveWorkout(activeWorkout.id);
+          } catch (error) {
+            logger.error('Failed to resolve stale active workout', error);
+            // Keep the FAB so opening the session retries the close.
+            hydrateActiveWorkout(activeWorkout.id, parsed);
+          }
         } else {
           hydrateActiveWorkout(
             activeWorkout.id,

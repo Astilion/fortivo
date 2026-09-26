@@ -167,7 +167,7 @@ export interface WorkoutHistoryWithDetails {
   workoutId: string | null;
   workoutName: string;
   completedAt: string;
-  actualDuration: number;
+  actualDuration: number | null;
   exerciseCount?: number;
   totalVolume?: number;
 }
@@ -183,7 +183,7 @@ export interface WorkoutHistoryDetails {
   workoutId: string | null;
   workoutName: string;
   completedAt: Date;
-  actualDuration: number;
+  actualDuration: number | null;
   exercises: WorkoutExerciseWithSets[];
   stats: {
     totalVolume: number;
@@ -391,6 +391,10 @@ export interface WorkoutHistoryRow {
   performance_data: string | null;
   workout_name: string | null;
 }
+
+export type CompletedWorkoutRow = Omit<WorkoutHistoryRow, 'actual_duration'> & {
+  actual_duration: number | null;
+};
 
 export interface WorkoutHistoryQueryRow {
   id: string;
