@@ -557,3 +557,64 @@ rusza boolean, kliencka nie widzi natywnych breadcrumbów w momencie ich powstan
 ogólniejszy, ważny przy każdej przyszłej zmianie konfiguracji: **audyt guardraili robiony
 wyłącznie przez lekturę kodu JS jest niepełny** — trzeba obejrzeć zawartość faktycznie
 wysłanego zdarzenia.
+
+---
+
+## 2026-09-24 — Wygaśnięcie aktywnego treningu zapisuje odhaczone serie
+
+**Kontekst:** Wpis z 2026-05-26 ustalił, że sesja starsza niż `ACTIVE_WORKOUT_TIMEOUT_MS` (12 h)
+jest czyszczona cicho przy starcie. Audyt bety pokazał, że kod nie odróżnia sesji porzuconej od
+takiej, w której użytkownik zrobił cały trening i zapomniał kliknąć „Zakończ”: w obu przypadkach
+odhaczone serie znikały bez śladu w historii.
+
+**Decyzja:** Ten wpis **doprecyzowuje 2026-05-26**. Wygasła sesja bez żadnej odhaczonej serii
+jest czyszczona jak dotąd. Sesja z co najmniej jedną odhaczoną serią trafia do historii jedną
+transakcją (`workoutService.resolveStaleActiveWorkout`, złożone z tych samych `_...InTx` co
+`finishWorkout`). Wpis w historii i progres dostają datę `started_at`, a czas trwania zapisuje
+się jako sentinel `-1` (`UNKNOWN_DURATION`), bo `workout_history.actual_duration` ma `NOT NULL`.
+Serwis mapuje `-1` na `null`, UI pokazuje „Czas nieznany”, eksport JSON niesie surowe `-1`.
+Każdy nowy odczyt `workout_history.actual_duration` (suma, średnia, sortowanie) musi pomijać
+wartości `< 0`. Stan po archiwizacji jest identyczny ze stanem po `finishWorkout`, bo obie
+ścieżki kończą się wspólnym `_deactivateWorkoutInTx`. Błąd zamykania sesji przy boocie jest
+łapany lokalnie i nie blokuje startu — store zostaje zhydratowany, więc FAB prowadzi do ponownej
+próby.
+
+**Odrzucone:** migracja `actual_duration` na `NULL` w hotfixie (wymaga rebuildu tabeli);
+czas trwania liczony od `started_at` (dałby 12+ godzin); data wpisu „teraz” (przesunęłaby
+trening na następny dzień w statystykach i planie tygodnia).
+
+**Dlaczego:** Odhaczona seria to jawna deklaracja użytkownika, że ją wykonał — skasowanie jej
+jest utratą danych, a nie sprzątaniem. Sesja bez odhaczeń nie niesie niczego, co warto zapisać,
+więc tam dotychczasowe zachowanie zostaje. Sentinel zamiast migracji, bo hotfix w trakcie bety
+nie powinien przebudowywać tabeli historii.
+
+---
+
+## 2026-09-24 — Obsłużone błędy trafiają do Sentry przez `logger.error`
+
+**Kontekst:** Audyt bety pokazał, że w buildzie release do Sentry docierały wyłącznie nieobsłużone
+crashe i dwa jawne `captureException` przy boocie. `logger.error` był w release no-opem, więc
+nieudany finisz treningu czy pętla błędów autosave'u kończyły się toastem i zerem sygnału.
+Osobno: błędy renderu łapane przez `ErrorBoundary` expo-routera idą w React Native przez
+`onCaughtError`, którego globalny handler Sentry nie widzi.
+
+**Decyzja:** `logger.error` w release woła `Sentry.captureException(error)` z tagiem
+`logger_message` (albo `captureMessage(message)`, gdy drugi argument nie jest `Error` — samego
+obiektu nie wysyła). Deduplikacja raz na sesję po kluczu `message|error.message`. W DEV logger
+nie woła Sentry. `app/_layout.tsx` eksportuje własny `ErrorBoundary`, który raportuje błąd i
+renderuje boundary expo-routera. Oba wywołania są bezpieczne bez klienta, więc model opt-in się
+nie zmienia. Reguła na przyszłość: komunikat i błąd przekazane do `logger.error` nie mogą
+zawierać danych użytkownika.
+
+**Odrzucone:** deduplikacja po samym `message` (zlewa różne przyczyny zgłaszane tym samym
+komunikatem z różnych miejsc); celowane `captureException` tylko w kilku catch'ach (każdy nowy
+ekran musiałby o tym pamiętać).
+
+**Dlaczego:** Beta ma mierzyć, czy działa zapis treningu — a jego awarie były obsługiwane, więc
+niewidoczne. Audyt 88 wywołań `logger.error` (2026-09-24): pierwszy argument to stała albo
+interpolacja bez danych użytkownika (numer migracji, nazwa pola ustawień, ID presetu w DEV-only
+`validatePresets`), drugi to złapany błąd — SQLite (nazwy kolumn i constraintów, bez wartości),
+`ServiceError` (stały polski tekst), AsyncStorage albo Linking. Jedyny ślad treści to komunikat
+`JSON.parse` na `performance_data`, który w Hermesie zawiera najwyżej jeden znak wejścia —
+zaakceptowane. Klucz z przyczyną zwija pętlę autosave'u do jednego zdarzenia (limit
+`MAX_ERRORS_PER_SESSION = 25` zostaje nietknięty), a różne awarie pokazuje osobno.

@@ -1,5 +1,5 @@
 import colors from '@/constants/Colors';
-import { formatDate } from '@/utils/date';
+import { formatDate, formatWorkoutDuration } from '@/utils/date';
 import { Ionicons } from '@expo/vector-icons';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 interface WorkoutHistoryCardProps {
   workoutName: string;
   completedAt: string;
-  duration: number;
+  duration: number | null;
   onPress: () => void;
   showTime?: boolean;
 }
@@ -48,7 +48,7 @@ export const WorkoutHistoryCard = memo(function WorkoutHistoryCard({
             size={16}
             color={colors.text.secondary}
           />
-          <Text style={styles.infoText}>{duration} min</Text>
+          <Text style={styles.infoText}>{formatWorkoutDuration(duration)}</Text>
         </View>
       </View>
     </Pressable>

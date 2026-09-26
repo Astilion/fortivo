@@ -11,6 +11,9 @@ export const formatDate = (
   });
 };
 
+export const formatWorkoutDuration = (minutes: number | null): string =>
+  minutes === null ? 'Czas nieznany' : `${minutes} min`;
+
 export const getGreeting = (): string => {
   const hour = new Date().getHours();
   if (hour < 18) return 'Dzień dobry';

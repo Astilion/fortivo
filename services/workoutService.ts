@@ -4,6 +4,7 @@ import { logger } from '@/utils/logger';
 import { ServiceError } from '@/utils/errors';
 import { getWeekStart } from '@/utils/days';
 import {
+  CompletedWorkoutRow,
   Exercise,
   ExerciseProgressQueryRow,
   ExerciseProgressRow,
@@ -24,7 +25,15 @@ import {
   WorkoutWithCountRow,
 } from '@/types/training';
 import { LOCAL_USER_ID } from '@/constants/User';
+import { UNKNOWN_DURATION } from '@/constants/activeWorkout';
 import * as SQLite from 'expo-sqlite';
+
+export type StaleWorkoutOutcome = 'archived' | 'cleared';
+
+export const hasCompletedSets = (exercises: WorkoutExerciseWithSets[]) =>
+  exercises.some((ex) => ex.sets.some((s) => s.completed));
+
+const toDisplayDuration = (minutes: number) => (minutes < 0 ? null : minutes);
 
 export class WorkoutService {
   private db: SQLite.SQLiteDatabase;
@@ -446,39 +455,73 @@ export class WorkoutService {
     return row || null;
   }
 
-  private async _resetActiveWorkoutDB(workoutId: string): Promise<void> {
-    await runInTransaction(this.db, async () => {
-      await this.db.runAsync(
-        `UPDATE workout_sets
-         SET actual_reps = NULL, actual_weight = NULL, actual_rpe = NULL,
-             actual_duration = NULL, actual_distance = NULL, completed = 0
-         WHERE workout_exercise_id IN (
-           SELECT id FROM workout_exercises WHERE workout_id = ?
-         )`,
-        [workoutId],
-      );
-      await this.db.runAsync(
-        'UPDATE workouts SET is_active = 0, started_at = NULL WHERE id = ?',
-        [workoutId],
-      );
-    });
+  private async _resetActiveWorkoutInTx(workoutId: string): Promise<void> {
+    await this.db.runAsync(
+      `UPDATE workout_sets
+       SET actual_reps = NULL, actual_weight = NULL, actual_rpe = NULL,
+           actual_duration = NULL, actual_distance = NULL, completed = 0
+       WHERE workout_exercise_id IN (
+         SELECT id FROM workout_exercises WHERE workout_id = ?
+       )`,
+      [workoutId],
+    );
+    await this._deactivateWorkoutInTx(workoutId);
   }
 
-  async clearStaleActiveWorkout(workoutId: string): Promise<void> {
+  private async _deactivateWorkoutInTx(workoutId: string): Promise<void> {
+    await this.db.runAsync(
+      'UPDATE workouts SET is_active = 0, started_at = NULL WHERE id = ?',
+      [workoutId],
+    );
+  }
+
+  // Completed sets are archived, not wiped: the user most likely just forgot
+  // to tap "Zakończ". The end time is unknown, so the entry is dated at start.
+  async resolveStaleActiveWorkout(
+    workoutId: string,
+  ): Promise<StaleWorkoutOutcome> {
+    let outcome: StaleWorkoutOutcome = 'cleared';
     try {
-      await this._resetActiveWorkoutDB(workoutId);
+      await runInTransaction(this.db, async () => {
+        const workout = await this.db.getFirstAsync<{
+          name: string;
+          started_at: string | null;
+          is_active: number;
+        }>('SELECT name, started_at, is_active FROM workouts WHERE id = ?', [
+          workoutId,
+        ]);
+        if (!workout || workout.is_active !== 1) return;
+
+        const exercises = await this.getWorkoutExercises(workoutId);
+        if (!hasCompletedSets(exercises)) {
+          await this._resetActiveWorkoutInTx(workoutId);
+          return;
+        }
+
+        const sessionDate = workout.started_at ?? new Date().toISOString();
+        await this._insertWorkoutHistoryInTx(
+          workoutId,
+          workout.name,
+          UNKNOWN_DURATION,
+          exercises,
+          sessionDate,
+        );
+        await this._saveProgressInTx(exercises, workout.name, sessionDate);
+        await this._deactivateWorkoutInTx(workoutId);
+        outcome = 'archived';
+      });
     } catch (error) {
-      logger.error('WorkoutService.clearStaleActiveWorkout failed', error);
-      throw new ServiceError(
-        'Nie udało się wyczyścić wygasłego treningu',
-        error,
-      );
+      logger.error('WorkoutService.resolveStaleActiveWorkout failed', error);
+      throw new ServiceError('Nie udało się zamknąć wygasłego treningu', error);
     }
+    return outcome;
   }
 
   async discardActiveWorkout(workoutId: string): Promise<void> {
     try {
-      await this._resetActiveWorkoutDB(workoutId);
+      await runInTransaction(this.db, () =>
+        this._resetActiveWorkoutInTx(workoutId),
+      );
     } catch (error) {
       logger.error('WorkoutService.discardActiveWorkout failed', error);
       throw new ServiceError('Nie udało się odrzucić treningu', error);
@@ -545,6 +588,7 @@ export class WorkoutService {
     workoutName: string | null,
     durationMinutes: number,
     exercises: WorkoutExerciseWithSets[],
+    completedAt: string,
   ): Promise<void> {
     const id = generateId('wh');
     const userId = LOCAL_USER_ID;
@@ -584,7 +628,7 @@ export class WorkoutService {
         workoutId,
         workoutName ?? null,
         userId,
-        new Date().toISOString(),
+        completedAt,
         durationMinutes,
         null,
         JSON.stringify(snapshot),
@@ -595,9 +639,9 @@ export class WorkoutService {
   private async _saveProgressInTx(
     exercises: WorkoutExerciseWithSets[],
     workoutName: string | null,
+    date: string,
   ): Promise<void> {
     const userId = LOCAL_USER_ID;
-    const date = new Date().toISOString();
 
     for (const ex of exercises) {
       // Progress is weight/reps based (max weight, volume = reps × weight).
@@ -675,18 +719,17 @@ export class WorkoutService {
             )
           : 0;
 
+        const finishedAt = new Date().toISOString();
         await this._saveSnapshotInTx(workoutId, exercises);
         await this._insertWorkoutHistoryInTx(
           workoutId,
           workout.name,
           durationMinutes,
           exercises,
+          finishedAt,
         );
-        await this._saveProgressInTx(exercises, workout.name);
-        await this.db.runAsync(
-          'UPDATE workouts SET is_active = 0, started_at = NULL WHERE id = ?',
-          [workoutId],
-        );
+        await this._saveProgressInTx(exercises, workout.name, finishedAt);
+        await this._deactivateWorkoutInTx(workoutId);
       });
     } catch (error) {
       logger.error('WorkoutService.finishWorkout failed', error);
@@ -713,7 +756,7 @@ export class WorkoutService {
       workoutId: row.workout_id,
       workoutName: row.workout_name ?? 'Usunięty trening',
       completedAt: row.completed_at,
-      actualDuration: row.actual_duration,
+      actualDuration: toDisplayDuration(row.actual_duration),
     }));
   }
 
@@ -747,10 +790,12 @@ export class WorkoutService {
       totalVolume: exercises.reduce(
         (sum, ex) =>
           sum +
-          ex.sets.reduce(
-            (s, set) => s + (set.actualReps || 0) * (set.actualWeight || 0),
-            0,
-          ),
+          ex.sets
+            .filter((set) => set.completed)
+            .reduce(
+              (s, set) => s + (set.actualReps ?? 0) * (set.actualWeight ?? 0),
+              0,
+            ),
         0,
       ),
       completedSets: exercises.reduce(
@@ -765,7 +810,7 @@ export class WorkoutService {
       workoutId: historyRow.workout_id,
       workoutName: historyRow.workout_name ?? 'Usunięty trening',
       completedAt: new Date(historyRow.completed_at),
-      actualDuration: historyRow.actual_duration,
+      actualDuration: toDisplayDuration(historyRow.actual_duration),
       exercises,
       stats,
     };
@@ -1010,16 +1055,20 @@ export class WorkoutService {
   async getCompletedWorkoutsThisWeek(
     weekStartsOn: number,
     userId = LOCAL_USER_ID,
-  ): Promise<WorkoutHistoryRow[]> {
+  ): Promise<CompletedWorkoutRow[]> {
     const startOfWeek = getWeekStart(new Date(), weekStartsOn);
 
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 7);
 
-    return this.db.getAllAsync<WorkoutHistoryRow>(
-      `SELECT * FROM workout_history 
+    const rows = await this.db.getAllAsync<WorkoutHistoryRow>(
+      `SELECT * FROM workout_history
      WHERE user_id = ? AND completed_at >= ? AND completed_at < ?`,
       [userId, startOfWeek.toISOString(), endOfWeek.toISOString()],
     );
+    return rows.map((row) => ({
+      ...row,
+      actual_duration: toDisplayDuration(row.actual_duration),
+    }));
   }
 }

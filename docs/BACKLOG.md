@@ -21,7 +21,9 @@
 - Reszta **D14** — drobne.
 - `jest-expo` wciąż w `dependencies`.
 - Import/restore danych — domyka pętlę bezpieczeństwa; wysoko po becie.
-- `originalError` → `cause` w `ServiceError` (dziś komunikat SQLite nie dociera do Sentry).
+- `originalError` → `cause` w `ServiceError`. Od 0.6.1 obsłużone błędy docierają do Sentry
+  przez `logger.error`, ale `ServiceError` niesie tylko polski komunikat — przyczyna SQLite
+  widoczna jest wyłącznie w osobnym zdarzeniu z warstwy serwisu.
 - `withExclusiveTransactionAsync` + przepchnięcie `txn` przez `_...InTx`.
 - **Sesja instalacyjna nigdy nie raportuje** (2026-09-04). `bootstrapCrashReporting()` biegnie
   raz przy ładowaniu modułu `app/_layout.tsx`, więc zgoda udzielona w onboardingu działa
@@ -52,6 +54,20 @@
   produkcyjnego. Do sprawdzenia w Eksploratorze pakietów aplikacji przez porównanie rozmiaru
   pobierania z wersją 0.2.1 z marca (sprzed dev clienta). Jeśli potwierdzone — wykluczyć
   z buildów release. Nie blokuje bety.
+- **Zgoda na raporty u aktualizujących z 0.5.x** (audyt bety #2, 2026-09-24; niski priorytet).
+  Onboarding się nie powtarza, więc kto przeszedł go przed modelem opt-in, pytania o zgodę nie
+  zobaczy nigdzie poza Profilem. To samo dotyczy przesunięcia palcem za slajd zgody i
+  systemowego „wstecz” w onboardingu. Poprawka: jednorazowe pytanie, gdy flaga
+  `crashReportingEnabled` jest pusta i brak `crashReportingConsentMeta`. Szczegóły:
+  `docs/private/audyt-beta-2026-09.md` #2.
+- **Nieidempotentne `ADD COLUMN` w migracjach** (audyt bety #10, 2026-09-24) — razem z **D9**.
+  Stary runner (≤ 0.5.0) bumpował `user_version` poza transakcją; baza z kolumną, ale wersją
+  N−1, trwale pada na kroku N i zostaje tylko reset. Poprawka: sprawdzenie
+  `PRAGMA table_info` przed `ALTER TABLE … ADD COLUMN`. Szczegóły: raport #10.
+- **Tworzenie i edycja treningu to dwa zapisy z ekranu** (audyt bety #11, 2026-09-24) — razem
+  z **D8**. `create-workout.tsx` / `edit-workout.tsx` wołają `createWorkout`/`updateWorkout` i
+  `saveWorkoutExercises` osobno; retry po błędzie duplikuje trening. Poprawka: jedna metoda
+  serwisu w jednej transakcji. Szczegóły: raport #11.
 
 ## Nieużywane zależności (kandydaci do usunięcia lub zagospodarowania)
 
