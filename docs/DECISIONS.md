@@ -618,3 +618,38 @@ interpolacja bez danych użytkownika (numer migracji, nazwa pola ustawień, ID p
 `JSON.parse` na `performance_data`, który w Hermesie zawiera najwyżej jeden znak wejścia —
 zaakceptowane. Klucz z przyczyną zwija pętlę autosave'u do jednego zdarzenia (limit
 `MAX_ERRORS_PER_SESSION = 25` zostaje nietknięty), a różne awarie pokazuje osobno.
+
+---
+
+## 2026-09-26 — Wysyłka do Play przez `eas submit` jako wersja robocza, konto usługi bez produkcji
+
+**Kontekst:** Buildy trafiały do Play Console ręcznym uploadem AAB. Automatyczna wysyłka z EAS
+wymaga klucza konta usługi Google Cloud, przechowywanego w EAS credentials.
+
+**Decyzja:** Wysyłka przez `eas submit` (w praktyce `eas build … --auto-submit`) na track `alpha`
+z `releaseStatus: draft`. Konto usługi nie ma uprawnień do toru produkcyjnego.
+
+**Odrzucone:** `releaseStatus: completed` (build trafiałby do testerów od razu po wysłaniu);
+konto usługi z pełnymi uprawnieniami; dalszy ręczny upload AAB (wolniejszy, a nie daje żadnej
+dodatkowej kontroli ponad wersję roboczą).
+
+**Dlaczego:** Żaden build nie trafia do testerów bez ręcznej kontroli — wersja robocza czeka na
+świadome „Zapisz i opublikuj”. Ograniczone uprawnienia konta sprawiają, że ewentualny wyciek
+klucza nie pozwala opublikować niczego na produkcji.
+
+---
+
+## 2026-09-26 — Kontrola release przez test wewnętrzny, nie uniwersalny APK
+
+**Kontekst:** Przed wdrożeniem na Alpha build trzeba sprawdzić na telefonie w postaci release —
+z działającym Sentry, source mapami i finalnym zestawem uprawnień.
+
+**Decyzja:** Kontrola release odbywa się na teście wewnętrznym Play Console (Dodaj z biblioteki →
+ten sam versionCode, który potem idzie na Alpha).
+
+**Odrzucone:** uniwersalny APK wyciągnięty z AAB i zainstalowany ręcznie; dev client.
+
+**Dlaczego:** Automatyczna ochrona Play przekierowuje ręcznie zainstalowany APK do Sklepu Play,
+więc nie da się go uczciwie przetestować. Dev client ma `__DEV__ = true`, więc Sentry w ogóle
+nie startuje i ścieżka raportowania zostaje nieprzetestowana. Test wewnętrzny sprawdza dokładnie
+ten plik, który trafi do testerów.
