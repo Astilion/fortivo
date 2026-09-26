@@ -173,7 +173,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       clearDbError();
       setIsReady(true);
     } catch (error) {
-      logger.error('Failed to initialize app:', error);
       // Migration failures get the recovery screen; anything else gets a
       // retryable error state instead of an endless spinner.
       if (error instanceof DatabaseMigrationError) {
@@ -187,6 +186,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         Sentry.captureException(error);
         setInitError(true);
       }
+      // After the explicit captures: Sentry's Dedupe drops the repeat, and the
+      // tagged event must be the one that survives.
+      logger.error('Failed to initialize app:', error);
     }
   };
 
