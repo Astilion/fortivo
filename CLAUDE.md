@@ -47,6 +47,7 @@ Bez folderu `/src` — pliki na root level:
 - **Refresh on focus:** `useFocusEffect` + `useCallback` (do refreshu listy/danych przy powrocie na ekran). `useEffect` zostaje dla initial mount, subscriptions, listenerów.
 - **Pressable** zamiast TouchableOpacity
 - **logger** zamiast console.log — `no-console: error` **egzekwowane przez ESLint**, wyjątek tylko dla `utils/logger.ts`
+- **`logger.error` raportuje w release do Sentry** — komunikat i przekazany błąd nie mogą zawierać danych użytkownika (bez interpolacji wartości: nazw treningów, ćwiczeń, ciężarów, pomiarów). Uzasadnienie: `docs/DECISIONS.md`.
 - **LOCAL_USER_ID** z `constants/User.ts` (nie hardcoded stringi)
 - **generateId(prefix)** z `database/database.ts`
 - **Partial<WorkoutSet>** spread dla generic set updates
@@ -106,6 +107,7 @@ Trzymaj się tej kolejności. Refactor 1.13.4 ujednolicił wszystkie ekrany pod 
 - Transakcja obowiązkowa dla każdego zapisu wielostanowego (workout + exercises + sets, plan + dni, finisz treningu)
 - Foreign keys: ON (`PRAGMA foreign_keys = ON`)
 - **Rebuild tabeli w migracji** (nowa tabela → kopia → DROP → RENAME): przy tabeli z dziećmi (np. `workouts`) obowiązkowo `PRAGMA foreign_keys = OFF` **poza transakcją** na czas rebuildu + `PRAGMA foreign_key_check` na końcu. Uzasadnienie: `docs/DECISIONS.md`.
+- **`workout_history.actual_duration = -1` oznacza czas nieznany** (`UNKNOWN_DURATION`) — każdy odczyt tej kolumny pomija `< 0`; serwis mapuje na `null`. Uzasadnienie: `docs/DECISIONS.md`.
 - **Snapshot `performance_data` ma `version: 1`, a odczyt wersji nie sprawdza** — każda zmiana kształtu snapshotu = bump `version` + branch w deserializacji. Uzasadnienie: `docs/DECISIONS.md`.
 - Recovery: przy `DatabaseMigrationError` aplikacja pokazuje recovery screen (reset + re-bootstrap), renderowany **poza** routerem z `AppProvider` (gate bezkontekstowy = takeover, nie `<Redirect>`). Reset kasuje wszystko nieodwracalnie.
 
@@ -173,7 +175,7 @@ Konwencja store'ów: akcje read-only niekrytyczne logują i zwracają wartość 
 - **`week_starts_on`** z `user_settings` używany konsekwentnie (nie hardcoded Sunday-start)
 - **Performance:** `useMemo` na filtered lists, `useCallback` na renderItem w FlatList
 - **Accessibility:** `accessibilityLabel` na icon-only buttonach, `hitSlop` na małych targetach, `accessibilityRole="alert"` na toaście
-- **Active workout = SQLite jako source of truth, store in-memory:** `activeWorkoutStore` bez `persist`; hydratowany z bazy (`started_at`) przy boocie. Autosave przez `useActiveWorkoutAutosave` (UPSERT po stabilnych ID + diff-prune via `deleteRowsNotIn`, NIE DELETE+reinsert). Sesja starsza niż `ACTIVE_WORKOUT_TIMEOUT_MS` (12 h) czyszczona cicho przy starcie. Okno 500 ms debounce'u = akceptowana strata — **nie tykać**. Uzasadnienie: `docs/DECISIONS.md`.
+- **Active workout = SQLite jako source of truth, store in-memory:** `activeWorkoutStore` bez `persist`; hydratowany z bazy (`started_at`) przy boocie. Autosave przez `useActiveWorkoutAutosave` (UPSERT po stabilnych ID + diff-prune via `deleteRowsNotIn`, NIE DELETE+reinsert). Sesja starsza niż `ACTIVE_WORKOUT_TIMEOUT_MS` (12 h) zamykana przy starcie: bez odhaczonych serii czyszczona, z odhaczonymi zapisywana do historii (`resolveStaleActiveWorkout`, czas trwania `-1` = nieznany). Okno 500 ms debounce'u = akceptowana strata — **nie tykać**. Uzasadnienie: `docs/DECISIONS.md`.
 - **Historia = immutable snapshot:** finisz serializuje wykonane serie do `workout_history.performance_data` (JSON); szczegóły historii czytają snapshot per-wpis, NIE żywe `workout_sets` (legacy fallback dla wpisów sprzed v8). Smart prefill z najnowszego finiszowanego snapshotu (`getLatestPerformanceSnapshot`): active = seed `actual_*` na aktywacji (`seedActualsFromLastSession`), edit-workout = overlay 5 pól numerycznych na PLANOWANE przy load (save path nietknięty). `workout_history`/`exercise_progress` denormalizują `workout_name` (FK `ON DELETE SET NULL`). Uzasadnienie: `docs/DECISIONS.md`.
 - **Kaskady FK trzeba pokazać użytkownikowi:** usunięcie własnego ćwiczenia kasuje je ze **wszystkich** treningów (razem z seriami) i czyści cały `exercise_progress`. Confirm liczy skutek przez `exerciseService.countWorkoutsUsingExercise(id)`. Przy każdej nowej destrukcyjnej akcji sprawdź mapę kaskad w `docs/private/fable-review/audyt-techniczny.md` §5.4. Uzasadnienie: `docs/DECISIONS.md`.
 - **Anti-loop w gate'ach:** flip stanu warunku synchronicznie PRZED async side-effectem (onboarding `complete()` ustawia `showOnboarding: false` przed `setOnboardingCompleted`).
