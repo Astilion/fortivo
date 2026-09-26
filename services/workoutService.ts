@@ -790,10 +790,12 @@ export class WorkoutService {
       totalVolume: exercises.reduce(
         (sum, ex) =>
           sum +
-          ex.sets.reduce(
-            (s, set) => s + (set.actualReps || 0) * (set.actualWeight || 0),
-            0,
-          ),
+          ex.sets
+            .filter((set) => set.completed)
+            .reduce(
+              (s, set) => s + (set.actualReps ?? 0) * (set.actualWeight ?? 0),
+              0,
+            ),
         0,
       ),
       completedSets: exercises.reduce(

@@ -1,7 +1,11 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { UNKNOWN_DURATION } from '@/constants/activeWorkout';
 import { hasCompletedSets, WorkoutService } from '@/services/workoutService';
-import { WorkoutExerciseWithSets, WorkoutSet } from '@/types/training';
+import {
+  PerformanceSnapshot,
+  WorkoutExerciseWithSets,
+  WorkoutSet,
+} from '@/types/training';
 
 const mockDb = {
   getFirstAsync: jest.fn<(...args: any[]) => Promise<any>>(),
@@ -163,5 +167,55 @@ describe('getCompletedWorkoutsThisWeek', () => {
     const rows = await service.getCompletedWorkoutsThisWeek(1);
 
     expect(rows.map((r) => r.actual_duration)).toEqual([null, 45]);
+  });
+});
+
+describe('getWorkoutHistoryDetails', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('counts volume only from completed sets and hides unknown duration', async () => {
+    const snapshot: PerformanceSnapshot = {
+      version: 1,
+      exercises: [
+        {
+          exerciseId: 'ex_1',
+          name: 'Przysiad',
+          measurementType: 'reps',
+          sets: [true, true, false, false].map((completed) => ({
+            completed,
+            reps: 10,
+            weight: 100,
+            rpe: null,
+            tempo: null,
+            duration: null,
+            distance: null,
+            actualReps: 10,
+            actualWeight: 100,
+            actualRpe: null,
+            actualDuration: null,
+            actualDistance: null,
+          })),
+        },
+      ],
+    };
+    mockDb.getFirstAsync.mockResolvedValueOnce({
+      id: 'wh_1',
+      workout_id: 'workout_1',
+      workout_name: 'FBW A',
+      user_id: 'local_user',
+      completed_at: STARTED_AT,
+      actual_duration: UNKNOWN_DURATION,
+      performance_notes: null,
+      performance_data: JSON.stringify(snapshot),
+    });
+
+    const details = await service.getWorkoutHistoryDetails('wh_1');
+
+    expect(details.stats.totalVolume).toBe(2000);
+    expect(details.stats.completedSets).toBe(2);
+    expect(details.stats.totalSets).toBe(4);
+    expect(details.actualDuration).toBeNull();
   });
 });
