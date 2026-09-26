@@ -11,8 +11,10 @@ import * as Sentry from '@sentry/react-native';
 import { isRunningInExpoGo } from 'expo';
 import { useFonts } from 'expo-font';
 import {
+  ErrorBoundaryProps,
   Href,
   Redirect,
+  ErrorBoundary as RouterErrorBoundary,
   Stack,
   useNavigationContainerRef,
   usePathname,
@@ -23,7 +25,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
-export { ErrorBoundary, usePathname } from 'expo-router';
+export { usePathname } from 'expo-router';
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -158,6 +160,16 @@ const commonScreenOptions: NativeStackNavigationOptions = {
   },
   animation: 'fade',
 };
+
+// Boundary-caught errors go through RN's onCaughtError, which bypasses
+// Sentry's global handler — without this they are never reported.
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  useEffect(() => {
+    Sentry.captureException(props.error);
+  }, [props.error]);
+
+  return <RouterErrorBoundary {...props} />;
+}
 
 function RootLayout() {
   const activeWorkoutId = useActiveWorkoutStore((state) => state.workoutId);
