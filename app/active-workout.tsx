@@ -159,6 +159,8 @@ export default function ActiveWorkoutScreen() {
     const dbWorkout = await workoutService.getActiveWorkout();
 
     if (!dbWorkout) {
+      // Without this the unmount flush would write the stale session back.
+      useActiveWorkoutStore.getState().reset();
       router.replace('/(tabs)/current-workout');
       return;
     }
