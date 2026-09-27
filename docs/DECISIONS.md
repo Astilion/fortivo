@@ -653,3 +653,26 @@ ten sam versionCode, który potem idzie na Alpha).
 więc nie da się go uczciwie przetestować. Dev client ma `__DEV__ = true`, więc Sentry w ogóle
 nie startuje i ścieżka raportowania zostaje nieprzetestowana. Test wewnętrzny sprawdza dokładnie
 ten plik, który trafi do testerów.
+
+---
+
+## 2026-09-26 — Ekran recovery bez kopii bazy; ratunek danych przez import (v0.7) i auto-backup SAF (v0.8)
+
+**Kontekst:** Audyt bety #5: przy nieudanej migracji użytkownik widzi ogólny komunikat
+i „Zresetuj bazę”, a eksport w tym stanie nie działa (brak kontekstu serwisów). Szkic poprawki
+z audytu zakładał przycisk „Udostępnij plik bazy”.
+
+**Decyzja:** W 0.6.2 ekran recovery pokazuje kod `v{N} · {cause.message}` do zrzutu ekranu,
+komunikat, że dane są nadal w telefonie i poprawka przyjdzie w aktualizacji, a „Zresetuj” jest
+drugorzędny, z potwierdzeniem nieodwracalności. Bez przycisku kopii bazy. Polityka prywatności
+bez zmian.
+
+**Odrzucone:** „Udostępnij plik bazy” do autora (waga i pomiary trafiałyby do administratora —
+nowa ścieżka danych, prawdopodobnie art. 9 RODO, zmiana polityki i Data Safety); kopia bazy dla
+samego użytkownika (aplikacja nie umie jej wczytać, więc niczego nie przywraca).
+
+**Dlaczego:** Przy błędzie migracji dane są nietknięte (audyt #10) — tracone są dopiero przez
+reset, więc najlepszą ochroną jest powstrzymanie resetu i kod do diagnozy. Trwały ratunek danych
+jest już w roadmapie: import JSON (v0.7) i auto-backup przez SAF do folderu użytkownika (v0.8),
+bez własnej chmury.
+

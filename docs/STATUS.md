@@ -29,6 +29,15 @@ Działa, czeka na commit na `chore/eas-submit`.
 
 ## Następny krok
 
-Przed wnioskiem o produkcję sprawdzić kryteria bety przy ~6–7 aktywnych z ~18: ≥60% z ≥4
-treningami w 2. tygodniu, zero utraty danych, ankieta (Sean Ellis) — wniosek pyta
-o zaangażowanie testerów. Kodowo: R5 („Usuń wszystkie dane") i M1.17 (dług + testy).
+Kalendarz (ustalony 2026-09-26, orientacyjny):
+
+- 26–28.09 — 0.6.1 dostępna na Alpha → komunikat na Discordzie + prośba o powrót do treningów
+- 29.09–~6.10 — hotfix 0.6.2 (audyt #5 + #9, #7, #8, #12); obserwacja crash-free w Sentry
+- ~3.10 — ankieta końcowa, przypomnienie ~6.10
+- ~7–8.10 — 0.6.2: build → test wewnętrzny → Alpha
+- ~10.10 — przegląd kryteriów bety (M1.16) → wniosek o produkcję albo przedłużenie bety o tydzień
+- po zgodzie — listing + ikona, R5, promocja z Alpha na produkcję
+
+Kryteria przy ~6–7 aktywnych z ~18: ≥60% z ≥4 treningami w 2. tygodniu (mierzalne tylko
+ankietą — brak analityki), zero utraty danych (sprawdzić, czy ktoś trafił na #1 w 0.6.0),
+Sean Ellis ≥1/3. Daty w `docs/ROADMAP.md` odświeżyć dopiero po przeglądzie ~10.10.
