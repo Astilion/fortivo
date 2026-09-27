@@ -184,6 +184,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         setDbError(error);
       } else {
         Sentry.captureException(error);
+        // A recovery retry can pass migrations and fail later; the stale
+        // dbError would keep the recovery spinner up forever.
+        clearDbError();
         setInitError(true);
       }
       // After the explicit captures: Sentry's Dedupe drops the repeat, and the
