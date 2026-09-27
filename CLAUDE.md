@@ -33,7 +33,7 @@ Bez folderu `/src` — pliki na root level:
 - `hooks/` — custom hooks
 - `types/` — TypeScript types (training.ts = główny plik typów)
 - `constants/` — Colors.ts, Styles.ts, User.ts (LOCAL_USER_ID), Training.ts, bodyParts.ts, PresetWorkouts.ts, PresetWeeklyPlans.ts, activeWorkout.ts
-- `utils/` — date.ts, logger.ts, numbers.ts, search.ts, confirm.ts, errors.ts, days.ts, onboarding.ts, validation.ts, validatePresets.ts, capitalize.ts, crashReporting.ts
+- `utils/` — date.ts, logger.ts, numbers.ts, search.ts, confirm.ts, errors.ts, days.ts, onboarding.ts, validation.ts, validatePresets.ts, capitalize.ts, crashReporting.ts, exportFile.ts
 - `database/` — database.ts (init + migracje), writeLock.ts (`runInTransaction`)
 - `__tests__/` — jest (utils/, services/, hooks/)
 
@@ -242,5 +242,6 @@ Po większych zmianach uruchom lint + typecheck + testy przed commitem.
 - `grep -rn "DROP TABLE" services/` # poza migracjami
 - `grep -rn "withTransactionAsync" services/ hooks/ app/` # wszystko poza `database/` = obejście write locka
 - `grep -rn "toISOString().split" app/ services/` # data UTC zamiast lokalnej
+- `grep -rn "toISOString().slice" app/ services/ utils/` # to samo, wariant ze `slice`
 - `grep -rn "console\." app/ services/ store/ hooks/ components/` # łapie też ESLint
 - Zapis bez `await` / bez `catch` w handlerach ekranów
