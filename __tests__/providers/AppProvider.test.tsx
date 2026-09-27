@@ -8,11 +8,13 @@ import { useDbErrorStore } from '@/store/dbErrorStore';
 
 jest.mock('@/database/database', () => {
   class DatabaseMigrationError extends Error {
+    readonly version: number;
     readonly cause?: unknown;
 
-    constructor(message: string, cause?: unknown) {
-      super(message);
+    constructor(version: number, cause?: unknown) {
+      super(`Migracja v${version} nie powiodła się`);
       this.name = 'DatabaseMigrationError';
+      this.version = version;
       this.cause = cause;
     }
   }
@@ -55,10 +57,7 @@ describe('AppProvider recovery', () => {
   test('a non-migration failure on recovery retry shows a retryable error', async () => {
     mockInitDatabase
       .mockRejectedValueOnce(
-        new DatabaseMigrationError(
-          'Migracja v9 nie powiodła się',
-          new Error('disk I/O error'),
-        ),
+        new DatabaseMigrationError(9, new Error('disk I/O error')),
       )
       .mockRejectedValueOnce(new Error('seed failed'));
 

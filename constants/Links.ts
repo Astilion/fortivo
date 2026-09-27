@@ -1,5 +1,7 @@
 export const PRIVACY_POLICY_URL = 'https://astilion.github.io/fortivo-privacy/';
 
+export const SUPPORT_EMAIL = 'mkaminski.contact@gmail.com';
+
 // Must equal the date in the header of the document actually served at
 // PRIVACY_POLICY_URL. Swapping the policy without swapping this constant voids
 // the point of the consent metadata: we would be recording that the user agreed

@@ -177,9 +177,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       // retryable error state instead of an endless spinner.
       if (error instanceof DatabaseMigrationError) {
         Sentry.captureException(error, {
-          tags: {
-            migration_version: error.message.match(/v(\d+)/)?.[1] ?? 'unknown',
-          },
+          tags: { migration_version: String(error.version) },
         });
         setDbError(error);
       } else {
