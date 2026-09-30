@@ -76,7 +76,13 @@ export default function WorkoutsScreen() {
     router.push(`/edit-workout?id=${workoutId}`);
   };
 
+  // The in-memory session would outlive the deleted rows and its autosave
+  // would keep failing on the missing workout's FK.
   const handleDeleteWorkout = (id: string, name: string) => {
+    if (id === activeWorkoutId) {
+      showToast('Zakończ lub odrzuć aktywny trening, żeby go usunąć', 'info');
+      return;
+    }
     confirmAction(
       'Usuń trening',
       `Czy na pewno chcesz usunąć "${name}"?`,

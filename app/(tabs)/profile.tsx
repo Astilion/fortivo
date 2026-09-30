@@ -16,8 +16,7 @@ import {
   View,
   Pressable,
 } from 'react-native';
-import { File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import { shareExportFile } from '@/utils/exportFile';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/providers/AppProvider';
@@ -204,30 +203,11 @@ export default function ProfileScreen() {
     setExporting(true);
     try {
       const envelope = await exportService.exportAllData();
-      const file = new File(
-        Paths.cache,
-        `fortivo-export-${new Date().toISOString().slice(0, 10)}.json`,
-      );
-      file.create({ overwrite: true });
-      file.write(JSON.stringify(envelope, null, 2));
-
-      try {
-        if (!(await Sharing.isAvailableAsync())) {
-          showToast('Udostępnianie niedostępne na tym urządzeniu', 'error');
-          return;
-        }
-        await Sharing.shareAsync(file.uri, {
-          mimeType: 'application/json',
-          dialogTitle: 'Eksport danych Fortivo',
-        });
+      const result = await shareExportFile(JSON.stringify(envelope, null, 2));
+      if (result === 'unavailable') {
+        showToast('Udostępnianie niedostępne na tym urządzeniu', 'error');
+      } else {
         showToast('Wyeksportowano dane', 'success');
-      } finally {
-        // A full health-data dump must not linger in the cache after sharing.
-        try {
-          file.delete();
-        } catch (cleanupError) {
-          logger.error('Failed to clean up export file', cleanupError);
-        }
       }
     } catch (error) {
       logger.error('Data export failed', error);

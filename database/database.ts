@@ -5,11 +5,13 @@ export const DB_NAME = 'fortivo.db';
 
 // Migration failure on startup; AppProvider routes to the recovery screen.
 export class DatabaseMigrationError extends Error {
+  readonly version: number;
   readonly cause?: unknown;
 
-  constructor(message: string, cause?: unknown) {
-    super(message);
+  constructor(version: number, cause?: unknown) {
+    super(`Migracja v${version} nie powiodła się`);
     this.name = 'DatabaseMigrationError';
+    this.version = version;
     this.cause = cause;
   }
 }
@@ -346,10 +348,7 @@ const runMigrations = async (db: SQLite.SQLiteDatabase) => {
       });
     } catch (error) {
       logger.error(`Migracja v${version} nie powiodła się`, error);
-      throw new DatabaseMigrationError(
-        `Migracja v${version} nie powiodła się`,
-        error,
-      );
+      throw new DatabaseMigrationError(version, error);
     }
 
     logger.db(`Migracja v${version} zakończona`);

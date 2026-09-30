@@ -177,13 +177,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       // retryable error state instead of an endless spinner.
       if (error instanceof DatabaseMigrationError) {
         Sentry.captureException(error, {
-          tags: {
-            migration_version: error.message.match(/v(\d+)/)?.[1] ?? 'unknown',
-          },
+          tags: { migration_version: String(error.version) },
         });
         setDbError(error);
       } else {
         Sentry.captureException(error);
+        // A recovery retry can pass migrations and fail later; the stale
+        // dbError would keep the recovery spinner up forever.
+        clearDbError();
         setInitError(true);
       }
       // After the explicit captures: Sentry's Dedupe drops the repeat, and the

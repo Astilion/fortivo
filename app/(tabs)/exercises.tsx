@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { LoadingView } from '@/components/ui/LoadingView';
 import colors from '@/constants/Colors';
+import { useApp } from '@/providers/AppProvider';
 import { useExerciseStore } from '@/store/exerciseStore';
 import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { useToastStore } from '@/store/toastStore';
@@ -14,6 +15,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { capitalize } from '@/utils/capitalize';
 import { confirmAction } from '@/utils/confirm';
+import { logger } from '@/utils/logger';
 import {
   FlatList,
   Pressable,
@@ -28,6 +30,7 @@ export default function ExercisesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('wszystkie');
   const router = useRouter();
+  const { workoutService } = useApp();
   const activeWorkoutId = useActiveWorkoutStore((state) => state.workoutId);
   const { showToast } = useToastStore();
   const exercises = useExerciseStore((state) => state.exercises);
@@ -80,6 +83,22 @@ export default function ExercisesScreen() {
 
   useRefreshOnFocus(loadExercises, [loadExercises]);
 
+  // Deleting an exercise that the live session still references makes every
+  // autosave and the finish fail on its FK. Before the session screen is
+  // opened the store holds no exercises, so the DB is the source of truth.
+  const isInActiveWorkout = useCallback(
+    async (exerciseId: string) => {
+      const { workoutId, exercises: sessionExercises } =
+        useActiveWorkoutStore.getState();
+      if (!workoutId) return false;
+      const session =
+        sessionExercises ??
+        (await workoutService.getWorkoutExercises(workoutId));
+      return session.some((ex) => ex.exercise.id === exerciseId);
+    },
+    [workoutService],
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: (typeof filteredExercises)[number] }) => (
       <Card onPress={() => router.push(`/exercise-details?id=${item.id}`)}>
@@ -105,6 +124,29 @@ export default function ExercisesScreen() {
                 style={styles.favoriteButton}
                 onPress={async (e) => {
                   e.stopPropagation();
+                  let inActiveWorkout: boolean;
+                  try {
+                    inActiveWorkout = await isInActiveWorkout(item.id);
+                  } catch (error) {
+                    logger.error(
+                      'Failed to read active workout exercises',
+                      error,
+                    );
+                    showToast(
+                      error instanceof ServiceError
+                        ? error.userMessage
+                        : 'Nie udało się sprawdzić aktywnego treningu',
+                      'error',
+                    );
+                    return;
+                  }
+                  if (inActiveWorkout) {
+                    showToast(
+                      'Usuń to ćwiczenie z aktywnego treningu albo zakończ trening, żeby je usunąć',
+                      'info',
+                    );
+                    return;
+                  }
                   const count = await getExerciseUsageCount(item.id);
                   const message =
                     count > 0
@@ -177,6 +219,7 @@ export default function ExercisesScreen() {
       deleteExercise,
       showToast,
       getExerciseUsageCount,
+      isInActiveWorkout,
     ],
   );
 

@@ -1,5 +1,6 @@
 import colors from '@/constants/Colors';
-import { DB_NAME } from '@/database/database';
+import { SUPPORT_EMAIL } from '@/constants/Links';
+import { DatabaseMigrationError, DB_NAME } from '@/database/database';
 import { useDbErrorStore } from '@/store/dbErrorStore';
 import { confirmAction } from '@/utils/confirm';
 import { logger } from '@/utils/logger';
@@ -9,7 +10,9 @@ import {
   ActivityIndicator,
   Alert,
   BackHandler,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -17,7 +20,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const RESET_WARNING =
-  'Aktualizacja danych aplikacji nie powiodła się. Możesz zresetować bazę danych. Spowoduje to utratę wszystkich zapisanych treningów, planów i pomiarów.';
+  'Tej operacji nie da się cofnąć. Wszystkie treningi, plany, historia i pomiary zostaną trwale usunięte. Zanim to zrobisz, napisz do nas — poprawka może uratować Twoje dane.';
+
+const errorCode = (error: DatabaseMigrationError) =>
+  error.cause instanceof Error
+    ? `Kod: v${error.version} · ${error.cause.message}`
+    : `Kod: v${error.version}`;
 
 // Full-screen takeover rendered directly by AppProvider when a migration
 // fails. It is intentionally NOT a router route: there is no services
@@ -39,7 +47,7 @@ export const DatabaseRecoveryScreen = () => {
       setBusy(false);
       Alert.alert(
         'Nie udało się naprawić bazy',
-        'Spróbuj zresetować bazę danych.',
+        'Błąd nadal występuje. Twoje dane są w telefonie — wyślij zrzut ekranu z kodem.',
       );
     }
   }, [dbError]);
@@ -58,7 +66,7 @@ export const DatabaseRecoveryScreen = () => {
 
   const handleReset = useCallback(() => {
     confirmAction(
-      'Zresetuj bazę',
+      'Zresetować bazę?',
       RESET_WARNING,
       async () => {
         setBusy(true);
@@ -88,10 +96,27 @@ export const DatabaseRecoveryScreen = () => {
         { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 },
       ]}
     >
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Wystąpił problem z bazą danych</Text>
-        <Text style={styles.body}>{RESET_WARNING}</Text>
-      </View>
+        <Text style={styles.body}>
+          Aktualizacja danych aplikacji nie powiodła się. Twoje treningi i
+          pomiary są nadal zapisane w telefonie.
+        </Text>
+        <Text style={styles.body}>
+          Zrób zrzut tego ekranu i wyślij go na adres:
+        </Text>
+        <Text selectable style={styles.email}>
+          {SUPPORT_EMAIL}
+        </Text>
+        <Text style={styles.body}>
+          Poprawka przyjdzie w aktualizacji aplikacji.
+        </Text>
+        {dbError ? (
+          <Text selectable style={styles.code}>
+            {errorCode(dbError)}
+          </Text>
+        ) : null}
+      </ScrollView>
 
       {busy ? (
         <View style={styles.busy}>
@@ -100,16 +125,13 @@ export const DatabaseRecoveryScreen = () => {
       ) : (
         <View style={styles.footer}>
           <Pressable
-            style={[styles.button, styles.resetButton]}
-            onPress={handleReset}
-          >
-            <Text style={styles.resetText}>Zresetuj bazę</Text>
-          </Pressable>
-          <Pressable
             style={[styles.button, styles.retryButton]}
             onPress={handleRetry}
           >
             <Text style={styles.retryText}>Spróbuj ponownie</Text>
+          </Pressable>
+          <Pressable style={styles.button} onPress={handleReset} hitSlop={8}>
+            <Text style={styles.resetText}>Zresetuj bazę</Text>
           </Pressable>
         </View>
       )}
@@ -122,24 +144,40 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.primary,
     paddingHorizontal: 24,
-    justifyContent: 'space-between',
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
+    gap: 12,
+    paddingBottom: 24,
   },
   title: {
     color: colors.text.primary,
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 4,
   },
   body: {
     color: colors.text.secondary,
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  email: {
+    color: colors.accent,
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  code: {
+    color: colors.text.primary,
+    backgroundColor: colors.secondary,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    fontSize: 13,
+    fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }),
   },
   busy: {
     paddingVertical: 24,
@@ -154,22 +192,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  resetButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.accent,
+  retryButton: {
+    backgroundColor: colors.accent,
   },
-  resetText: {
-    color: colors.accent,
+  retryText: {
+    color: colors.primary,
     fontSize: 16,
     fontWeight: '600',
   },
-  retryButton: {
-    backgroundColor: colors.background,
-  },
-  retryText: {
-    color: colors.text.primary,
-    fontSize: 16,
+  resetText: {
+    color: colors.danger,
+    fontSize: 15,
     fontWeight: '600',
   },
 });
