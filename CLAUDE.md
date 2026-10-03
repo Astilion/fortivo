@@ -211,7 +211,7 @@ Konwencja store'ów: akcje read-only niekrytyczne logują i zwracają wartość 
 - **Wysyłka do Play:** `eas build --profile production --platform android --auto-submit` → track `alpha` jako `draft`. Klucz konta usługi jest w EAS credentials, nie w repo (wpisy w `.gitignore` to tylko zabezpieczenie); konto nie ma uprawnień do produkcji. Uzasadnienie: `docs/DECISIONS.md`.
 - Sam `eas submit` bez `--id` pyta o build; **nie** używaj `--latest` po buildzie preview/development — wyśle zły build.
 - **Kolejność wydania:** wersja robocza → test wewnętrzny (Dodaj z biblioteki, ten sam versionCode) → kontrola release → merge → Alpha: Edytuj wersję → Zapisz i opublikuj → Przegląd publikowanych zmian. Kontrola release nie przez uniwersalny APK ani dev client. Uzasadnienie: `docs/DECISIONS.md`.
-- **Testy na urządzeniu: zawsze preview build, nigdy Expo Go** (natywny Sentry, SQLite). Po edycji serwisów pełny reload Metro (`r`), nie Fast Refresh. Urządzenia: Huawei P30 Pro, POCO F8 Pro (POCO wymaga pełnego uninstalla przed sideloadem).
+- **Smoke: dev build z EAS na emulatorze, nigdy Expo Go** (natywny Sentry, SQLite). Lokalny `expo run:android` pada na Windows (limit 260 znaków ścieżki); dev client ma ten sam pakiet co wersja z Play, więc nie instaluj go na telefonie z prawdziwymi danymi. Dev client ma `__DEV__ = true` — Sentry sprawdza dopiero kontrola release na teście wewnętrznym. Po edycji serwisów pełny reload Metro (`r`), nie Fast Refresh. Urządzenia: Huawei P30 Pro, POCO F8 Pro.
 
 ## Komendy
 

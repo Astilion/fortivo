@@ -676,3 +676,22 @@ reset, więc najlepszą ochroną jest powstrzymanie resetu i kod do diagnozy. Tr
 jest już w roadmapie: import JSON (v0.7) i auto-backup przez SAF do folderu użytkownika (v0.8),
 bez własnej chmury.
 
+
+
+---
+
+## 2026-10-03 — Wniosek o produkcję przed przeglądem kryteriów bety
+
+**Kontekst:** Kalendarz bety zakładał przegląd kryteriów zaliczenia (M1.16) około 10.10
+i dopiero potem wniosek o dostęp do produkcji w Play Console. 0.6.2 jest już na Alpha,
+a rozpatrzenie wniosku przez Google trwa niezależnie od nas.
+
+**Decyzja:** Wniosek złożony 2026-10-03, przed przeglądem. Promocja z Alpha na produkcję
+zostaje ręczna i następuje dopiero po przeglądzie kryteriów.
+
+**Odrzucone:** czekanie z wnioskiem do przeglądu ~10.10.
+
+**Dlaczego:** Zgoda Google nie jest publikacją — daje tylko możliwość wydania na produkcję,
+a o samym wydaniu nadal decydują kryteria bety. Złożenie wniosku wcześniej równolegle zużywa
+czas oczekiwania na Google zamiast dokładać go po przeglądzie. Przy odmowie plan B to
+rekrutacja dodatkowych testerów (Wykop, Reddit) i nacisk na zaangażowanie obecnych.

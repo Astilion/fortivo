@@ -68,6 +68,10 @@
   z **D8**. `create-workout.tsx` / `edit-workout.tsx` wołają `createWorkout`/`updateWorkout` i
   `saveWorkoutExercises` osobno; retry po błędzie duplikuje trening. Poprawka: jedna metoda
   serwisu w jednej transakcji. Szczegóły: raport #11.
+- **Etykieta „Zresetuj” w potwierdzeniu resetu bazy** (2026-10-03). Podczas smoke'a 0.6.2
+  przypadkowe potwierdzenie skasowało bazę na emulatorze. Kod działa zgodnie z założeniem
+  (reset tylko przez `confirmAction`), ale „Zresetuj” obok „Anuluj” łatwo pomylić przy
+  nieodwracalnej akcji. Rozważyć jednoznaczne „Usuń wszystkie dane”.
 
 ## Nieużywane zależności (kandydaci do usunięcia lub zagospodarowania)
 
