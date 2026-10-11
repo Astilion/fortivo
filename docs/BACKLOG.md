@@ -24,7 +24,13 @@
 - `originalError` → `cause` w `ServiceError`. Od 0.6.1 obsłużone błędy docierają do Sentry
   przez `logger.error`, ale `ServiceError` niesie tylko polski komunikat — przyczyna SQLite
   widoczna jest wyłącznie w osobnym zdarzeniu z warstwy serwisu.
-- `withExclusiveTransactionAsync` + przepchnięcie `txn` przez `_...InTx`.
+- `withExclusiveTransactionAsync` + przepchnięcie `txn` przez `_...InTx`. Ustalenie z 2026-10-11:
+  pojedyncze `runAsync` spoza `runInTransaction` (serwisy workout, exercise, weight, measurement,
+  weeklyPlan, profile) mogą wpaść w cudzą otwartą transakcję na wspólnym połączeniu i zostać
+  cofnięte jej `ROLLBACK`-iem, mimo że użytkownik dostał toast sukcesu. Realny scenariusz:
+  autosave aktywnego treningu + ulubione/własne ćwiczenie dodane w pickerze w tym samym oknie.
+  Prawdopodobieństwo bardzo niskie (nakładka czasowa i błąd tej transakcji naraz). Alternatywa
+  do oceny: pojedyncze zapisy przez ten sam łańcuch write locka.
 - **Sesja instalacyjna nigdy nie raportuje** (2026-09-04). `bootstrapCrashReporting()` biegnie
   raz przy ładowaniu modułu `app/_layout.tsx`, więc zgoda udzielona w onboardingu działa
   dopiero od kolejnego startu aplikacji — a pierwsza sesja jest tą o najwyższym ryzyku
@@ -72,6 +78,26 @@
   przypadkowe potwierdzenie skasowało bazę na emulatorze. Kod działa zgodnie z założeniem
   (reset tylko przez `confirmAction`), ale „Zresetuj” obok „Anuluj” łatwo pomylić przy
   nieodwracalnej akcji. Rozważyć jednoznaczne „Usuń wszystkie dane”.
+- **FORTIVO-8: `SharedObject doesn't contain valid id` przy odczycie planu** (2026-10-11).
+  1 event (0.6.2+19, ~5 s po starcie, current-workout), niepotwierdzone. Podejrzenie: wyścig
+  w `SharedObjectRegistry` expo-modules-core 3.0.18 — argumenty `AsyncFunction` są konwertowane
+  na wątku tła, który czyta mapę `pairs` bez synchronizacji, podczas gdy wątek JS ją modyfikuje
+  (nowe statementy, finalizatory GC). Nasz `close`/`finalize` nie pasuje do objawu. W Sentry brak
+  innych issue z SharedObject (90 dni) i brak „Failed to initialize app” (14 dni) — ścieżka retry
+  nie jest przyczyną tego eventu. Skutek: nieudany odczyt planu (toast, kolejny focus powinien
+  ładować poprawnie — niesprawdzone). Ten sam mechanizm może trafić zapisy — w transakcji kończy
+  się `ROLLBACK`-iem. Do sprawdzenia changelog expo przy przeglądzie M1.16 / v0.7. Issue w Sentry
+  zostaje otwarte.
+- **„Spróbuj ponownie” po `initError` gubi połączenie** (2026-10-11). `providers/AppProvider.tsx:105`
+  woła `initDatabase()` przy każdym `reinitNonce` (retry z `:202–207`), a poprzedni uchwyt jest
+  zamykany tylko przy `DatabaseMigrationError` (`database/database.ts:363–366`). Drugie
+  `openDatabaseAsync` (`database/database.ts:359`) dostaje ten sam zcache'owany natywny obiekt
+  (`expo-sqlite/android/.../SQLiteModule.kt:110`, `addRef`); gdy GC zbierze stary wrapper JS,
+  `NativeDatabase.sharedObjectDidRelease()` woła `ref.close()` bez patrzenia na refCount
+  (`NativeDatabase.kt:28–31`) i zamyka połączenie nowego kontekstu. Poprawka: zamknąć stary
+  uchwyt przed ponownym otwarciem albo zamykać go w `catch` także dla błędów spoza migracji.
+- Pomysł, nie teraz (2026-10-11): jedna ponowna próba po przejściowym błędzie natywnym expo-sqlite
+  (`InvalidSharedObjectIdException`) dla odczytów i autosave. Wraca, jeśli FORTIVO-8 się powtórzy.
 
 ## Nieużywane zależności (kandydaci do usunięcia lub zagospodarowania)
 
