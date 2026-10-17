@@ -43,7 +43,7 @@ Pełna funkcjonalność offline, zero kont, zero backendu. **Wersja 0.6.0.**
 - ✅ **v0.6** — niemutowalne snapshoty historii + smart prefill kolejnej sesji
 - ✅ **M1.15 „Pre-beta hardening"** — integralność danych (transakcyjny finisz treningu
   i zapis planu, wspólny write lock na transakcjach SQLite, daty lokalne zamiast UTC),
-  prywatność (crash reporting z przełącznikiem opt-out, guardraile Sentry), eksport
+  prywatność (crash reporting na zasadzie opt-in, guardraile Sentry), eksport
   danych do JSON
 
 ### 🔜 M1.16 — closed beta
@@ -51,6 +51,8 @@ Pełna funkcjonalność offline, zero kont, zero backendu. **Wersja 0.6.0.**
 Zamknięte testy na cudzych urządzeniach, wg wymogów Google Play dla nowych kont
 deweloperskich. Cel nie brzmi „zebrać feedback" — brzmi **udowodnić, że dane
 użytkownika są bezpieczne poza laptopem autora**.
+
+Zamknięte testy są w toku; po nich ankieta, przegląd kryteriów i wniosek o produkcję.
 
 Kryteria zaliczenia:
 
@@ -98,8 +100,9 @@ mierzenia, czy wraca. Paywall ma jedną premierę i nie może wyjść pusty.
 - cel tygodniowy na dashboardzie + licznik tygodni z rzędu — świadomie **nie** dzienny
   streak; na siłowni dni wolne są częścią planu, nie porażką
 - prośba o recenzję po trzecim ukończonym treningu / pierwszym rekordzie
-- anonimowa analityka produktowa, hostowana w UE, z opt-outem w profilu; kilkanaście
-  zdarzeń, zero danych treningowych. **Granica święta: dane treningowe ≠ telemetria**
+- anonimowa analityka produktowa, hostowana w UE, model zgody do rozstrzygnięcia przed v0.7
+  (por. `DECISIONS.md` 2026-08-31); kilkanaście zdarzeń, zero danych treningowych.
+  **Granica święta: dane treningowe ≠ telemetria**
 - import JSON jako lustro istniejącego eksportu — domyka pętlę bezpieczeństwa danych,
   daje pełną ścieżkę zmiany telefonu i jest generalną próbą migracji local→cloud
 

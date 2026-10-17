@@ -98,8 +98,14 @@
   uchwyt przed ponownym otwarciem albo zamykać go w `catch` także dla błędów spoza migracji.
 - Pomysł, nie teraz (2026-10-11): jedna ponowna próba po przejściowym błędzie natywnym expo-sqlite
   (`InvalidSharedObjectIdException`) dla odczytów i autosave. Wraca, jeśli FORTIVO-8 się powtórzy.
+- Screenshoty w README (`assets/screenshots/`) z 2026-05-24 — ekrany od tego czasu zmienione
+  (30 commitów); nazwy `current-workout.tsx.png` i `active-workout.tsx.png` są zamienione
+  względem ekranów (podpisy w README są poprawne). (nowe 2026-10-17)
 
 ## Nieużywane zależności (kandydaci do usunięcia lub zagospodarowania)
+
+> **Zamknięte 2026-06-10** (`d1f2de1`) — obie usunięte z `package.json`; wpis niżej nieaktualny,
+> odnotowane 2026-10-17.
 
 Stan na v0.6 (zweryfikowane grepem — zero importów w kodzie):
 
