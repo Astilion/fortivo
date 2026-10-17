@@ -14,17 +14,17 @@ Current version: 0.6.2. Closed testing on Google Play is in progress; public rel
 
 ## Screenshots
 
-| Dashboard | Live workout |
-| --- | --- |
+| Dashboard                                                                           | Live workout                                                                                              |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | ![Dashboard with weekly, monthly and total stats](assets/screenshots/index.tsx.png) | ![Live workout with rest timer, set logging and progress bar](assets/screenshots/current-workout.tsx.png) |
 
-| Workout preview | Plans and presets |
-| --- | --- |
+| Workout preview                                                                                 | Plans and presets                                                                   |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | ![Workout preview listing exercises before starting](assets/screenshots/active-workout.tsx.png) | ![Workouts screen with plans and presets tabs](assets/screenshots/workouts.tsx.png) |
 
-| Exercise list | |
-| --- | --- |
-| ![Exercise list with search and category filters](assets/screenshots/exercises.tsx.png) | |
+| Exercise list                                                                           |     |
+| --------------------------------------------------------------------------------------- | --- |
+| ![Exercise list with search and category filters](assets/screenshots/exercises.tsx.png) |     |
 
 ## Tech Stack
 
