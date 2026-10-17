@@ -54,14 +54,15 @@ The service layer is class-based. Each service (`WorkoutService`, `WeeklyPlanSer
 Every service transaction goes through `runInTransaction` (`database/writeLock.ts`), which chains
 them so only one `BEGIN…COMMIT` is in flight at a time: expo-sqlite's `withTransactionAsync` is not
 exclusive, and its unnamed `ROLLBACK` on the shared connection could cancel another caller's
-transaction. The migration runner is the only direct caller. Upserts are true
-`INSERT … ON CONFLICT(…) DO UPDATE`; `INSERT OR REPLACE` is banned, because with foreign keys on it
-deletes the row first and fires `ON DELETE CASCADE` on its children.
+transaction. The migration runner is the only place that calls `withTransactionAsync` directly.
+Upserts are true `INSERT … ON CONFLICT(…) DO UPDATE`; `INSERT OR REPLACE` is banned, because with
+foreign keys on it deletes the row first and fires `ON DELETE CASCADE` on its children.
 
-Multi-step writes are orchestrated by the service, not the screen. A screen calls one method —
-`workoutService.finishWorkout(...)` or `weeklyPlanService.savePlanWithDays(...)` — and each runs
-as a single transaction, so a retry after a failure cannot duplicate a history entry or leave a plan
-without its days.
+Multi-step writes belong in the service, as one transaction: `workoutService.finishWorkout(...)` and
+`weeklyPlanService.savePlanWithDays(...)` each run as a single service transaction, so a retry after
+a failure cannot duplicate a history entry or leave a plan without its days. Creating and editing a
+workout are still two separate writes from the screen — a known debt, tracked in
+`docs/BACKLOG.md`.
 
 State lives in seven Zustand stores: `workoutStore`, `weeklyPlanStore`, `exerciseStore`,
 `activeWorkoutStore`, `onboardingStore`, `toastStore`, and `dbErrorStore`. `activeWorkoutStore` is
@@ -108,14 +109,19 @@ Build and app configuration live in `app.json` and `eas.json` at the root.
 Requires Node 20+ (the Expo SDK 54 baseline; the version is not pinned in the repo) and the Expo
 tooling. Android is the only supported target.
 
-The project uses expo-dev-client; run it on a development build. A local `expo run:android` fails on
-Windows because of the 260-character path limit, so development builds come from EAS:
+The project uses expo-dev-client; run it on a development build. A local `expo run:android` can fail
+on Windows because of the 260-character path limit, so development builds come from EAS:
 
 ```bash
-npm install                                              # install dependencies
-eas build --profile development --platform android      # build the dev client on EAS
-npm start                                                # start the Expo dev server
-npm run android                                          # start Metro and open the installed dev build
+npm install                                           # install dependencies
+eas build --profile development --platform android   # build the dev client on EAS
+```
+
+Then start the dev server with either of:
+
+```bash
+npm start         # Expo dev server
+npm run android   # same, and opens the installed dev build on Android
 ```
 
 Crash reporting reads `EXPO_PUBLIC_SENTRY_DSN` (see `.env.example`). Without it, in development, or
@@ -174,7 +180,8 @@ not exist.
   onboarding slide and can be changed in the profile, taking effect from the next launch. Without
   consent the Sentry client is never created. Events go to Sentry's EU region with
   `sendDefaultPii: false`, the user object removed, breadcrumbs scrubbed (no console output, no
-  touch labels, no route query strings, network details trimmed to the connection type) and a cap on events per session.
+  touch labels, no route query strings, network details trimmed to the connection type) and a cap
+  on events per session.
 - Android Auto Backup is deliberately enabled (`allowBackup: true` is explicit in `app.json`): with
   no accounts, it is the only way data survives a reinstall or a new phone.
 - All data can be exported to a JSON file through the share sheet. There is no import yet, so the
