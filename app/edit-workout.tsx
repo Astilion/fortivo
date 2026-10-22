@@ -88,6 +88,7 @@ export default function EditWorkoutScreen() {
       await workoutService.saveWorkoutExercises(id, draft.exercises);
       clearDraft();
       router.back();
+      showToast('Zapisano zmiany', 'success');
     } catch (error) {
       logger.error('Błąd zapisu treningu', error);
       if (error instanceof ServiceError) {
