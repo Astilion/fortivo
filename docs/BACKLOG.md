@@ -74,6 +74,8 @@
   z **D8**. `create-workout.tsx` / `edit-workout.tsx` wołają `createWorkout`/`updateWorkout` i
   `saveWorkoutExercises` osobno; retry po błędzie duplikuje trening. Poprawka: jedna metoda
   serwisu w jednej transakcji. Szczegóły: raport #11.
+  przed `saveWorkoutExercises` w `create-workout.tsx` — walidacja wyżej już
+  wyklucza pustą listę (2026-10-22, zostawiony w hotfixie 0.6.3 celowo).
 - **Etykieta „Zresetuj” w potwierdzeniu resetu bazy** (2026-10-03). Podczas smoke'a 0.6.2
   przypadkowe potwierdzenie skasowało bazę na emulatorze. Kod działa zgodnie z założeniem
   (reset tylko przez `confirmAction`), ale „Zresetuj” obok „Anuluj” łatwo pomylić przy
@@ -101,6 +103,17 @@
 - Screenshoty w README (`assets/screenshots/`) z 2026-05-24 — ekrany od tego czasu zmienione
   (30 commitów); nazwy `current-workout.tsx.png` i `active-workout.tsx.png` są zamienione
   względem ekranów (podpisy w README są poprawne). (nowe 2026-10-17)
+- **Wpisana wartość ginie przy killu procesu w aktywnym treningu** (2026-10-22,
+  po hotfixie 0.6.3). Pola aktywnego treningu trzymają wpis w `pendingText`
+  (ref) aż do `onBlur`/`onEndEditing`, a schowanie klawiatury strzałką na
+  Androidzie nie zdejmuje fokusu. 0.6.3 domyka ścieżkę „Zakończ trening”
+  (`forceBlur()` przed potwierdzeniem), ale wartość, która nie przeszła
+  commitu, nie trafia do store'a ani do bazy, jeśli system zabije proces albo
+  aplikacja przejdzie w tło. **Nie zweryfikowane** — sprawdzić krokiem
+  „wpisz → schowaj strzałką → `adb shell am force-stop com.astilion.fortivo`”.
+  Jeśli się potwierdzi: utrata danych (twardy bloker z kryteriów M1.16),
+  priorytet wysoki. Kierunek do rozważenia: commit oczekujących wartości przy
+  przejściu aplikacji w tło.
 
 ## Nieużywane zależności (kandydaci do usunięcia lub zagospodarowania)
 
