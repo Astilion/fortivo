@@ -10,7 +10,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { generateId } from '@/database/database';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  AppState,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { parseDecimal, parseInteger } from '@/utils/numbers';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
@@ -39,6 +46,8 @@ const getValueLabel = (measurementType?: MeasurementType): string => {
       return 'Powt.';
   }
 };
+const NEW_SET_DEFAULT_REPS = 8;
+const NEW_SET_DEFAULT_WEIGHT = 0;
 
 const getActualValue = (
   set: WorkoutSet,
@@ -100,6 +109,10 @@ export default function ActiveWorkoutScreen() {
     return text;
   };
 
+  const forceBlur = () => {
+    TextInput.State.currentlyFocusedInput()?.blur();
+  };
+
   useActiveWorkoutAutosave();
 
   // Load once per mount; loadActiveWorkout reconciles DB against the store
@@ -117,11 +130,24 @@ export default function ActiveWorkoutScreen() {
   useFocusEffect(
     useCallback(() => {
       if (pendingExercise) {
+        const measurementType = pendingExercise.measurementType;
+        const isTime = measurementType === 'time';
+        const isDistance = measurementType === 'distance';
         const newExercise: WorkoutExerciseWithSets = {
           id: generateId('we'),
           exercise: pendingExercise,
           sets: [
-            { id: generateId('ws'), reps: 8, weight: 0, completed: false },
+            {
+              id: generateId('ws'),
+              reps: NEW_SET_DEFAULT_REPS,
+              weight: NEW_SET_DEFAULT_WEIGHT,
+              completed: false,
+              actualReps:
+                isDistance || isTime ? undefined : NEW_SET_DEFAULT_REPS,
+              actualWeight: NEW_SET_DEFAULT_WEIGHT,
+              actualDuration: isTime ? 0 : undefined,
+              actualDistance: isDistance ? 0 : undefined,
+            },
           ],
         };
         useActiveWorkoutStore.getState().addExercise(newExercise);
@@ -136,8 +162,17 @@ export default function ActiveWorkoutScreen() {
   // tap-out) still fires its onBlur handler into the store before navigation.
   useEffect(() => {
     return () => {
-      TextInput.State.currentlyFocusedInput()?.blur();
+      forceBlur();
     };
+  }, []);
+
+  // Commit a pending value before the OS can kill the app in the background;
+  // the store change then reaches SQLite through the debounced autosave.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') forceBlur();
+    });
+    return () => subscription.remove();
   }, []);
 
   useEffect(() => {
@@ -294,6 +329,9 @@ export default function ActiveWorkoutScreen() {
   };
 
   const handleFinishWorkout = () => {
+    // Commit any value typed without Enter (still in pendingText) before the
+    // dialog — onBlur lands asynchronously, and finish reads from the store.
+    forceBlur();
     confirmAction(
       'Zakończ trening',
       'Czy na pewno chcesz zakończyć trening?',
@@ -500,7 +538,7 @@ export default function ActiveWorkoutScreen() {
                       <TextInput
                         key={`weight-${set.id}-${set.actualWeight}`}
                         style={styles.input}
-                        defaultValue={set.actualWeight?.toString() || '0'}
+                        defaultValue={set.actualWeight?.toString() ?? ''}
                         onChangeText={(t) => stashText(weightKey, t)}
                         onEndEditing={commitWeight}
                         onBlur={commitWeight}
@@ -522,7 +560,7 @@ export default function ActiveWorkoutScreen() {
                           getActualValue(
                             set,
                             item.exercise.measurementType,
-                          )?.toString() || '0'
+                          )?.toString() ?? ''
                         }
                         onChangeText={(t) => stashText(valueKey, t)}
                         onEndEditing={commitValue}
@@ -540,7 +578,7 @@ export default function ActiveWorkoutScreen() {
                         <TextInput
                           key={`rpe-${set.id}-${set.actualRpe}-${validationKey}`}
                           style={styles.input}
-                          defaultValue={set.actualRpe?.toString() || ''}
+                          defaultValue={set.actualRpe?.toString() ?? ''}
                           onChangeText={(t) => stashText(rpeKey, t)}
                           onEndEditing={commitRpe}
                           onBlur={commitRpe}
@@ -556,7 +594,7 @@ export default function ActiveWorkoutScreen() {
                         <TextInput
                           key={`tempo-${set.id}-${set.tempo}-${validationKey}`}
                           style={styles.input}
-                          defaultValue={set.tempo || ''}
+                          defaultValue={set.tempo ?? ''}
                           onChangeText={(t) => stashText(tempoKey, t)}
                           onEndEditing={commitTempo}
                           onBlur={commitTempo}

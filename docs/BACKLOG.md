@@ -74,6 +74,8 @@
   z **D8**. `create-workout.tsx` / `edit-workout.tsx` wołają `createWorkout`/`updateWorkout` i
   `saveWorkoutExercises` osobno; retry po błędzie duplikuje trening. Poprawka: jedna metoda
   serwisu w jednej transakcji. Szczegóły: raport #11.
+  przed `saveWorkoutExercises` w `create-workout.tsx` — walidacja wyżej już
+  wyklucza pustą listę (2026-10-22, zostawiony w hotfixie 0.6.3 celowo).
 - **Etykieta „Zresetuj” w potwierdzeniu resetu bazy** (2026-10-03). Podczas smoke'a 0.6.2
   przypadkowe potwierdzenie skasowało bazę na emulatorze. Kod działa zgodnie z założeniem
   (reset tylko przez `confirmAction`), ale „Zresetuj” obok „Anuluj” łatwo pomylić przy
@@ -101,6 +103,12 @@
 - Screenshoty w README (`assets/screenshots/`) z 2026-05-24 — ekrany od tego czasu zmienione
   (30 commitów); nazwy `current-workout.tsx.png` i `active-workout.tsx.png` są zamienione
   względem ekranów (podpisy w README są poprawne). (nowe 2026-10-17)
+- **Szybkie zamknięcie z listy aplikacji gubi wpisaną wartość** (2026-10-22, po
+  hotfixie 0.6.3). 0.6.3 zapisuje wartość przy przejściu w tło (blur + natychmiastowy
+  zapis w tle), ale swipe z listy ostatnich aplikacji w ułamku sekundy po wyjściu
+  wyprzedza asynchroniczny łańcuch `onBlur` → commit → SQLite. Kierunek: przy przejściu
+  w tło zatwierdzać `pendingText` synchronicznie (rejestr funkcji commitu per pole),
+  bez czekania na `onBlur`. Wąski przypadek, ale to utrata danych — wysoko po becie.
 
 ## Nieużywane zależności (kandydaci do usunięcia lub zagospodarowania)
 
@@ -129,6 +137,12 @@ Stan na v0.6 (zweryfikowane grepem — zero importów w kodzie):
 - Multi-measurement rendering + wykresy.
 - Backfill `workout_name` w starych `exercise_progress` (zostawione null by design).
 - Edycja `measurementType` ćwiczenia z historią → dziwny render (warn/disable).
+- Zmiana nazwy ćwiczenia w trakcie aktywnego treningu nie dociera do sesji
+  (2026-10-22, smoke 0.6.3). `activeWorkoutStore` trzyma kopię ćwiczenia z chwili
+  dodania; finisz zapisuje snapshot ze starą nazwą, kolejna sesja ma już nową. Dane
+  serii i powiązanie z ćwiczeniem poprawne — różni się tylko etykieta w jednym wpisie
+  historii. Niski priorytet; rozważyć przy pracy nad edycją ćwiczeń z historią
+  (pozycja wyżej).
 - `exerciseStore` — read errors przez `error.message` (EN) zamiast `userMessage` (PL);
   niespójność z `useAsyncLoader`, do ujednolicenia.
 

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { useApp } from '@/providers/AppProvider';
 import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { useToastStore } from '@/store/toastStore';
@@ -35,6 +36,20 @@ export function useActiveWorkoutAutosave() {
       const { workoutId: id, exercises: ex } = useActiveWorkoutStore.getState();
       if (id && ex) save(id, ex);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Android pauses JS timers in the background, so the debounced save never
+  // fires there; a store change committed while backgrounded (force-blurred
+  // input) is saved immediately, before the OS can kill the process.
+  useEffect(() => {
+    return useActiveWorkoutStore.subscribe((state, prev) => {
+      if (AppState.currentState === 'active') return;
+      if (state.exercises === prev.exercises) return;
+      if (state.workoutId && state.exercises) {
+        save(state.workoutId, state.exercises);
+      }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

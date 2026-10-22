@@ -676,8 +676,6 @@ reset, więc najlepszą ochroną jest powstrzymanie resetu i kod do diagnozy. Tr
 jest już w roadmapie: import JSON (v0.7) i auto-backup przez SAF do folderu użytkownika (v0.8),
 bez własnej chmury.
 
-
-
 ---
 
 ## 2026-10-03 — Wniosek o produkcję przed przeglądem kryteriów bety
@@ -695,3 +693,33 @@ zostaje ręczna i następuje dopiero po przeglądzie kryteriów.
 a o samym wydaniu nadal decydują kryteria bety. Złożenie wniosku wcześniej równolegle zużywa
 czas oczekiwania na Google zamiast dokładać go po przeglądzie. Przy odmowie plan B to
 rekrutacja dodatkowych testerów (Wykop, Reddit) i nacisk na zaangażowanie obecnych.
+
+---
+
+## 2026-10-22 — Autosave aktywnego treningu zapisuje od razu, gdy aplikacja jest w tle
+
+**Kontekst:** Hotfix 0.6.3. Wartość wpisana w aktywnym treningu i niezatwierdzona
+(klawiatura schowana strzałką, pole wciąż z fokusem) ginęła, gdy system zamknął
+aplikację w tle. Po dodaniu `forceBlur()` przy przejściu w tło wartość trafiała do
+store'a, ale nie do bazy: na Androidzie React Native wstrzymuje timery JS w tle,
+więc debounce autosave'u nie odpalał przed zabiciem procesu. Potwierdzone logami
+na emulatorze (swipe z listy ostatnich aplikacji).
+
+**Decyzja:** Ten wpis **doprecyzowuje 2026-05-26**. Na pierwszym planie autosave
+działa bez zmian (debounce 500 ms + flush przy odmontowaniu). Zmiana store'a, która
+zachodzi, gdy `AppState.currentState !== 'active'`, zapisuje się natychmiast —
+przez subskrypcję Zustanda w `useActiveWorkoutAutosave`, nie przez efekt Reacta.
+Ekran aktywnego treningu przy przejściu w tło wymusza blur pola z fokusem, żeby
+oczekująca wartość przeszła commit do store'a.
+
+**Odrzucone:** natychmiastowy zapis wszystkich zmian (koniec debounce'u — narusza
+2026-05-26); zapis całego store'a w nasłuchu `AppState` (wyścig z asynchronicznym
+`onBlur` — zapis mógłby wyprzedzić commit wartości).
+
+**Dlaczego:** Subskrypcja odpala się synchronicznie przy zmianie store'a, więc zapis
+w tle zawsze następuje po commicie wartości, bez zależności od timerów i od tego, czy
+React renderuje w tle. Znane ograniczenia: zabicie procesu na pierwszym planie (crash) oraz zamknięcie
+aplikacji z listy ostatnich aplikacji w ułamku sekundy po wyjściu z niej nadal mogą
+zgubić wartość edytowaną w tej chwili — łańcuch `onBlur` → commit → zapis SQLite jest
+asynchroniczny i nie zdąża. Zawężenie: synchroniczny commit schowka bez `onBlur`
+(BACKLOG).
