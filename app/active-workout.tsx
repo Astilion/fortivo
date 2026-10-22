@@ -10,7 +10,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { generateId } from '@/database/database';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  AppState,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { parseDecimal, parseInteger } from '@/utils/numbers';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
@@ -157,6 +164,15 @@ export default function ActiveWorkoutScreen() {
     return () => {
       forceBlur();
     };
+  }, []);
+
+  // Commit a pending value before the OS can kill the app in the background;
+  // the store change then reaches SQLite through the debounced autosave.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') forceBlur();
+    });
+    return () => subscription.remove();
   }, []);
 
   useEffect(() => {

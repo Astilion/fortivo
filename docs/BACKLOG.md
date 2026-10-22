@@ -103,17 +103,12 @@
 - Screenshoty w README (`assets/screenshots/`) z 2026-05-24 — ekrany od tego czasu zmienione
   (30 commitów); nazwy `current-workout.tsx.png` i `active-workout.tsx.png` są zamienione
   względem ekranów (podpisy w README są poprawne). (nowe 2026-10-17)
-- **Wpisana wartość ginie przy killu procesu w aktywnym treningu** (2026-10-22,
-  po hotfixie 0.6.3). Pola aktywnego treningu trzymają wpis w `pendingText`
-  (ref) aż do `onBlur`/`onEndEditing`, a schowanie klawiatury strzałką na
-  Androidzie nie zdejmuje fokusu. 0.6.3 domyka ścieżkę „Zakończ trening”
-  (`forceBlur()` przed potwierdzeniem), ale wartość, która nie przeszła
-  commitu, nie trafia do store'a ani do bazy, jeśli system zabije proces albo
-  aplikacja przejdzie w tło. **Nie zweryfikowane** — sprawdzić krokiem
-  „wpisz → schowaj strzałką → `adb shell am force-stop com.astilion.fortivo`”.
-  Jeśli się potwierdzi: utrata danych (twardy bloker z kryteriów M1.16),
-  priorytet wysoki. Kierunek do rozważenia: commit oczekujących wartości przy
-  przejściu aplikacji w tło.
+- **Szybkie zamknięcie z listy aplikacji gubi wpisaną wartość** (2026-10-22, po
+  hotfixie 0.6.3). 0.6.3 zapisuje wartość przy przejściu w tło (blur + natychmiastowy
+  zapis w tle), ale swipe z listy ostatnich aplikacji w ułamku sekundy po wyjściu
+  wyprzedza asynchroniczny łańcuch `onBlur` → commit → SQLite. Kierunek: przy przejściu
+  w tło zatwierdzać `pendingText` synchronicznie (rejestr funkcji commitu per pole),
+  bez czekania na `onBlur`. Wąski przypadek, ale to utrata danych — wysoko po becie.
 
 ## Nieużywane zależności (kandydaci do usunięcia lub zagospodarowania)
 
