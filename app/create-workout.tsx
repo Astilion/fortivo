@@ -44,6 +44,7 @@ export default function CreateWorkoutScreen() {
     clearDraft();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   const handleSaveWorkout = async () => {
     setShowNameError(false);
     setShowExercisesError(false);
@@ -69,14 +70,13 @@ export default function CreateWorkoutScreen() {
         templateId: undefined,
       };
       const savedWorkout = await workoutService.createWorkout(workoutData);
-      if (draft.exercises.length > 0) {
-        await workoutService.saveWorkoutExercises(
-          savedWorkout.id,
-          draft.exercises,
-        );
-      }
+      await workoutService.saveWorkoutExercises(
+        savedWorkout.id,
+        draft.exercises,
+      );
       clearDraft();
-      router.back();
+      showToast('Trening został zapisany', 'success');
+      router.dismissTo('/(tabs)/workouts');
     } catch (error) {
       logger.error('Błąd zapisu treningu', error);
       if (error instanceof ServiceError) {
