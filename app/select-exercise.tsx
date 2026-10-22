@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { capitalize } from '@/utils/capitalize';
 import { matchesSearch } from '@/utils/search';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 
 export default function SelectExerciseScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,11 +40,14 @@ export default function SelectExerciseScreen() {
   const activeWorkoutId = useActiveWorkoutStore((state) => state.workoutId);
   const toggleFavorite = useExerciseStore((state) => state.toggleFavorite);
   const isFavorite = useExerciseStore((state) => state.isFavorite);
+  const loadExercises = useExerciseStore((state) => state.loadExercises);
 
   const categories = useExerciseStore((state) => state.categories);
   const favoriteExercises = useExerciseStore(
     (state) => state.favoriteExercises,
   );
+
+  useRefreshOnFocus(loadExercises, [loadExercises]);
 
   const filteredExercises = useMemo(
     () =>
@@ -237,7 +241,7 @@ export default function SelectExerciseScreen() {
           ))}
       </ScrollView>
 
-      {loading ? (
+      {loading && exercises.length === 0 ? (
         <ActivityIndicator size="large" color={colors.accent} />
       ) : (
         <FlatList
