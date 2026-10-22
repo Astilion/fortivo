@@ -10,7 +10,7 @@ so the app works the same on the gym floor with no signal. The only outbound tra
 crash reporting (see [Privacy](#privacy)). It targets Android; iOS is not built yet. The app's
 interface is in Polish, since the target market is Poland.
 
-Current version: 0.6.2. Closed testing on Google Play is in progress; public release will follow.
+Current version: 0.6.3. Closed testing on Google Play is in progress; public release will follow.
 
 ## Screenshots
 
