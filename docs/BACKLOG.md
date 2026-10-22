@@ -137,6 +137,12 @@ Stan na v0.6 (zweryfikowane grepem — zero importów w kodzie):
 - Multi-measurement rendering + wykresy.
 - Backfill `workout_name` w starych `exercise_progress` (zostawione null by design).
 - Edycja `measurementType` ćwiczenia z historią → dziwny render (warn/disable).
+- Zmiana nazwy ćwiczenia w trakcie aktywnego treningu nie dociera do sesji
+  (2026-10-22, smoke 0.6.3). `activeWorkoutStore` trzyma kopię ćwiczenia z chwili
+  dodania; finisz zapisuje snapshot ze starą nazwą, kolejna sesja ma już nową. Dane
+  serii i powiązanie z ćwiczeniem poprawne — różni się tylko etykieta w jednym wpisie
+  historii. Niski priorytet; rozważyć przy pracy nad edycją ćwiczeń z historią
+  (pozycja wyżej).
 - `exerciseStore` — read errors przez `error.message` (EN) zamiast `userMessage` (PL);
   niespójność z `useAsyncLoader`, do ujednolicenia.
 
