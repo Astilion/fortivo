@@ -543,6 +543,8 @@ export default function ActiveWorkoutScreen() {
                         onEndEditing={commitWeight}
                         onBlur={commitWeight}
                         keyboardType="decimal-pad"
+                        placeholder="0"
+                        placeholderTextColor={colors.muted}
                       />
                     </View>
 
@@ -570,6 +572,8 @@ export default function ActiveWorkoutScreen() {
                             ? 'decimal-pad'
                             : 'numeric'
                         }
+                        placeholder="0"
+                        placeholderTextColor={colors.muted}
                       />
                     </View>
                     {settings?.trackRPE && (
