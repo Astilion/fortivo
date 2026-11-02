@@ -10,6 +10,7 @@ import { useActiveWorkoutStore } from '@/store/activeWorkoutStore';
 import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
+import { polishPlural } from '@/utils/plural';
 import { WorkoutRow, WorkoutExerciseWithSets } from '@/types/training';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -144,7 +145,8 @@ export default function CurrentWorkoutScreen() {
                     {index + 1}. {item.exercise.name}
                   </Text>
                   <Text style={styles.exerciseSets}>
-                    {item.sets.length} serii
+                    {item.sets.length}{' '}
+                    {polishPlural(item.sets.length, 'seria', 'serie', 'serii')}
                   </Text>
                 </View>
               ))}

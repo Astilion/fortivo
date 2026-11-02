@@ -4,6 +4,7 @@ import { LoadingView } from '@/components/ui/LoadingView';
 import { WorkoutHistoryCard } from '@/components/ui/WorkoutHistoryCard';
 import colors from '@/constants/Colors';
 import { useWorkoutHistory } from '@/hooks/useWorkoutHistory';
+import { polishPlural } from '@/utils/plural';
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
@@ -48,7 +49,8 @@ export default function WorkoutHistoryScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Historia Treningów</Text>
         <Text style={styles.subtitle}>
-          {history.length} {history.length === 1 ? 'trening' : 'treningów'}
+          {history.length}{' '}
+          {polishPlural(history.length, 'trening', 'treningi', 'treningów')}
         </Text>
       </View>
 

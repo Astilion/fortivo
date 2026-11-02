@@ -6,6 +6,7 @@ import { useToastStore } from '@/store/toastStore';
 import { PresetWorkout, PresetWorkoutSet } from '@/types/presets';
 import { ServiceError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
+import { polishPlural } from '@/utils/plural';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -133,7 +134,12 @@ export default function PresetWorkoutDetailsScreen() {
         <View style={styles.metaRow}>
           <Text style={styles.meta}>
             {preset.exercises.length}{' '}
-            {preset.exercises.length === 1 ? 'ćwiczenie' : 'ćwiczeń'}
+            {polishPlural(
+              preset.exercises.length,
+              'ćwiczenie',
+              'ćwiczenia',
+              'ćwiczeń',
+            )}
           </Text>
           {preset.estimatedDurationMinutes !== undefined && (
             <>
