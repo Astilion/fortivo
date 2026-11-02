@@ -139,7 +139,7 @@ export default function WorkoutDetailsScreen() {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{details.stats.totalVolume}</Text>
-          <Text style={styles.statLabel}>{`Volume (${weightUnit})`}</Text>
+          <Text style={styles.statLabel}>{`Objętość (${weightUnit})`}</Text>
         </View>
 
         <View style={styles.statCard}>

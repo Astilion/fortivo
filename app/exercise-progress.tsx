@@ -144,7 +144,7 @@ export default function ExerciseProgressScreen() {
                 </View>
 
                 <View style={styles.stat}>
-                  <Text style={styles.statLabel}>Volume</Text>
+                  <Text style={styles.statLabel}>Objętość</Text>
                   <Text style={styles.statValue}>
                     {item.totalVolume}
                     {weightUnit}
