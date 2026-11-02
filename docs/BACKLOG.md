@@ -14,6 +14,8 @@
 - **D11** — N+1 w `getWorkoutExercises` (do JOIN/IN).
 - **D12** — typy kłamiące na granicy serwis→UI (`WeeklyPlanDay.workout` non-null vs `null` + `as WeeklyPlan`, `{id,name} as Workout` w mailboxie).
 - **D13** — polska odmiana liczebników („2 treningów"); wzorzec istnieje w `WorkoutCard.getExerciseLabel`, wynieść jako `utils/plural.ts`.
+  **Zamknięte 2026-11-02 (0.6.5):** `utils/plural.ts` (`polishPlural`) + test; użyte w Historii, Moim Treningu („serie”),
+  szczegółach gotowca i obu kartach treningów (stary `getExerciseLabel` mylił się dla 22–24).
 
 ## Reszta / drobne
 
@@ -60,6 +62,11 @@
   produkcyjnego. Do sprawdzenia w Eksploratorze pakietów aplikacji przez porównanie rozmiaru
   pobierania z wersją 0.2.1 z marca (sprzed dev clienta). Jeśli potwierdzone — wykluczyć
   z buildów release. Nie blokuje bety.
+  **Zamknięte 2026-11-02 (0.6.5):** potwierdzone i naprawione. Przeniesienie do `devDependencies` nie
+  pomaga (autolinking SDK 54 skanuje też devDependencies); hook `scripts/eas-exclude-dev-client.js`
+  wyklucza 7 paczek dev clienta z autolinkingu w profilu production. AAB 0.6.4 → 0.6.5: 79,2 → 62,1 MB,
+  DEX 37,8 → 19,7 MB (4 → 3 pliki), natywne arm64 23,0 → 18,3 MB; wypadły ML Kit (`libbarhopper_v3.so`
+  + 3 modele `.tflite`), Jetpack Compose, Apollo. Rozmiar pobierania z Eksploratora pakietów — dopisać.
 - **Zgoda na raporty u aktualizujących z 0.5.x** (audyt bety #2, 2026-09-24; niski priorytet).
   Onboarding się nie powtarza, więc kto przeszedł go przed modelem opt-in, pytania o zgodę nie
   zobaczy nigdzie poza Profilem. To samo dotyczy przesunięcia palcem za slajd zgody i
