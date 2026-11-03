@@ -46,13 +46,14 @@ Pełna funkcjonalność offline, zero kont, zero backendu. **Wersja 0.6.0.**
   prywatność (crash reporting na zasadzie opt-in, guardraile Sentry), eksport
   danych do JSON
 
-### 🔜 M1.16 — closed beta
+### ✅ M1.16 — closed beta
 
 Zamknięte testy na cudzych urządzeniach, wg wymogów Google Play dla nowych kont
 deweloperskich. Cel nie brzmi „zebrać feedback" — brzmi **udowodnić, że dane
 użytkownika są bezpieczne poza laptopem autora**.
 
-Zamknięte testy są w toku; po nich ankieta, przegląd kryteriów i wniosek o produkcję.
+Zamknięte testy zakończone; Google przyznał dostęp produkcyjny 1 listopada 2026. Pierwsze publiczne
+wydanie: 0.6.5.
 
 Kryteria zaliczenia:
 

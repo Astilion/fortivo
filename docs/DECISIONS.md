@@ -723,3 +723,57 @@ aplikacji z listy ostatnich aplikacji w ułamku sekundy po wyjściu z niej nadal
 zgubić wartość edytowaną w tej chwili — łańcuch `onBlur` → commit → zapis SQLite jest
 asynchroniczny i nie zdąża. Zawężenie: synchroniczny commit schowka bez `onBlur`
 (BACKLOG).
+
+---
+
+## 2026-11-02 — Dev client wykluczony z buildów production hookiem EAS
+
+**Kontekst:** AAB miał 39,6 MB nieskompresowanych DEX-ów (BACKLOG, 2026-09-11). `expo-dev-client` siedzi
+w `dependencies` od `4a8d6cc` (lokalne dev buildy). `expo-dev-launcher` i `expo-dev-menu` w wariancie release
+podmieniają własny kod na zaślepki (`android/src/release/`), ale ich zależności są zadeklarowane jako
+`implementation` dla wszystkich wariantów: Jetpack Compose, ML Kit `barcode-scanning` (z natywnym
+`libbarhopper_v3.so` w czterech ABI i trzema modelami `.tflite`), Apollo, Koin, `kotlin-reflect`. Flaga
+`debugOnly` w `expo-module.config.json` działa w autolinkingu tylko na iOS.
+
+**Decyzja:** Hook npm `eas-build-post-install` (`scripts/eas-exclude-dev-client.js`) przy
+`EAS_BUILD_PROFILE=production` dopisuje na serwerze buildu do `expo.autolinking.android.exclude` siedem
+paczek: `expo-dev-client`, `expo-dev-launcher`, `expo-dev-menu`, `expo-dev-menu-interface`, `expo-manifests`,
+`expo-json-utils`, `expo-updates-interface` (cztery ostatnie używa wyłącznie dev client). Profile
+`development` i `preview` zostają bez zmian. `package.json` w repo nie ma tej listy — hook nie odpala się
+lokalnie. Wynik na 0.6.5: AAB 79,2 → 62,1 MB, DEX 37,8 → 19,7 MB, natywne arm64 23,0 → 18,3 MB.
+
+**Odrzucone:** przeniesienie `expo-dev-client` do `devDependencies` (autolinking SDK 54 skanuje też
+devDependencies, a EAS je instaluje); usunięcie paczki i doinstalowywanie na czas dev buildu (łatwo
+zapomnieć w jedną albo drugą stronę); statyczne `exclude` w `package.json` (zabiłoby dev buildy).
+
+**Dlaczego:** Najmniejsza zmiana, która dotyka wyłącznie buildu produkcyjnego. JS sięga po dev clienta
+tylko opcjonalnie (`expo/src/Expo.fx.tsx`: `!!NativeModules.EXDevLauncher`; `expo-dev-menu`:
+`requireOptionalNativeModule`), więc brak modułów nie wywraca aplikacji — potwierdzone smoke'iem 0.6.5.
+Skutek uboczny do pamiętania: bez dev clienta Gradle rozwiązuje starszą wersję `androidx.core` (tę, której
+wymagają React Native i Expo). Przy kolejnych aktualizacjach Expo sprawdzić, czy lista paczek dev clienta
+się nie zmieniła — nowa paczka w drzewie dev clienta wróci do AAB po cichu. Weryfikacja: w logu EAS linia
+`[exclude-dev-client] excluded…`, w AAB brak `libbarhopper_v3.so`.
+
+---
+
+## 2026-11-02 — Wydanie produkcyjne przez nowy build 0.6.5, nie promocję 0.6.4
+
+**Kontekst:** Google przyznał dostęp produkcyjny 2026-11-01, na Alpha stało 0.6.4. Polityka prywatności
+w wersji 2026-09-11 opisywała wyłącznie testy zamknięte, więc przed publicznym wydaniem musiała dostać
+nową wersję.
+
+**Decyzja:** Na produkcję idzie nowy build 0.6.5: polityka 2026-11-02 z `PRIVACY_POLICY_VERSION` w
+`constants/Links.ts` ustawionym na tę samą datę, wykluczenie dev clienta (wpis wyżej), poprawki tekstów
+(odmiana liczebników, „Objętość") i ikona adaptacyjna pomniejszona do bezpiecznej strefy. Kontrola na
+teście wewnętrznym tym samym versionCode, który idzie na produkcję (zgodnie z 2026-09-26). Konto usługi
+EAS nadal bez uprawnień do produkcji — wydanie dodawane ręcznie z biblioteki.
+
+**Odrzucone:** promocja 0.6.4 z Alpha bez zmian — metadane zgody zapisywałyby `policyVersion` dokumentu,
+którego użytkownik już by nie zobaczył (rozjazd zakazany wpisem 2026-08-31); zmiana polityki bez zmiany
+daty — narusza zasadę z punktu 14 polityki.
+
+**Dlaczego:** Punkt 4 polityki (raporty o błędach) się nie zmienił, więc użytkownicy, którzy zgodzili się na
+wersję 2026-09-11, nie muszą jej udzielać ponownie — historia zmian w punkcie 14 to dokumentuje. Ikona: grafika
+`icon.png` była jednocześnie foregroundem ikony adaptacyjnej i sięgała krawędzi płótna, więc launchery
+ucinały zewnętrzne talerze. Ten sam projekt pomniejszony do 82% (`assets/images/adaptive-icon.png`); tło
+grafiki to dokładnie `#1C2227` = `adaptiveIcon.backgroundColor`, więc nie ma widocznej krawędzi.
