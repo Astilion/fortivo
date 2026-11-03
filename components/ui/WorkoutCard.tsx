@@ -1,4 +1,5 @@
 import colors from '@/constants/Colors';
+import { polishPlural } from '@/utils/plural';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -17,11 +18,8 @@ interface WorkoutCardProps {
   isFavorite: boolean;
 }
 
-const getExerciseLabel = (count: number) => {
-  if (count === 1) return 'ćwiczenie';
-  if (count >= 2 && count <= 4) return 'ćwiczenia';
-  return 'ćwiczeń';
-};
+const getExerciseLabel = (count: number) =>
+  polishPlural(count, 'ćwiczenie', 'ćwiczenia', 'ćwiczeń');
 
 export const WorkoutCard = ({
   workoutName,

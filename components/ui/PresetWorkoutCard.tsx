@@ -1,5 +1,6 @@
 import colors from '@/constants/Colors';
 import { PresetWorkout } from '@/types/presets';
+import { polishPlural } from '@/utils/plural';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface PresetWorkoutCardProps {
@@ -7,11 +8,8 @@ interface PresetWorkoutCardProps {
   onPress: () => void;
 }
 
-const getExerciseLabel = (count: number) => {
-  if (count === 1) return 'ćwiczenie';
-  if (count >= 2 && count <= 4) return 'ćwiczenia';
-  return 'ćwiczeń';
-};
+const getExerciseLabel = (count: number) =>
+  polishPlural(count, 'ćwiczenie', 'ćwiczenia', 'ćwiczeń');
 
 const getCategoryLabel = (category: PresetWorkout['category']) => {
   if (category === 'basic') return 'Podstawowe';
