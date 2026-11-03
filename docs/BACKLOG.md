@@ -56,6 +56,10 @@
   Dodatkowo włączenie R8 wymaga wysyłania mapowań ProGuarda do Sentry, inaczej stosy natywne
   przestaną być czytelne dokładnie wtedy, gdy zaczną przychodzić. Do rozważenia w M1.17
   albo v0.7.
+  **Termin (2026-11-03):** przy wydaniu 0.6.5 Play Console pokazał „Optymalizacja kodu DEX poniżej progu —
+  zaciemnianie kodu 1%”. Próg 25% dotyczy aplikacji z > 10 MB DEX (0.6.5: 19,7 MB). Wg Android vitals od
+  **lutego 2027** Play może obniżać widoczność i pokazywać ostrzeżenie na stronie w sklepie; publikacji nie
+  blokuje. → **0.6.6, priorytet 1**, razem z wysyłką mapowań do Sentry.
 - **Nieskompresowane DEX-y w AAB: 39,6 MB** (2026-09-11, build 16). Podejrzenie:
   `expo-dev-client` siedzi w `dependencies`, nie `devDependencies` (dodany `4a8d6cc`
   2026-09-04 na potrzeby lokalnego dev buildu), więc kompiluje się także do wydania
