@@ -63,6 +63,12 @@
   **W toku 2026-11-04 (0.6.6):** `expo-build-properties` (`enableMinifyInReleaseBuilds`, `enableShrinkResourcesInReleaseBuilds`)
   + `experimental_android.enableAndroidGradlePlugin` w pluginie Sentry (wtyczka Gradle 5.11.0, automatyczna wysyłka
   mapowań R8 i symboli natywnych). Zamknąć po smoke'u 0.6.6 i odczycie wskaźnika w Play Console.
+  **Build 0.6.6 (2026-11-04):** `r8.json` w AAB — zaciemnianie ~89% (bez: 10,61%), wycinanie ~89% (bez: 10,94%),
+  **optymalizacja 0%** (`isOptimizationsEnabled: false` — szablon RN/Expo używa `proguard-android.txt`, nie
+  `-optimize`). DEX 19,7 → 7,9 MB, `res/` 973 → 825 plików, mapowanie `proguard.map` 26,6 MB w metadanych AAB,
+  mapowanie w Sentry potwierdzone. Jeśli Play oznaczy optymalizację jako poniżej progu — osobna wersja z
+  `proguard-android-optimize.txt` (własny config plugin) i pełnym smoke'iem; optymalizacja R8 częściej psuje
+  biblioteki z refleksją.
 - **Nieskompresowane DEX-y w AAB: 39,6 MB** (2026-09-11, build 16). Podejrzenie:
   `expo-dev-client` siedzi w `dependencies`, nie `devDependencies` (dodany `4a8d6cc`
   2026-09-04 na potrzeby lokalnego dev buildu), więc kompiluje się także do wydania
@@ -94,6 +100,11 @@
   przypadkowe potwierdzenie skasowało bazę na emulatorze. Kod działa zgodnie z założeniem
   (reset tylko przez `confirmAction`), ale „Zresetuj” obok „Anuluj” łatwo pomylić przy
   nieodwracalnej akcji. Rozważyć jednoznaczne „Usuń wszystkie dane”.
+- **Poprawki SDK 54 do nadrobienia** (2026-11-04, `expo doctor` w buildzie 0.6.6). 12 paczek w wersjach patch
+  starszych niż oczekiwane przez SDK 54, m.in. `expo` 54.0.10 → ~54.0.37, `expo-sqlite` 16.0.8 → ~16.0.10,
+  `expo-router` 6.0.8 → ~6.0.24, `react-native` 0.81.4 → 0.81.5. Nie blokuje buildu. Celowo **nie w 0.6.6**
+  (R8 to jedna zmiana runtime na wydanie). Osobna wersja: `npx expo install --check` → przegląd changelogów
+  (expo-modules-core / expo-sqlite pod FORTIVO-8) → pełny smoke.
 - **FORTIVO-8: `SharedObject doesn't contain valid id` przy odczycie planu** (2026-10-11).
   1 event (0.6.2+19, ~5 s po starcie, current-workout), niepotwierdzone. Podejrzenie: wyścig
   w `SharedObjectRegistry` expo-modules-core 3.0.18 — argumenty `AsyncFunction` są konwertowane
