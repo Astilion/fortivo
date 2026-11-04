@@ -60,6 +60,9 @@
   zaciemnianie kodu 1%”. Próg 25% dotyczy aplikacji z > 10 MB DEX (0.6.5: 19,7 MB). Wg Android vitals od
   **lutego 2027** Play może obniżać widoczność i pokazywać ostrzeżenie na stronie w sklepie; publikacji nie
   blokuje. → **0.6.6, priorytet 1**, razem z wysyłką mapowań do Sentry.
+  **W toku 2026-11-04 (0.6.6):** `expo-build-properties` (`enableMinifyInReleaseBuilds`, `enableShrinkResourcesInReleaseBuilds`)
+  + `experimental_android.enableAndroidGradlePlugin` w pluginie Sentry (wtyczka Gradle 5.11.0, automatyczna wysyłka
+  mapowań R8 i symboli natywnych). Zamknąć po smoke'u 0.6.6 i odczycie wskaźnika w Play Console.
 - **Nieskompresowane DEX-y w AAB: 39,6 MB** (2026-09-11, build 16). Podejrzenie:
   `expo-dev-client` siedzi w `dependencies`, nie `devDependencies` (dodany `4a8d6cc`
   2026-09-04 na potrzeby lokalnego dev buildu), więc kompiluje się także do wydania
@@ -70,7 +73,7 @@
   pomaga (autolinking SDK 54 skanuje też devDependencies); hook `scripts/eas-exclude-dev-client.js`
   wyklucza 7 paczek dev clienta z autolinkingu w profilu production. AAB 0.6.4 → 0.6.5: 79,2 → 62,1 MB,
   DEX 37,8 → 19,7 MB (4 → 3 pliki), natywne arm64 23,0 → 18,3 MB; wypadły ML Kit (`libbarhopper_v3.so`
-  + 3 modele `.tflite`), Jetpack Compose, Apollo. Rozmiar pobierania z Eksploratora pakietów — dopisać.
+  + 3 modele `.tflite`), Jetpack Compose, Apollo. Rozmiar pobierania w Sklepie Play (telefon autora, 0.6.5): **15 MB**; porównania z 0.6.4 nie mierzono.
 - **Zgoda na raporty u aktualizujących z 0.5.x** (audyt bety #2, 2026-09-24; niski priorytet).
   Onboarding się nie powtarza, więc kto przeszedł go przed modelem opt-in, pytania o zgodę nie
   zobaczy nigdzie poza Profilem. To samo dotyczy przesunięcia palcem za slajd zgody i
@@ -109,6 +112,10 @@
   `NativeDatabase.sharedObjectDidRelease()` woła `ref.close()` bez patrzenia na refCount
   (`NativeDatabase.kt:28–31`) i zamyka połączenie nowego kontekstu. Poprawka: zamknąć stary
   uchwyt przed ponownym otwarciem albo zamykać go w `catch` także dla błędów spoza migracji.
+  **Zamknięte 2026-11-04 (0.6.6):** `AppProvider.initializeApp` zamyka w `catch` uchwyt, który otworzył się, ale nie
+  trafił do kontekstu (`database.closeAsync()` przed ponowną próbą) + test regresyjny w `AppProvider.test.tsx`.
+  Jawne `closeAsync` zdejmuje natywny obiekt z cache `SQLiteModule` (refCount 1 → 0), więc retry dostaje nowe połączenie,
+  a GC starego wrappera zamyka już tylko stary binding.
 - Pomysł, nie teraz (2026-10-11): jedna ponowna próba po przejściowym błędzie natywnym expo-sqlite
   (`InvalidSharedObjectIdException`) dla odczytów i autosave. Wraca, jeśli FORTIVO-8 się powtórzy.
 - Screenshoty w README (`assets/screenshots/`) z 2026-05-24 — ekrany od tego czasu zmienione
