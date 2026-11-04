@@ -101,8 +101,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const initializeApp = async () => {
     setIsReady(false);
     setInitError(false);
+    // A handle that opened but never reached the context must be closed before
+    // a retry: expo-sqlite would hand the retry the same cached native
+    // connection, and garbage-collecting this wrapper later closes it.
+    let database: SQLite.SQLiteDatabase | null = null;
     try {
-      const database = await initDatabase();
+      database = await initDatabase();
 
       const exerciseService = new ExerciseService(database);
       const workoutService = new WorkoutService(database);
@@ -173,6 +177,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       clearDbError();
       setIsReady(true);
     } catch (error) {
+      if (database) {
+        await database.closeAsync().catch(() => {});
+      }
       // Migration failures get the recovery screen; anything else gets a
       // retryable error state instead of an endless spinner.
       if (error instanceof DatabaseMigrationError) {
