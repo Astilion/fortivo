@@ -1,7 +1,7 @@
 {
   "name": "fortivo",
   "main": "expo-router/entry",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "packageManager": "npm@11.19.1",
   "scripts": {
     "start": "expo start",
@@ -22,6 +22,7 @@
     "@react-navigation/native": "^7.1.8",
     "@sentry/react-native": "~7.2.0",
     "expo": "~54.0.10",
+    "expo-build-properties": "~1.0.10",
     "expo-constants": "~18.0.9",
     "expo-dev-client": "~6.0.21",
     "expo-file-system": "~19.0.23",
