@@ -69,6 +69,8 @@
   mapowanie w Sentry potwierdzone. Jeśli Play oznaczy optymalizację jako poniżej progu — osobna wersja z
   `proguard-android-optimize.txt` (własny config plugin) i pełnym smoke'iem; optymalizacja R8 częściej psuje
   biblioteki z refleksją.
+  **Play Console (2026-11-04):** ostrzeżenie „Optymalizacja kodu DEX poniżej progu” zniknęło dla 0.6.6 —
+  optymalizacja 0% nie jest oznaczana. `-optimize` niepotrzebne. Pozycję zamknąć po smoke'u i wydaniu 0.6.6.
 - **Nieskompresowane DEX-y w AAB: 39,6 MB** (2026-09-11, build 16). Podejrzenie:
   `expo-dev-client` siedzi w `dependencies`, nie `devDependencies` (dodany `4a8d6cc`
   2026-09-04 na potrzeby lokalnego dev buildu), więc kompiluje się także do wydania
@@ -100,6 +102,14 @@
   przypadkowe potwierdzenie skasowało bazę na emulatorze. Kod działa zgodnie z założeniem
   (reset tylko przez `confirmAction`), ale „Zresetuj” obok „Anuluj” łatwo pomylić przy
   nieodwracalnej akcji. Rozważyć jednoznaczne „Usuń wszystkie dane”.
+- **Polityka pkt 7 — uprawnienie dodawane przez Google Play** (2026-11-04). Play Console pokazuje dla 0.6.6
+  `com.android.vending.CHECK_LICENSE`, którego nie ma w manifeście AAB (0.6.4–0.6.6 identyczne: INTERNET,
+  ACCESS_NETWORK_STATE, DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION) — dokłada je Play przy dostarczaniu, najpewniej
+  ochrona automatyczna. Potwierdzone: Play Console pokazuje je też dla 0.6.5, czyli było od początku, nie z R8. Punkt 7 opisuje uprawnienia deklarowane przez aplikację, więc pozostaje prawdziwy; przy
+  najbliższej zmianie polityki dopisać jedno zdanie o uprawnieniu dodawanym przez Google Play (zmiana polityki =
+  nowa data = bump `PRIVACY_POLICY_VERSION` = nowy build).
+- **sentry-cli używa `sentry.io` z tokenu zamiast `de.sentry.io`** (2026-11-04, build 0.6.6). Upload mapowań
+  dociera do projektu w regionie UE. Przy wymianie tokenu: wygenerować token w `de.sentry.io`, żeby ostrzeżenie zniknęło.
 - **Poprawki SDK 54 do nadrobienia** (2026-11-04, `expo doctor` w buildzie 0.6.6). 12 paczek w wersjach patch
   starszych niż oczekiwane przez SDK 54, m.in. `expo` 54.0.10 → ~54.0.37, `expo-sqlite` 16.0.8 → ~16.0.10,
   `expo-router` 6.0.8 → ~6.0.24, `react-native` 0.81.4 → 0.81.5. Nie blokuje buildu. Celowo **nie w 0.6.6**
