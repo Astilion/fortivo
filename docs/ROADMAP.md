@@ -53,7 +53,7 @@ deweloperskich. Cel nie brzmi „zebrać feedback" — brzmi **udowodnić, że d
 użytkownika są bezpieczne poza laptopem autora**.
 
 Zamknięte testy zakończone; Google przyznał dostęp produkcyjny 1 listopada 2026. Pierwsze publiczne
-wydanie: 0.6.5.
+wydanie: 0.6.5, w Sklepie Play od 4 listopada 2026.
 
 Kryteria zaliczenia:
 

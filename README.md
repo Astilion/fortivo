@@ -2,6 +2,8 @@
 
 Offline-first workout tracker for Android, built with React Native and Expo.
 
+<a href="https://play.google.com/store/apps/details?id=com.astilion.fortivo"><img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80"></a>
+
 ## Description
 
 Fortivo is a strength-training app for planning workouts, running them live, and tracking progress
@@ -10,7 +12,7 @@ so the app works the same on the gym floor with no signal. The only outbound tra
 crash reporting (see [Privacy](#privacy)). It targets Android; iOS is not built yet. The app's
 interface is in Polish, since the target market is Poland.
 
-Current version: 0.6.3. Closed testing on Google Play is in progress; public release will follow.
+Current version: 0.6.5, [available on Google Play](https://play.google.com/store/apps/details?id=com.astilion.fortivo) since November 2026.
 
 ## Screenshots
 
@@ -211,7 +213,8 @@ A few of them:
 
 ## Roadmap
 
-- Closed testing on Google Play, then the public release.
+- ✅ Closed testing on Google Play, public release (0.6.5, November 2026).
+- 0.6.6 — R8 code shrinking with Sentry mapping upload.
 - v0.7 "Retention pack" — local reminders, weekly goal, review prompt, privacy-first product
   analytics (EU), JSON import.
 - v0.8 "Logging & trust" — first free chart, logging keyboard, plate calculator, supersets UI,
