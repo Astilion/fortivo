@@ -69,4 +69,32 @@ describe('AppProvider recovery', () => {
     ).toBeTruthy();
     expect(useDbErrorStore.getState().dbError).toBeNull();
   });
+
+  test('a failure after the database opened closes it before a retry', async () => {
+    const failing = jest
+      .fn<() => Promise<never>>()
+      .mockRejectedValue(new Error('seed failed'));
+    const closeAsync = jest
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined);
+    const database = {
+      prepareAsync: failing,
+      execAsync: failing,
+      runAsync: failing,
+      getAllAsync: failing,
+      getFirstAsync: failing,
+      withTransactionAsync: failing,
+      closeAsync,
+    };
+    mockInitDatabase.mockResolvedValueOnce(
+      database as unknown as Awaited<ReturnType<typeof initDatabase>>,
+    );
+
+    renderApp();
+
+    expect(
+      await screen.findByText('Nie udało się uruchomić aplikacji'),
+    ).toBeTruthy();
+    expect(closeAsync).toHaveBeenCalledTimes(1);
+  });
 });

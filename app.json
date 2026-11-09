@@ -2,7 +2,7 @@
   "expo": {
     "name": "Fortivo",
     "slug": "fortivo",
-    "version": "0.6.5",
+    "version": "0.6.6",
     "backgroundColor": "#1C2227",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -50,7 +50,19 @@
         {
           "url": "https://de.sentry.io/",
           "organization": "astilion",
-          "project": "fortivo"
+          "project": "fortivo",
+          "experimental_android": {
+            "enableAndroidGradlePlugin": true
+          }
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
         }
       ]
     ],
