@@ -31,8 +31,14 @@ import { useToastStore } from '@/store/toastStore';
 import { ServiceError } from '@/utils/errors';
 import { ACTIVE_WORKOUT_TIMEOUT_MS } from '@/constants/activeWorkout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  MeasurementType,
+  buildActualUpdate,
+  getActualValue,
+  getFollowingSetUpdates,
+} from '@/utils/activeWorkoutSets';
 
-type MeasurementType = 'reps' | 'time' | 'distance';
+type PendingField = 'weight' | 'value' | 'rpe' | 'tempo';
 
 // Active workout edits each set's *actual* value; field & label depend on the
 // exercise's measurementType (reps / seconds / meters).
@@ -49,39 +55,14 @@ const getValueLabel = (measurementType?: MeasurementType): string => {
 const NEW_SET_DEFAULT_REPS = 8;
 const NEW_SET_DEFAULT_WEIGHT = 0;
 
-const getActualValue = (
-  set: WorkoutSet,
-  measurementType?: MeasurementType,
-): number | undefined => {
-  switch (measurementType) {
-    case 'time':
-      return set.actualDuration;
-    case 'distance':
-      return set.actualDistance;
-    default:
-      return set.actualReps;
-  }
-};
-
-const buildActualUpdate = (
-  measurementType: MeasurementType | undefined,
-  value: number,
-): Partial<WorkoutSet> => {
-  switch (measurementType) {
-    case 'time':
-      return { actualDuration: value };
-    case 'distance':
-      return { actualDistance: value };
-    default:
-      return { actualReps: value };
-  }
-};
+const pendingKey = (field: PendingField, setId: string) => `${field}-${setId}`;
 
 export default function ActiveWorkoutScreen() {
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
   const [validationKey, setValidationKey] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [, setTick] = useState(0);
+  const [lastEditedSetId, setLastEditedSetId] = useState<string | null>(null);
   const { workoutService } = useApp();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -328,6 +309,67 @@ export default function ActiveWorkoutScreen() {
     useActiveWorkoutStore.getState().updateSetValue(exerciseId, setId, updates);
   };
 
+  const commitWeight = (exerciseId: string, setId: string) => {
+    const text = takeText(pendingKey('weight', setId));
+    if (text === undefined) return;
+    updateSetValue(exerciseId, setId, { actualWeight: parseDecimal(text) });
+    setLastEditedSetId(setId);
+  };
+
+  const commitValue = (exercise: WorkoutExerciseWithSets, setId: string) => {
+    const text = takeText(pendingKey('value', setId));
+    if (text === undefined) return;
+    const measurementType = exercise.exercise.measurementType;
+    const val =
+      measurementType === 'distance' ? parseDecimal(text) : parseInteger(text);
+    updateSetValue(exercise.id, setId, buildActualUpdate(measurementType, val));
+    setLastEditedSetId(setId);
+  };
+
+  const commitRpe = (exerciseId: string, setId: string) => {
+    const text = takeText(pendingKey('rpe', setId));
+    if (text === undefined) return;
+    const validated = validateRPE(text);
+    if (validated === null && text.trim()) {
+      setValidationKey((prev) => prev + 1);
+    }
+    updateSetValue(exerciseId, setId, { actualRpe: validated ?? undefined });
+    setLastEditedSetId(setId);
+  };
+
+  const commitTempo = (exerciseId: string, setId: string) => {
+    const text = takeText(pendingKey('tempo', setId));
+    if (text === undefined) return;
+    const validated = validateTempo(text);
+    if (validated === null && text.trim()) {
+      setValidationKey((prev) => prev + 1);
+    }
+    updateSetValue(exerciseId, setId, { tempo: validated ?? undefined });
+    setLastEditedSetId(setId);
+  };
+
+  // Synchronous, unlike forceBlur(): a tap on a Pressable keeps the input
+  // focused (keyboardShouldPersistTaps="handled"), so onBlur never lands first.
+  const flushPendingEdits = () => {
+    for (const ex of useActiveWorkoutStore.getState().exercises ?? []) {
+      for (const workoutSet of ex.sets) {
+        commitWeight(ex.id, workoutSet.id);
+        commitValue(ex, workoutSet.id);
+        commitRpe(ex.id, workoutSet.id);
+        commitTempo(ex.id, workoutSet.id);
+      }
+    }
+  };
+
+  const applyToFollowing = (exerciseId: string, setId: string) => {
+    flushPendingEdits();
+    const applied = useActiveWorkoutStore
+      .getState()
+      .applySetToFollowing(exerciseId, setId);
+    setLastEditedSetId(null);
+    if (applied > 0) showToast(`Zastosowano do ${applied} serii`, 'info');
+  };
+
   const handleFinishWorkout = () => {
     // Commit any value typed without Enter (still in pendingText) before the
     // dialog — onBlur lands asynchronously, and finish reads from the store.
@@ -441,53 +483,9 @@ export default function ActiveWorkoutScreen() {
             </View>
 
             {item.sets.map((set, setIndex) => {
-              const weightKey = `weight-${set.id}`;
-              const valueKey = `value-${set.id}`;
-              const rpeKey = `rpe-${set.id}`;
-              const tempoKey = `tempo-${set.id}`;
-
-              const commitWeight = () => {
-                const text = takeText(weightKey);
-                if (text === undefined) return;
-                updateSetValue(item.id, set.id, {
-                  actualWeight: parseDecimal(text),
-                });
-              };
-              const commitValue = () => {
-                const text = takeText(valueKey);
-                if (text === undefined) return;
-                const val =
-                  item.exercise.measurementType === 'distance'
-                    ? parseDecimal(text)
-                    : parseInteger(text);
-                updateSetValue(
-                  item.id,
-                  set.id,
-                  buildActualUpdate(item.exercise.measurementType, val),
-                );
-              };
-              const commitRpe = () => {
-                const text = takeText(rpeKey);
-                if (text === undefined) return;
-                const validated = validateRPE(text);
-                if (validated === null && text.trim()) {
-                  setValidationKey((prev) => prev + 1);
-                }
-                updateSetValue(item.id, set.id, {
-                  actualRpe: validated ?? undefined,
-                });
-              };
-              const commitTempo = () => {
-                const text = takeText(tempoKey);
-                if (text === undefined) return;
-                const validated = validateTempo(text);
-                if (validated === null && text.trim()) {
-                  setValidationKey((prev) => prev + 1);
-                }
-                updateSetValue(item.id, set.id, {
-                  tempo: validated ?? undefined,
-                });
-              };
+              const canApplyToFollowing =
+                set.id === lastEditedSetId &&
+                getFollowingSetUpdates(item, set.id).length > 0;
 
               return (
                 <View key={set.id} style={styles.setCard}>
@@ -495,6 +493,20 @@ export default function ActiveWorkoutScreen() {
                     <Text style={styles.setNumber}>Seria {setIndex + 1}</Text>
 
                     <View style={styles.setActions}>
+                      {canApplyToFollowing && (
+                        <Pressable
+                          onPress={() => applyToFollowing(item.id, set.id)}
+                          style={styles.applyButton}
+                          hitSlop={6}
+                          accessibilityLabel="Zastosuj do kolejnych serii"
+                        >
+                          <Ionicons
+                            name="arrow-down-circle-outline"
+                            size={24}
+                            color={colors.accent}
+                          />
+                        </Pressable>
+                      )}
                       {item.sets.length > 1 && (
                         <Pressable
                           onPress={() => removeSet(item.id, set.id)}
@@ -539,9 +551,11 @@ export default function ActiveWorkoutScreen() {
                         key={`weight-${set.id}-${set.actualWeight}`}
                         style={styles.input}
                         defaultValue={set.actualWeight?.toString() ?? ''}
-                        onChangeText={(t) => stashText(weightKey, t)}
-                        onEndEditing={commitWeight}
-                        onBlur={commitWeight}
+                        onChangeText={(t) =>
+                          stashText(pendingKey('weight', set.id), t)
+                        }
+                        onEndEditing={() => commitWeight(item.id, set.id)}
+                        onBlur={() => commitWeight(item.id, set.id)}
                         keyboardType="decimal-pad"
                         placeholder="0"
                         placeholderTextColor={colors.muted}
@@ -564,9 +578,11 @@ export default function ActiveWorkoutScreen() {
                             item.exercise.measurementType,
                           )?.toString() ?? ''
                         }
-                        onChangeText={(t) => stashText(valueKey, t)}
-                        onEndEditing={commitValue}
-                        onBlur={commitValue}
+                        onChangeText={(t) =>
+                          stashText(pendingKey('value', set.id), t)
+                        }
+                        onEndEditing={() => commitValue(item, set.id)}
+                        onBlur={() => commitValue(item, set.id)}
                         keyboardType={
                           item.exercise.measurementType === 'distance'
                             ? 'decimal-pad'
@@ -583,9 +599,11 @@ export default function ActiveWorkoutScreen() {
                           key={`rpe-${set.id}-${set.actualRpe}-${validationKey}`}
                           style={styles.input}
                           defaultValue={set.actualRpe?.toString() ?? ''}
-                          onChangeText={(t) => stashText(rpeKey, t)}
-                          onEndEditing={commitRpe}
-                          onBlur={commitRpe}
+                          onChangeText={(t) =>
+                            stashText(pendingKey('rpe', set.id), t)
+                          }
+                          onEndEditing={() => commitRpe(item.id, set.id)}
+                          onBlur={() => commitRpe(item.id, set.id)}
                           keyboardType="decimal-pad"
                           placeholder="1-10"
                           placeholderTextColor={colors.muted}
@@ -599,9 +617,11 @@ export default function ActiveWorkoutScreen() {
                           key={`tempo-${set.id}-${set.tempo}-${validationKey}`}
                           style={styles.input}
                           defaultValue={set.tempo ?? ''}
-                          onChangeText={(t) => stashText(tempoKey, t)}
-                          onEndEditing={commitTempo}
-                          onBlur={commitTempo}
+                          onChangeText={(t) =>
+                            stashText(pendingKey('tempo', set.id), t)
+                          }
+                          onEndEditing={() => commitTempo(item.id, set.id)}
+                          onBlur={() => commitTempo(item.id, set.id)}
                           placeholder="3-1-2"
                           placeholderTextColor={colors.muted}
                         />
@@ -719,6 +739,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  applyButton: {
+    padding: 4,
+    marginRight: 4,
   },
   deleteButton: {
     padding: 4,

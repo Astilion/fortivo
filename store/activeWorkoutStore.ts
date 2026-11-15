@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { WorkoutExerciseWithSets, WorkoutSet } from '@/types/training';
+import { getFollowingSetUpdates } from '@/utils/activeWorkoutSets';
 
 // In-memory only (NO persist middleware). SQLite is the single source of truth;
 // this store is hydrated from the DB on boot and on screen mount, so the active
@@ -25,6 +26,8 @@ interface ActiveWorkoutState {
   // Returns the new `completed` value — the screen needs it to decide whether to
   // start the rest timer (which depends on user settings it owns).
   toggleSetCompleted: (exerciseId: string, setId: string) => boolean;
+  // Returns how many sets changed, for the confirmation toast.
+  applySetToFollowing: (exerciseId: string, sourceSetId: string) => number;
   addExercise: (exercise: WorkoutExerciseWithSets) => void;
   addSet: (exerciseId: string, defaultSet: WorkoutSet) => void;
   removeSet: (exerciseId: string, setId: string) => void;
@@ -34,7 +37,7 @@ interface ActiveWorkoutState {
   stopRestTimer: () => void;
 }
 
-export const useActiveWorkoutStore = create<ActiveWorkoutState>((set) => ({
+export const useActiveWorkoutStore = create<ActiveWorkoutState>((set, get) => ({
   workoutId: null,
   workoutStartTime: null,
   exercises: null,
@@ -101,6 +104,32 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>((set) => ({
         ) ?? null,
     }));
     return next;
+  },
+
+  applySetToFollowing: (exerciseId: string, sourceSetId: string) => {
+    const exercise = get().exercises?.find((ex) => ex.id === exerciseId);
+    if (!exercise) return 0;
+
+    const targets = getFollowingSetUpdates(exercise, sourceSetId);
+    // No set() on a no-op: a fresh exercises reference would trigger autosave.
+    if (targets.length === 0) return 0;
+
+    const updatesById = new Map(targets.map((t) => [t.setId, t.updates]));
+    set((state) => ({
+      exercises:
+        state.exercises?.map((ex) =>
+          ex.id === exerciseId
+            ? {
+                ...ex,
+                sets: ex.sets.map((s) => {
+                  const updates = updatesById.get(s.id);
+                  return updates ? { ...s, ...updates } : s;
+                }),
+              }
+            : ex,
+        ) ?? null,
+    }));
+    return targets.length;
   },
 
   addExercise: (exercise: WorkoutExerciseWithSets) =>
