@@ -777,3 +777,26 @@ wersję 2026-09-11, nie muszą jej udzielać ponownie — historia zmian w punkc
 `icon.png` była jednocześnie foregroundem ikony adaptacyjnej i sięgała krawędzi płótna, więc launchery
 ucinały zewnętrzne talerze. Ten sam projekt pomniejszony do 82% (`assets/images/adaptive-icon.png`); tło
 grafiki to dokładnie `#1C2227` = `adaptiveIcon.backgroundColor`, więc nie ma widocznej krawędzi.
+
+---
+
+## 2026-11-15 — „Zastosuj do kolejnych serii" kopiuje ciężar i wartość główną, bez cofania
+
+**Kontekst:** W aktywnym treningu użytkownik przepisywał ręcznie zmieniony ciężar / powtórzenia do
+każdej kolejnej serii. 0.6.7 dodaje ikonę przy ostatnio edytowanej serii, która kopiuje jej wartości dalej.
+
+**Decyzja:** Kopiowane są ciężar (`actualWeight`) i wartość główna zależna od typu pomiaru
+(`actualReps` / `actualDuration` / `actualDistance`). Cele to wyłącznie serie późniejsze i nieodhaczone;
+źródło może być odhaczone. Pole puste w źródle nie jest kopiowane (nie czyści celu), `0` jest kopiowane.
+Przed kopiowaniem `flushPendingEdits()` zatwierdza synchronicznie wszystkie niezatwierdzone wpisy.
+Bez „Cofnij" — toast tylko informuje, ile serii zmieniono.
+
+**Odrzucone:** kopiowanie RPE (ocena konkretnej, wykonanej serii — nie przenosi się na kolejne) i tempa
+(w aktywnym treningu to pole planu, nie wykonania); nadpisywanie serii odhaczonych lub wcześniejszych
+(zmieniałoby to, co użytkownik już zalogował); „Cofnij" w tej wersji — wymaga rozbudowy wspólnego
+toastu, odłożone do `BACKLOG.md`.
+
+**Dlaczego:** Seria odhaczona to zapis faktu, a kopiowanie ma przyspieszać logowanie tego, co dopiero
+przed użytkownikiem. Ikona pokazuje się tylko, gdy kopiowanie coś zmieni, więc akcja jest tania do
+zignorowania, a pomyłkę naprawia się ręczną edycją jednej serii. Tap w `Pressable` nie zdejmuje fokusu z
+inputu (`keyboardShouldPersistTaps="handled"`), stąd synchroniczny flush zamiast `forceBlur()`.
