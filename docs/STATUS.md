@@ -1,6 +1,6 @@
 # Status — 2026-11-17
 
-**Wersja:** 0.6.7 (produkcja 100%) · **Migracja bazy:** v10 · **main:** 9ca5712 (`release/0.6.7` jeszcze niescalone)
+**Wersja:** 0.6.7 (produkcja 100%) · **Migracja bazy:** v10 · **main:** 4d1024a
 
 ## Zrobione ostatnio
 
@@ -22,7 +22,6 @@
 
 ## Następny krok
 
-- merge `release/0.6.7` → `main` (`--no-ff`), usunięcie gałęzi, push
 - link do Sklepu Play w CV, prośba do testerów o opinie, odpowiedzi na opinie
 - z backlogu: `flushPendingEdits()` w listenerze `AppState` (utrata danych przy szybkim zamknięciu)
 - przy przeglądzie: changelog expo pod FORTIVO-8
