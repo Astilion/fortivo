@@ -2,7 +2,7 @@
   "expo": {
     "name": "Fortivo",
     "slug": "fortivo",
-    "version": "0.6.6",
+    "version": "0.6.7",
     "backgroundColor": "#1C2227",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

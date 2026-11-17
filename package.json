@@ -1,7 +1,7 @@
 {
   "name": "fortivo",
   "main": "expo-router/entry",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "packageManager": "npm@11.19.1",
   "scripts": {
     "start": "expo start",
