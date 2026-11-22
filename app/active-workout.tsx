@@ -147,13 +147,21 @@ export default function ActiveWorkoutScreen() {
     };
   }, []);
 
-  // Commit a pending value before the OS can kill the app in the background;
-  // the store change then reaches SQLite through the debounced autosave.
+  // Commit pending text synchronously — onBlur from forceBlur() lands too late
+  // for a fast swipe-away. The save starts at once, but the SQLite write is
+  // async, so this narrows the loss window rather than closing it.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state !== 'active') forceBlur();
+      if (state !== 'active') {
+        flushPendingEdits();
+        forceBlur();
+      }
     });
     return () => subscription.remove();
+    // Subscribed once: flushPendingEdits from the first render is safe while
+    // the commits read only refs, getState() and stable setters — render state
+    // read there would be stale.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

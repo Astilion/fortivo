@@ -800,3 +800,27 @@ toastu, odłożone do `BACKLOG.md`.
 przed użytkownikiem. Ikona pokazuje się tylko, gdy kopiowanie coś zmieni, więc akcja jest tania do
 zignorowania, a pomyłkę naprawia się ręczną edycją jednej serii. Tap w `Pressable` nie zdejmuje fokusu z
 inputu (`keyboardShouldPersistTaps="handled"`), stąd synchroniczny flush zamiast `forceBlur()`.
+
+---
+
+## 2026-11-22 — Przejście w tło zatwierdza niezatwierdzone wpisy synchronicznie
+
+**Kontekst:** Znane ograniczenie z wpisu 2026-10-22: przy swipe'ie z listy ostatnich aplikacji w ułamku
+sekundy po wyjściu łańcuch `forceBlur()` → `onBlur` → commit → zapis SQLite nie zdążał i wartość
+wpisana bez zatwierdzenia ginęła (BACKLOG, 2026-10-22).
+
+**Decyzja:** Ten wpis **doprecyzowuje 2026-10-22**. Listener `AppState` w `app/active-workout.tsx` przy
+`state !== 'active'` najpierw woła `flushPendingEdits()` (ta sama funkcja co „Zastosuj do kolejnych
+serii", wpis 2026-11-15), a dopiero potem `forceBlur()`. Commit do store'a dzieje się w tym samym ticku,
+co zdarzenie `AppState`, a subskrypcja w `useActiveWorkoutAutosave` (bez zmian) od razu startuje zapis,
+bo `AppState.currentState` jest już `'background'`. `forceBlur()` zostaje — `takeText` usuwa wpis ze
+schowka, więc spóźniony `onBlur` nic nie robi.
+
+**Odrzucone:** rejestr funkcji commitu per pole (kierunek z BACKLOG) — `flushPendingEdits()` już
+przechodzi po wszystkich seriach ze store'a i zatwierdza każdy klucz schowka, więc rejestr byłby drugim
+źródłem tej samej wiedzy.
+
+**Dlaczego:** Zapis nie zależy już od `onBlur`, którego moment dostarczenia kontroluje platforma.
+Ograniczenie, które zostaje: sam zapis SQLite (`saveActiveWorkoutSnapshot`) jest nadal asynchroniczny,
+więc zabicie procesu, zanim transakcja się zatwierdzi, wciąż gubi tę wartość — okno jest dużo węższe,
+ale nie zerowe. Crash na pierwszym planie bez zmian (okno debounce'u 500 ms, wpis 2026-05-26).
