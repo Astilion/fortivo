@@ -151,6 +151,9 @@
   **Stan 2026-11-15 (0.6.7):** `flushPendingEdits()` w `app/active-workout.tsx` zatwierdza
   synchronicznie cały `pendingText` (każda seria, każde ćwiczenie) — dziś woła go tylko
   „Zastosuj do kolejnych serii". Fix = wywołać go w listenerze `AppState` zamiast / obok `forceBlur()`.
+  **Zamknięte 2026-11-22:** listener woła `flushPendingEdits()` przed `forceBlur()`; zapis SQLite
+  nadal asynchroniczny (wąskie okno zostaje). Test: `__tests__/app/active-workout.test.tsx`.
+  Szczegóły: `DECISIONS.md`, wpis 2026-11-22.
 - **„Cofnij" dla „Zastosuj do kolejnych serii"** (2026-11-15, 0.6.7). Kopiowanie działa bez
   cofania (decyzja w `DECISIONS.md`). Wymaga: opcjonalnej akcji w `toastStore` (`showToast(message, type, action?)`)
   i przycisku w `components/Toast.tsx`, dłuższego czasu ekspozycji przy akcji, nonce'a (ten sam
