@@ -824,3 +824,43 @@ przechodzi po wszystkich seriach ze store'a i zatwierdza każdy klucz schowka, w
 Ograniczenie, które zostaje: sam zapis SQLite (`saveActiveWorkoutSnapshot`) jest nadal asynchroniczny,
 więc zabicie procesu, zanim transakcja się zatwierdzi, wciąż gubi tę wartość — okno jest dużo węższe,
 ale nie zerowe. Crash na pierwszym planie bez zmian (okno debounce'u 500 ms, wpis 2026-05-26).
+
+---
+
+## 2026-11-17 — Fortivo bez funkcji AI; AI wyłącznie w planowanym panelu trenera
+
+**Kontekst:** Przy rozpisywaniu kolejnych projektów (aplikacja mobilna, panel trenera) trzeba było
+ustalić, w którym produkcie mogą pojawić się funkcje AI.
+
+**Decyzja:** Aplikacja mobilna Fortivo nie dostaje funkcji AI. Funkcje AI mogą pojawić się wyłącznie
+w planowanym panelu trenera (`docs/ROADMAP.md`, Faza 4). Wpis potwierdza istniejące pozycjonowanie:
+„AI coach" jest w `docs/ROADMAP.md` na liście tego, czym Fortivo świadomie nie jest, a „AI cokolwiek"
+— na liście czerwonych flag scope creep w roboczej roadmapie.
+
+**Odrzucone:** „Fortivo AI Pro" — funkcje AI w aplikacji realizowane przez backend panelu. Wymagałoby
+konta użytkownika, dodałoby drugi kanał wychodzący obok Sentry i wysyłałoby dane o zdrowiu (treningi,
+waga, pomiary ciała) do zewnętrznego modelu, czyli przetwarzanie danych szczególnej kategorii
+z art. 9 RODO.
+
+**Dlaczego:** Fortivo to prywatny dziennik bez konta i bez chmury (pozycjonowanie w `docs/ROADMAP.md`),
+a Sentry z jawną zgodą jest dziś jedynym kanałem wychodzącym z aplikacji. Każda z trzech konsekwencji
+„AI Pro" łamie jedno z tych założeń. Podpowiedzi heurystyczne pozostają dozwolone (`docs/ROADMAP.md`).
+
+---
+
+## 2026-11-17 — `docs/private/` zostaje prywatne
+
+**Kontekst:** `docs/` w repozytorium aplikacji jest śledzone, z wyjątkiem `docs/private/`
+i `docs/scratch/`. `docs/private/` to osobne, prywatne repozytorium. Przy porządkowaniu tego, co
+z dokumentacji projektu jest publiczne, trzeba było potwierdzić jego status.
+
+**Decyzja:** `docs/private/` zostaje prywatne. Trafiają tam robocze notatki, audyty, wyjaśnienia zmian
+(`explanations/`), plany komercyjne i sprawy umowne. Publiczne pozostają `docs/STATUS.md`,
+`DECISIONS.md`, `BACKLOG.md` i `ROADMAP.md`.
+
+**Odrzucone:** upublicznienie katalogu — notatki robocze i audyty powstają bez myśli o czytelniku
+z zewnątrz, a plany komercyjne i sprawy umowne nie mogą być publiczne.
+
+**Dlaczego:** Publiczne dokumenty są pisane tak, żeby dało się ich bronić przed czytelnikiem
+z zewnątrz. Wersje publiczne (np. `docs/ROADMAP.md`) wyprowadza się z roboczych świadomie,
+zamiast otwierać katalog roboczy.
