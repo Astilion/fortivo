@@ -113,8 +113,9 @@
 - **Poprawki SDK 54 do nadrobienia** (2026-11-04, `expo doctor` w buildzie 0.6.6). 12 paczek w wersjach patch
   starszych niż oczekiwane przez SDK 54, m.in. `expo` 54.0.10 → ~54.0.37, `expo-sqlite` 16.0.8 → ~16.0.10,
   `expo-router` 6.0.8 → ~6.0.24, `react-native` 0.81.4 → 0.81.5. Nie blokuje buildu. Celowo **nie w 0.6.6**
-  (R8 to jedna zmiana runtime na wydanie). Osobna wersja: `npx expo install --check` → przegląd changelogów
-  (expo-modules-core / expo-sqlite pod FORTIVO-8) → pełny smoke.
+  (R8 to jedna zmiana runtime na wydanie). Osobna wersja: `npx expo install --check` → pełny smoke.
+  Przegląd changelogów pod FORTIVO-8 zrobiony (2026-11-28): expo-sqlite 16.0.10 i expo-modules-core 3.0.30
+  nie zawierają poprawki. Aktualizacja SDK nie zamyka FORTIVO-8, więc ta pozycja to już tylko zwykłe patche.
 - **FORTIVO-8: `SharedObject doesn't contain valid id` przy odczycie planu** (2026-10-11).
   1 event (0.6.2+19, ~5 s po starcie, current-workout), niepotwierdzone. Podejrzenie: wyścig
   w `SharedObjectRegistry` expo-modules-core 3.0.18 — argumenty `AsyncFunction` są konwertowane
@@ -125,6 +126,13 @@
   ładować poprawnie — niesprawdzone). Ten sam mechanizm może trafić zapisy — w transakcji kończy
   się `ROLLBACK`-iem. Do sprawdzenia changelog expo przy przeglądzie M1.16 / v0.7. Issue w Sentry
   zostaje otwarte.
+  **Aktualizacja 2026-11-28:** event z 2026-11-24 (0.6.8+27) to `NullPointerException` przy `prepareAsync`.
+  Binding natywny jest zresetowany w trakcie procesu i połączenie pada aż do restartu. Autosave padł, serie zginęły.
+  Obejście w 0.6.9 (DECISIONS 2026-11-28): proxy `db` + `reconnect()` + jedna ponowna próba całej transakcji
+  w `runInTransaction`. Issue w Sentry zostaje otwarte, bo przyczyna jest w expo. **Bez ochrony zostają** odczyty
+  oraz pojedyncze `runAsync` spoza `runInTransaction` (waga, pomiary, ulubione, profil). Po reconnect wywołanym
+  przez transakcję one też trafiają w nowe połączenie, ale same go nie odnawiają. Kierunek: pozycja
+  „`withExclusiveTransactionAsync` + przepchnięcie `txn` przez `_...InTx`” wyżej.
 - **„Spróbuj ponownie” po `initError` gubi połączenie** (2026-10-11). `providers/AppProvider.tsx:105`
   woła `initDatabase()` przy każdym `reinitNonce` (retry z `:202–207`), a poprzedni uchwyt jest
   zamykany tylko przy `DatabaseMigrationError` (`database/database.ts:363–366`). Drugie
@@ -139,6 +147,8 @@
   a GC starego wrappera zamyka już tylko stary binding.
 - Pomysł, nie teraz (2026-10-11): jedna ponowna próba po przejściowym błędzie natywnym expo-sqlite
   (`InvalidSharedObjectIdException`) dla odczytów i autosave. Wraca, jeśli FORTIVO-8 się powtórzy.
+  **Zrealizowane dla transakcji 2026-11-28 (0.6.9)**, a więc także dla autosave'u. Odczyty i pojedyncze `runAsync`
+  zostają bez ponownej próby (pozycja FORTIVO-8 wyżej).
 - Screenshoty w README (`assets/screenshots/`) z 2026-05-24 — ekrany od tego czasu zmienione
   (30 commitów); nazwy `current-workout.tsx.png` i `active-workout.tsx.png` są zamienione
   względem ekranów (podpisy w README są poprawne). (nowe 2026-10-17)

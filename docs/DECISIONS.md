@@ -864,3 +864,34 @@ z zewnątrz, a plany komercyjne i sprawy umowne nie mogą być publiczne.
 **Dlaczego:** Publiczne dokumenty są pisane tak, żeby dało się ich bronić przed czytelnikiem
 z zewnątrz. Wersje publiczne (np. `docs/ROADMAP.md`) wyprowadza się z roboczych świadomie,
 zamiast otwierać katalog roboczy.
+
+---
+
+## 2026-11-28 — Martwe połączenie SQLite: reconnect i jedna ponowna próba transakcji
+
+**Kontekst:** FORTIVO-8, event 2026-11-24 na 0.6.8: `Call to function 'NativeDatabase.prepareAsync' has been
+rejected → Caused by: java.lang.NullPointerException`. Natywny binding połączenia expo-sqlite zostaje zresetowany
+w trakcie procesu (`sharedObjectDidRelease` → `resetNative()`), a `isClosed` zostaje `false`. Od tej chwili każde
+wywołanie na połączeniu pada aż do restartu aplikacji. Autosave aktywnego treningu też padał, więc serie ginęły.
+Przyczyna jest w expo. expo-sqlite 16.0.10 i expo-modules-core 3.0.30 jej nie naprawiają.
+
+**Decyzja:** Ten wpis **doprecyzowuje 2026-08-08** (`runInTransaction`): lock oprócz serializacji ponawia teraz
+transakcję po reconnect. Serwisy nie dostają połączenia, tylko proxy `db` z `database/connection.ts`, które każde
+wywołanie kieruje do aktualnego połączenia. Gdy transakcja padnie błędem martwego połączenia
+(`isDeadConnectionError`: `NullPointerException`, `already released`, `valid id`, `Access to closed resource`),
+`runInTransaction` wywołuje `reconnect()`. Ta funkcja otwiera nowe połączenie przez
+`openDatabaseAsync(DB_NAME, { useNewConnection: true })` i ustawia WAL i `foreign_keys`, bez migracji i seeda.
+Potem lock loguje `Database connection lost, reconnected` i jeszcze raz wykonuje **całą** transakcję. Ponowna próba
+jest jedna i odbywa się w łańcuchu locka. Po celowym zamknięciu (nieudany start w `AppProvider`) połączenie jest
+czyszczone przed `closeAsync()`, a `reconnect()` przy braku połączenia odmawia.
+
+**Odrzucone:** ponawianie pojedynczych zapytań, bo powtórzenie jednego statementu w środku transakcji zatwierdziłoby
+pół zapisu. Reconnect bez `useNewConnection` też odpada: natywny moduł zwraca z cache ten sam martwy `NativeDatabase`.
+Odrzucone jest także czekanie na poprawkę w expo, bo do tego czasu użytkownicy tracą serie.
+
+**Dlaczego:** Transakcja jest najmniejszą jednostką, którą można bezpiecznie powtórzyć. Zadania w transakcjach serwisów
+da się powtórzyć: ID generowane są poza zadaniem albo na nowo w środku. Proxy sprawia, że po reconnect nowe połączenie
+widzą wszystkie serwisy naraz, także odczyty. Znane ryzyko: `resetNative()` nie woła `sqlite3_close`, więc natywny
+uchwyt wycieka. Jeśli połączenie umrze w środku transakcji z zapisem, wyciekły uchwyt może trzymać lock zapisu WAL.
+Wtedy ponowna próba dostanie `database is locked`, a taki błąd nie pasuje do wzorca. Nie ma więc pętli, a użytkownik
+widzi toast jak dotąd. Bez ochrony zostają odczyty i pojedyncze `runAsync` spoza `runInTransaction` (BACKLOG, FORTIVO-8).

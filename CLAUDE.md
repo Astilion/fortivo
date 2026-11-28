@@ -34,7 +34,7 @@ Bez folderu `/src` — pliki na root level:
 - `types/` — TypeScript types (training.ts = główny plik typów)
 - `constants/` — Colors.ts, Styles.ts, User.ts (LOCAL_USER_ID), Training.ts, bodyParts.ts, PresetWorkouts.ts, PresetWeeklyPlans.ts, activeWorkout.ts
 - `utils/` — date.ts, logger.ts, numbers.ts, search.ts, confirm.ts, errors.ts, days.ts, onboarding.ts, validation.ts, validatePresets.ts, capitalize.ts, crashReporting.ts, exportFile.ts
-- `database/` — database.ts (init + migracje), writeLock.ts (`runInTransaction`)
+- `database/` — database.ts (init + migracje), writeLock.ts (`runInTransaction`), connection.ts (proxy `db`, `setConnection`, `reconnect`)
 - `__tests__/` — jest (utils/, services/, hooks/)
 
 ## Konwencje kodu
@@ -103,6 +103,7 @@ Trzymaj się tej kolejności. Refactor 1.13.4 ujednolicił wszystkie ekrany pod 
 - Migracje: `PRAGMA user_version` — numer aktualnej migracji w `docs/STATUS.md` (v7 `started_at` na `workouts`; v8 `performance_data` JSON snapshot na `workout_history`; v9 decouple historii od treningu — FK `ON DELETE SET NULL` + denormalizowana `workout_name`, rebuild tabeli; v10 `workout_name` na `exercise_progress`)
 - Każda migracja idzie w osobnej transakcji; `user_version` bumpuje się dopiero po sukcesie kroku. Uzasadnienie: `docs/DECISIONS.md`.
 - **Każda transakcja w warstwie serwisów przez `runInTransaction` z `database/writeLock.ts`, NIGDY `db.withTransactionAsync` wprost.** Jedyny wyjątek: runner migracji. Uzasadnienie: `docs/DECISIONS.md`.
+- **Serwisy dostają proxy `db` z `database/connection.ts`, nigdy surowe połączenie.** `openDatabaseAsync` tylko w `initDatabase` i `reconnect`. Reconnect i ponowna próba tylko w `runInTransaction` (cała transakcja, w łańcuchu locka), nigdy pojedyncze zapytanie. Uzasadnienie: `docs/DECISIONS.md`.
 - **Brak transakcji zagnieżdżonych w expo-sqlite** — metody składane w większą transakcję wydzielaj jako wewnętrzne `_...InTx` bez własnego wrappera. Uzasadnienie: `docs/DECISIONS.md`.
 - Transakcja obowiązkowa dla każdego zapisu wielostanowego (workout + exercises + sets, plan + dni, finisz treningu)
 - Foreign keys: ON (`PRAGMA foreign_keys = ON`)
