@@ -327,9 +327,13 @@ CREATE INDEX IF NOT EXISTS idx_workouts_favorite ON workouts(is_favorite);
 
 // ─── Migration runner ─────────────────────────────────────────────────────────
 
-const runMigrations = async (db: SQLite.SQLiteDatabase) => {
+export const applyConnectionPragmas = async (db: SQLite.SQLiteDatabase) => {
   await db.execAsync('PRAGMA journal_mode = WAL;');
   await db.execAsync('PRAGMA foreign_keys = ON;');
+};
+
+const runMigrations = async (db: SQLite.SQLiteDatabase) => {
+  await applyConnectionPragmas(db);
 
   const result = await db.getFirstAsync<{ user_version: number }>(
     'PRAGMA user_version',

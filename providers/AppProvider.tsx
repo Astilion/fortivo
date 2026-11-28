@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react-native';
 import exercisesData from '@/assets/data/exercises.json';
 import { DatabaseMigrationError, initDatabase } from '@/database/database';
+import { db, setConnection } from '@/database/connection';
 import { useDbErrorStore } from '@/store/dbErrorStore';
 import { DatabaseRecoveryScreen } from '@/components/DatabaseRecoveryScreen';
 import { ErrorView } from '@/components/ui/ErrorView';
@@ -107,15 +108,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     let database: SQLite.SQLiteDatabase | null = null;
     try {
       database = await initDatabase();
+      setConnection(database);
 
-      const exerciseService = new ExerciseService(database);
-      const workoutService = new WorkoutService(database);
-      const profileService = new ProfileService(database);
-      const weightService = new WeightService(database);
-      const measurementService = new MeasurementService(database);
-      const weeklyPlanService = new WeeklyPlanService(database);
-      const presetService = new PresetService(database);
-      const exportService = new ExportService(database);
+      const exerciseService = new ExerciseService(db);
+      const workoutService = new WorkoutService(db);
+      const profileService = new ProfileService(db);
+      const weightService = new WeightService(db);
+      const measurementService = new MeasurementService(db);
+      const weeklyPlanService = new WeeklyPlanService(db);
+      const presetService = new PresetService(db);
+      const exportService = new ExportService(db);
 
       const validatedExercises = validateExerciseData(exercisesData);
       await exerciseService.seedExercises(validatedExercises);
@@ -161,7 +163,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       setContext({
-        db: database,
+        db,
         exerciseService,
         workoutService,
         profileService,
@@ -178,6 +180,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsReady(true);
     } catch (error) {
       if (database) {
+        // Cleared first: a late call on the closed handle would fail with
+        // "Access to closed resource" and trigger a reconnect.
+        setConnection(null);
         await database.closeAsync().catch(() => {});
       }
       // Migration failures get the recovery screen; anything else gets a
